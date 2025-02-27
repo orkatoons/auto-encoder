@@ -1,5 +1,6 @@
 import os
 import subprocess
+
 from pymkv import MKVFile
 
 # Define your input MKV file
@@ -23,11 +24,11 @@ for track in mkv.tracks:
         # For PGS subtitles, use ".sup"
         # For SubRip/SRT subtitles, use ".srt"
         # For VobSub, extraction will generate a pair (.idx and .sub) if you specify ".idx"
-        if track._track_codec == "PGS":
+        if "PGS" in track._track_codec:
             out_ext = "sup"
-        elif track._track_codec == "SubRip/SRT":
+        elif "SubRip" or "SRT" in track._track_codec:
             out_ext = "srt"
-        elif track._track_codec == "VobSub":
+        elif "VobSub" in track._track_codec:
             out_ext = "idx"
         else:
             out_ext = "txt"  # fallback
