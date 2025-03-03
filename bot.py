@@ -8,8 +8,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 TOKEN = os.getenv("DISCORD_TOKEN")
-GUILD_ID = os.getenv("GUILD_ID")
-CHANNEL_ID = os.getenv("CHANNEL_ID")
+GUILD_ID = int(os.getenv("GUILD_ID"))
+CHANNEL_ID = int(os.getenv("CHANNEL_ID"))
 TIMEOUT = 12 * 60 * 60  # 12 hours
 
 FLASK_SERVER_URL = "http://localhost:5000"

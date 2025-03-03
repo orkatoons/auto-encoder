@@ -6,6 +6,7 @@ import subprocess
 import time
 import re
 import requests
+from pymkv import MKVFile
 
 # ----------------- Configuration -----------------
 FLASK_SERVER_URL = "http://localhost:5000"
@@ -13,16 +14,16 @@ HANDBRAKE_CLI = r"C:\Program Files (x86)\HandBrakeCLI-1.9.1-win-x86_64\HandBrake
 DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1341674153404792852/rky38iFrH3h0_S1tzvt3E2Iugi8p1GuT0MmFPIb1DRmpb4lKkwjeHeYACjg6FnX4Ji3O"
 
 PRESET_SETTINGS = {
-    "480p": {"width": 854, "height": 480, "quality": 17},
-    "576p": {"width": 1024, "height": 576, "quality": 17},
-    "720p": {"width": 1280, "height": 720, "quality": 17},
+    "480p": {"width": 854, "height": 480, "quality": 11},
+    "576p": {"width": 1024, "height": 576, "quality": 13},
+    "720p": {"width": 1280, "height": 720, "quality": 15},
     "1080p": {"width": 1920, "height": 1080, "quality": 17},
 }
 
 BITRATE_RANGES = {
-    "480p": (1500, 2500),
-    "576p": (2500, 3500),
-    "720p": (5000, 7000)
+    "480p": (1600, 2400),
+    "576p": (2600, 3400),
+    "720p": (5200, 6800)
 }
 
 crop_values = {
@@ -100,7 +101,7 @@ def get_cropping(input_file, res, cq=17):
         log(f"❌ No settings found for {res}, skipping...")
         return None
 
-    preview_file = f"preview_{res}.mp4"
+    preview_file = f"preview_{res}.mkv"
     snapshots = {
         "original": f"preview_snapshot_{res}_original.jpg",
         "autocrop": f"preview_snapshot_{res}_autocrop.jpg",
@@ -157,7 +158,7 @@ def encode_preview(input_file, res, cq, approved_crop):
         log(f"❌ No settings found for {res}, skipping...")
         return None
 
-    preview_file = f"preview_{res}.mp4"
+    preview_file = f"preview_{res}.mkv"
     snapshot_file = f"preview_{res}.jpg"
     command = [
         HANDBRAKE_CLI,
@@ -199,62 +200,149 @@ def adjust_cq_for_bitrate(input_file, res, approved_crop):
         log(f"🔍 Bitrate for {res} preview: {bitrate} Kbps")
         if min_bitrate <= bitrate <= max_bitrate:
             log(f"✅ Bitrate is in range ({min_bitrate}-{max_bitrate} Kbps)")
-            return cq
+            return int(cq)
         elif bitrate > max_bitrate:
             cq += 2
         elif bitrate < min_bitrate:
             cq -= 2
 
-        if cq < 10 or cq > 25:
+        if cq < 9 or cq > 27:
             log("⚠️ CQ adjustment out of range. Using default CQ 17.")
             return 17
 
-# --------------------Phase 3--------------------
-def extract_subtitles(mkv_file, status_callback):
-    filename = os.path.basename(mkv_file)
-    status_callback(filename, "Subtitles", "Extracting...")
 
-    MKVTOOLNIX_PATH = r"C:\Program Files\MKVToolNix"
-    cmd_info = [f"{MKVTOOLNIX_PATH}\\mkvinfo", mkv_file]
-    result = subprocess.run(cmd_info, capture_output=True, text=True)
-
-    # Print mkvinfo output (optional)
-    sub_log(result.stdout)
-
-    subtitle_tracks = []
-    track_pattern = re.compile(r"\| \+ Track number: (\d+) .*?\|  \+ Track type: subtitles", re.DOTALL)
-    matches = track_pattern.findall(result.stdout)
-
-    if not matches:
-        sub_log("❌ No subtitle tracks found.")
-        status_callback(filename, "Subtitles", "No subtitles")
-        return
-
-    for match in matches:
-        subtitle_tracks.append(int(match))
-
-    output_folder = "subtitles"
+# --------------------Phase 2--------------------
+def extract_audio(input_file):
+    input_dir = os.path.dirname(input_file)
+    base_name = os.path.splitext(os.path.basename(input_file))[0]
+    output_folder = os.path.normpath(os.path.join(input_dir, base_name))
     os.makedirs(output_folder, exist_ok=True)
 
-    for track_id in subtitle_tracks:
-        output_file = os.path.join(output_folder, f"{filename}_sub_{track_id}.srt")
-        cmd_extract = ["mkvextract", "tracks", mkv_file, f"{track_id}:{output_file}"]
+    print("Input file:", input_file)
+    print("Input dir:", input_dir)
+    print("Base name:", base_name)
+    print("Output folder:", output_folder)
+    print(f"🎵 Detecting audio tracks for {base_name}...")
 
-        process = subprocess.Popen(cmd_extract, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-        for line in process.stdout:
-            sub_log(line, end="")  # Update GUI subprocess log in real-time
-        process.wait()
+    # Run eac3to to list tracks
+    list_cmd = ["eac3to", input_file]
+    result = subprocess.run(list_cmd, capture_output=True, text=True)
 
-        if process.returncode == 0:
-            sub_log(f"✅ Extracted subtitles: {output_file}")
-            status_callback(filename, "Subtitles", "Completed")
+    print(result.stdout)  # Show command output
+    if result.stderr:
+        print(result.stderr)
+
+    # Find audio tracks
+    tracks = re.findall(r"(\d+): .*?, (\d+\.\d) channels", result.stdout)
+    if not tracks:
+        print("⚠️ No audio tracks found!")
+        return
+
+    for track_number, channels in tracks:
+        track_number = track_number.strip()
+        channels = channels.strip()
+
+        if channels in ["5.1", "7.1"]:
+            bitrate = "448" if "480p" in input_file or "576p" in input_file else "640"
+            output_audio = os.path.normpath(os.path.join(output_folder, f"{base_name}-{bitrate}.ac3"))
+
+            extract_cmd = ["eac3to", f'"{input_file}"', f'{track_number}:"{output_audio}"', f"-{bitrate}"]
+            print("Running command:", " ".join(extract_cmd))  # Debugging
+            process = subprocess.run(" ".join(extract_cmd), shell=True, capture_output=True, text=True)
+
+            # Print standard output
+            print("STDOUT:\n", process.stdout)
+
+            # Print error output (if any)
+            if process.stderr:
+                print("STDERR:\n", process.stderr)
+
+
         else:
-            sub_log(f"❌ Failed to extract subtitles for track {track_id}")
-            status_callback(filename, "Subtitles", "Failed")
 
+            # Ensure the output folder exists
+
+            os.makedirs(output_folder, exist_ok=True)
+
+            # Normalize and format paths correctly
+
+            temp_audio = os.path.normpath(os.path.join(output_folder, "temp.aac"))
+
+            final_audio = os.path.normpath(os.path.join(output_folder, f"{base_name}.m4a"))
+
+            extract_cmd = f'eac3to "{input_file}" {track_number}:"{temp_audio}"'
+
+            qaac_cmd = f'qaac64 -V 127 -i "{temp_audio}" --no-delay -o "{final_audio}"'
+
+            print(f"🎤 Extracting stereo/mono audio track {track_number}...")
+
+            # Run extraction
+
+            process = subprocess.run(extract_cmd, shell=True, capture_output=True, text=True)
+
+            print("STDOUT:\n", process.stdout)
+
+            if process.stderr:
+                print("STDERR:\n", process.stderr)
+
+            print("🔄 Converting extracted audio with qaac...")
+
+            # Run qaac conversion
+
+            process = subprocess.run(qaac_cmd, shell=True, capture_output=True, text=True)
+
+            print("STDOUT:\n", process.stdout)
+
+            if process.stderr:
+                print("STDERR:\n", process.stderr)
+
+            # Cleanup temp file if extraction succeeded
+
+            if os.path.exists(temp_audio):
+                os.remove(temp_audio)
+
+    print("✅ Audio extraction complete!")
+
+# --------------------Phase 3--------------------
+def extract_subtitles(mkv_path):
+    input_dir = os.path.dirname(mkv_path)
+    base_name = os.path.splitext(os.path.basename(mkv_path))[0]
+
+    mkv = MKVFile(mkv_path)
+    print("MKV merge output:")
+    print(mkv)
+
+    for track in mkv.tracks:
+        print("Found track:", track)
+        if track.track_type == "subtitles":
+            if "PGS" in track._track_codec:
+                out_ext = "sup"
+            elif "SubRip" in track._track_codec or "SRT" in track._track_codec:
+                out_ext = "srt"
+            elif "VobSub" in track._track_codec:
+                out_ext = "idx"
+            else:
+                out_ext = "txt"
+
+            language = track._language if track._language else "unknown"
+            output_file = os.path.join(
+                input_dir,
+                f"{base_name}_subtitle_{track._track_id}_{language}.{out_ext}"
+            )
+
+            cmd = ["mkvextract", "tracks", mkv_path, f"{track._track_id}:{output_file}"]
+            print("Running command:", " ".join(cmd))
+            subprocess.run(cmd)
+            print(f"✅ Extracted subtitle track {track._track_id} to {output_file}")
+        else:
+            print(f"Skipping track {track._track_id} with codec {track._track_codec}")
+
+    print("Extraction complete!")
 
 def encode_file(input_file, resolutions, status_callback):
     filename = os.path.basename(input_file)
+    extract_subtitles(input_file)
+    extract_audio(input_file)
     for res in resolutions:
         status_callback(filename, res, "Starting...")
         settings = PRESET_SETTINGS.get(res)
@@ -275,7 +363,7 @@ def encode_file(input_file, resolutions, status_callback):
             status_callback(filename, res, "Cancelled")
             continue
 
-        output_file = f"{os.path.splitext(input_file)[0]}_{res}.mp4"
+        output_file = f"{os.path.splitext(input_file)[0]}_{res}.mkv"
         command = [
             HANDBRAKE_CLI,
             "-i", input_file,
@@ -289,14 +377,14 @@ def encode_file(input_file, resolutions, status_callback):
             "--encoder-profile", "high",
             "--encoder-level", "4.1",
             "--encopts",
-            "--all-audio none",
-            "--all-subtitles none",
+            "-a", "none",  # disable audio
+            "-s", "none",  # disable subtitles
             ("subme=10:deblock=-3,-3:me=umh:merange=32:mbtree=0:"
              "dct-decimate=0:fast-pskip=0:aq-mode=2:aq-strength=1.0:"
              "qcomp=0.60:psy-rd=1.1,0.00")
         ]
         status_callback(filename, res, "Encoding...")
-        log(f"\n🚀 Starting final encode for {res}...\n")
+        log(f"\n🚀 Starting final encode for {res}... at CQ {cq}\n")
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf-8",errors="ignore")
         for line in process.stdout:
             sub_log(line, end="")
@@ -307,7 +395,6 @@ def encode_file(input_file, resolutions, status_callback):
             completion_bitrate = get_bitrate(output_file)
             send_completion_webhook(completion_bitrate, res, input_file)
             status_callback(filename, res, "Completed")
-            extract_subtitles(input_file, status_callback)
         else:
             log(f"\n❌ Encoding failed for {res}!\n")
             status_callback(filename, res, "Failed")
