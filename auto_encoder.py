@@ -370,6 +370,8 @@ def encode_file(input_file, resolutions, status_callback):
             "-o", output_file,
             "--crop", crop_values[approved_crop],
             "--encoder", "x264",
+            "-a", "none",  # disable audio
+            "-s", "none",  # disable subtitles
             "--quality", str(cq),
             "--width", str(settings["width"]),
             "--height", str(settings["height"]),
@@ -377,8 +379,6 @@ def encode_file(input_file, resolutions, status_callback):
             "--encoder-profile", "high",
             "--encoder-level", "4.1",
             "--encopts",
-            "-a", "none",  # disable audio
-            "-s", "none",  # disable subtitles
             ("subme=10:deblock=-3,-3:me=umh:merange=32:mbtree=0:"
              "dct-decimate=0:fast-pskip=0:aq-mode=2:aq-strength=1.0:"
              "qcomp=0.60:psy-rd=1.1,0.00")
