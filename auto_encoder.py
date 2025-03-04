@@ -11,8 +11,8 @@ from pymkv import MKVFile
 # ----------------- Configuration -----------------
 FLASK_SERVER_URL = "http://localhost:5000"
 HANDBRAKE_CLI = r"C:\Program Files (x86)\HandBrakeCLI-1.9.1-win-x86_64\HandBrakeCLI.exe"
-DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1341674153404792852/rky38iFrH3h0_S1tzvt3E2Iugi8p1GuT0MmFPIb1DRmpb4lKkwjeHeYACjg6FnX4Ji3O"
-
+DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1346557040683778119/cgpYKgRVTCAWRGu79b1fK27Non6MyYApaQMyXRl2qbIIjeolr_fGTeJHPAZ8Fw-PdvM9"
+#TEST_DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1341674153404792852/rky38iFrH3h0_S1tzvt3E2Iugi8p1GuT0MmFPIb1DRmpb4lKkwjeHeYACjg6FnX4Ji3O"
 PRESET_SETTINGS = {
     "480p": {"width": 854, "height": 480, "quality": 11},
     "576p": {"width": 1024, "height": 576, "quality": 13},
@@ -56,6 +56,19 @@ def send_completion_webhook(completion_bitrate, resolution, input_file):
     except Exception as e:
         log("❌ Exception sending completion webhook: " + str(e))
     return True
+
+def send_webhook_message(message):
+    data = {"content":message}
+    try:
+        response = requests.post(DISCORD_WEBHOOK_URL, data=data)
+        if response.status_code in (200, 204):
+            log(f"✅ Webhook sent successfully.")
+        else:
+            log(f"❌ Failed to send webhook: {response.status_code} - {response.text}")
+    except Exception as e:
+        log("❌ Exception sending completion webhook: " + str(e))
+
+
 
 def send_previews(preview_files):
     response = requests.post(f"{FLASK_SERVER_URL}/send_previews", json={"previews": preview_files})
@@ -176,8 +189,8 @@ def encode_preview(input_file, res, cq, approved_crop):
         ("subme=10:deblock=-3,-3:me=umh:merange=32:mbtree=0:"
          "dct-decimate=0:fast-pskip=0:aq-mode=2:aq-strength=1.0:"
          "qcomp=0.60:psy-rd=1.1,0.00"),
-        "--start-at", "duration:10",
-        "--stop-at", "duration:40"
+        "--start-at", "duration:100",
+        "--stop-at", "duration:250"
     ]
     log(f"\n🎬 Encoding 60-sec preview for {res} with CQ {cq} and crop {approved_crop}...\n")
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf-8",errors="ignore")
@@ -212,11 +225,22 @@ def adjust_cq_for_bitrate(input_file, res, approved_crop):
 
 
 # --------------------Phase 2--------------------
-def extract_audio(input_file):
+def extract_audio(input_file, res):
     input_dir = os.path.dirname(input_file)
     base_name = os.path.splitext(os.path.basename(input_file))[0]
     output_folder = os.path.normpath(os.path.join(input_dir, base_name))
     os.makedirs(output_folder, exist_ok=True)
+
+    # Determine the parent directory (one level up from the input file's directory)
+    parent_dir = os.path.normpath(os.path.join(os.path.dirname(input_file), ".."))
+
+    # Build the output directory by joining the parent_dir with the resolution folder
+    output_dir = os.path.normpath(os.path.join(parent_dir, res))
+
+    # Create the output directory if it doesn't already exist
+    os.makedirs(output_dir, exist_ok=True)
+
+
 
     print("Input file:", input_file)
     print("Input dir:", input_dir)
@@ -245,8 +269,9 @@ def extract_audio(input_file):
         if channels in ["5.1", "7.1"]:
             bitrate = "448" if "480p" in input_file or "576p" in input_file else "640"
             output_audio = os.path.normpath(os.path.join(output_folder, f"{base_name}-{bitrate}.ac3"))
-
-            extract_cmd = ["eac3to", f'"{input_file}"', f'{track_number}:"{output_audio}"', f"-{bitrate}"]
+            # Construct the normalized output file path using os.path.join
+            output_file = os.path.normpath(os.path.join(output_dir, f"{os.path.splitext(base_name)[0]}@{res}-{bitrate}.ac3"))
+            extract_cmd = ["eac3to", f'"{input_file}"', f'{track_number}:"{output_file}"', f"-{bitrate}"]
             print("Running command:", " ".join(extract_cmd))  # Debugging
             process = subprocess.run(" ".join(extract_cmd), shell=True, capture_output=True, text=True)
 
@@ -256,23 +281,27 @@ def extract_audio(input_file):
             # Print error output (if any)
             if process.stderr:
                 print("STDERR:\n", process.stderr)
+                send_webhook_message(f"❌ Audio extraction failed!")
+
+            send_webhook_message(f"✅ Audio extraction complete for {base_name}@{res}")
 
 
         else:
 
             # Ensure the output folder exists
 
-            os.makedirs(output_folder, exist_ok=True)
+            #os.makedirs(output_folder, exist_ok=True)
 
             # Normalize and format paths correctly
 
             temp_audio = os.path.normpath(os.path.join(output_folder, "temp.aac"))
 
             final_audio = os.path.normpath(os.path.join(output_folder, f"{base_name}.m4a"))
+            output_file = os.path.normpath(os.path.join(output_dir, f"{os.path.splitext(base_name)[0]}@{res}.m4a"))
 
             extract_cmd = f'eac3to "{input_file}" {track_number}:"{temp_audio}"'
 
-            qaac_cmd = f'qaac64 -V 127 -i "{temp_audio}" --no-delay -o "{final_audio}"'
+            qaac_cmd = f'qaac64 -V 127 -i "{temp_audio}" --no-delay -o "{output_file}"'
 
             print(f"🎤 Extracting stereo/mono audio track {track_number}...")
 
@@ -284,6 +313,7 @@ def extract_audio(input_file):
 
             if process.stderr:
                 print("STDERR:\n", process.stderr)
+                send_webhook_message(f"❌ Audio extraction failed!")
 
             print("🔄 Converting extracted audio with qaac...")
 
@@ -301,7 +331,7 @@ def extract_audio(input_file):
             if os.path.exists(temp_audio):
                 os.remove(temp_audio)
 
-    print("✅ Audio extraction complete!")
+            send_webhook_message(f"✅ Audio extraction complete for {base_name}@{res}")
 
 # --------------------Phase 3--------------------
 def extract_subtitles(mkv_path):
@@ -333,16 +363,17 @@ def extract_subtitles(mkv_path):
             cmd = ["mkvextract", "tracks", mkv_path, f"{track._track_id}:{output_file}"]
             print("Running command:", " ".join(cmd))
             subprocess.run(cmd)
-            print(f"✅ Extracted subtitle track {track._track_id} to {output_file}")
+            send_webhook_message(f"✅ Extracted subtitle track {track._track_id} for {base_name}")
         else:
-            print(f"Skipping track {track._track_id} with codec {track._track_codec}")
+            log(f"Unable to extract {track._track_id} with codec {track._track_codec} for {base_name}")
 
     print("Extraction complete!")
 
 def encode_file(input_file, resolutions, status_callback):
     filename = os.path.basename(input_file)
+    send_webhook_message(f"Beginning encoding for {filename} @ {resolutions}")
     extract_subtitles(input_file)
-    extract_audio(input_file)
+
     for res in resolutions:
         status_callback(filename, res, "Starting...")
         settings = PRESET_SETTINGS.get(res)
@@ -350,6 +381,7 @@ def encode_file(input_file, resolutions, status_callback):
             log(f"❌ No settings found for {res}, skipping...")
             status_callback(filename, res, "Skipped (no settings)")
             continue
+        extract_audio(input_file, res)
 
         approved_crop = get_cropping(input_file, res)
         if not approved_crop:
@@ -362,8 +394,23 @@ def encode_file(input_file, resolutions, status_callback):
             log(f"⏩ Final encoding for {res} was cancelled.")
             status_callback(filename, res, "Cancelled")
             continue
+        send_webhook_message(f"Proceeding to Final Encode for {filename}@{res}")
 
-        output_file = f"{os.path.splitext(input_file)[0]}_{res}.mkv"
+        # Determine the parent directory (one level up from the input file's directory)
+        parent_dir = os.path.normpath(os.path.join(os.path.dirname(input_file), ".."))
+
+        # Build the output directory by joining the parent_dir with the resolution folder
+        output_dir = os.path.normpath(os.path.join(parent_dir, res))
+
+        # Create the output directory if it doesn't already exist
+        #os.makedirs(output_dir, exist_ok=True)
+
+        # Construct the normalized output file path using os.path.join
+        output_file = os.path.normpath(os.path.join(output_dir, f"{os.path.splitext(filename)[0]}@{res}.mkv"))
+
+        print("Output file path:", output_file)  # Debugging
+        log(f"Output file path: {output_file}")  # Debugging
+
         command = [
             HANDBRAKE_CLI,
             "-i", input_file,
@@ -397,6 +444,7 @@ def encode_file(input_file, resolutions, status_callback):
             status_callback(filename, res, "Completed")
         else:
             log(f"\n❌ Encoding failed for {res}!\n")
+            send_webhook_message(f"Encoding failed for {filename}@{res}")
             status_callback(filename, res, "Failed")
 
 # ----------------- GUI Components -----------------
