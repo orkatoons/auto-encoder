@@ -11,7 +11,7 @@ from pymkv import MKVFile
 # ----------------- Configuration -----------------
 FLASK_SERVER_URL = "http://localhost:5000"
 HANDBRAKE_CLI = r"C:\Program Files (x86)\HandBrakeCLI-1.9.1-win-x86_64\HandBrakeCLI.exe"
-DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1346557040683778119/cgpYKgRVTCAWRGu79b1fK27Non6MyYApaQMyXRl2qbIIjeolr_fGTeJHPAZ8Fw-PdvM9"
+DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1341674153404792852/rky38iFrH3h0_S1tzvt3E2Iugi8p1GuT0MmFPIb1DRmpb4lKkwjeHeYACjg6FnX4Ji3O"
 #TEST_DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1341674153404792852/rky38iFrH3h0_S1tzvt3E2Iugi8p1GuT0MmFPIb1DRmpb4lKkwjeHeYACjg6FnX4Ji3O"
 PRESET_SETTINGS = {
     "480p": {"width": 854, "height": 480, "quality": 11},
@@ -21,9 +21,9 @@ PRESET_SETTINGS = {
 }
 
 BITRATE_RANGES = {
-    "480p": (1600, 2400),
-    "576p": (2600, 3400),
-    "720p": (5200, 6800)
+        "480p": (1500, 2500),
+        "576p": (2500, 3500),
+        "720p": (5000, 7000),
 }
 
 crop_values = {
@@ -37,7 +37,7 @@ crop_values = {
 
 def determine_encodes(file_path):
     filename = os.path.basename(file_path).lower()
-    if "webdl" in filename:
+    if "webdl" in filename or "web-dl" in filename:
         return ["720p"]
     elif "bluray" in filename:
         return ["720p", "576p", "480p"]
@@ -171,35 +171,61 @@ def encode_preview(input_file, res, cq, approved_crop):
         log(f"❌ No settings found for {res}, skipping...")
         return None
 
-    preview_file = f"preview_{res}.mkv"
-    snapshot_file = f"preview_{res}.jpg"
-    command = [
-        HANDBRAKE_CLI,
-        "-i", input_file,
-        "-o", preview_file,
-        "--crop", crop_values[approved_crop],
-        "--encoder", "x264",
-        "--quality", str(cq),
-        "--width", str(settings["width"]),
-        "--height", str(settings["height"]),
-        "--encoder-preset", "placebo",
-        "--encoder-profile", "high",
-        "--encoder-level", "4.1",
-        "--encopts",
-        ("subme=10:deblock=-3,-3:me=umh:merange=32:mbtree=0:"
-         "dct-decimate=0:fast-pskip=0:aq-mode=2:aq-strength=1.0:"
-         "qcomp=0.60:psy-rd=1.1,0.00"),
-        "--start-at", "duration:100",
-        "--stop-at", "duration:250"
-    ]
-    log(f"\n🎬 Encoding 60-sec preview for {res} with CQ {cq} and crop {approved_crop}...\n")
-    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf-8",errors="ignore")
-    for line in process.stdout:
-        sub_log(line, end="")  # subprocess output to subprocess log area
-    process.wait()
+    start_section = ["duration:300", "duration:600", "duration:900"]  # Start, Middle, End
+    end_section = ["duration:400", "duration:700", "duration:1000"]  # Start, Middle, End
+    bitrates = []
 
-    bitrate = get_bitrate(preview_file)
-    return bitrate
+    for start, end in zip(start_section, end_section):
+        while True:
+            preview_file = f"preview_{res}_{start}.mkv"
+            command = [
+                HANDBRAKE_CLI,
+                "-i", input_file,
+                "-o", preview_file,
+                "--crop", crop_values[approved_crop],
+                "--encoder", "x264",
+                "--quality", str(cq),
+                "--width", str(settings["width"]),
+                "--height", str(settings["height"]),
+                "--encoder-preset", "placebo",
+                "--encoder-profile", "high",
+                "--encoder-level", "4.1",
+                "--encopts",
+                ("subme=10:deblock=-3,-3:me=umh:merange=32:mbtree=0:"
+                 "dct-decimate=0:fast-pskip=0:aq-mode=2:aq-strength=1.0:"
+                 "qcomp=0.60:psy-rd=1.1,0.00"),
+                "--start-at", start,
+                "--stop-at", end
+            ]
+
+            log(f"\n🎬 Encoding preview for {res} with CQ {cq} ({start} to {end})...\n")
+            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="ignore")
+            for line in process.stdout:
+                sub_log(line, end="")
+            process.wait()
+
+            bitrate = get_bitrate(preview_file)
+
+            if bitrate:
+                min_bitrate, max_bitrate = BITRATE_RANGES[res]
+                if bitrate < min_bitrate:
+                    cq -= 1
+                elif bitrate > max_bitrate:
+                    cq += 1
+                else:
+                    bitrates.append(bitrate)
+                    break  # Move to the next section once it's in range
+            else:
+                log("⚠️ No valid bitrate found, retrying with adjusted CQ.")
+
+    if bitrates:
+        avg_cq = round(sum(bitrates) / len(bitrates))
+        log(f"🔍 Final chosen CQ for {res}: {avg_cq}")
+        return avg_cq
+    else:
+        log("⚠️ No valid bitrates found.")
+        return None
+
 
 def adjust_cq_for_bitrate(input_file, res, approved_crop):
     min_bitrate, max_bitrate = BITRATE_RANGES[res]
@@ -215,9 +241,9 @@ def adjust_cq_for_bitrate(input_file, res, approved_crop):
             log(f"✅ Bitrate is in range ({min_bitrate}-{max_bitrate} Kbps)")
             return int(cq)
         elif bitrate > max_bitrate:
-            cq += 2
+            cq += 1
         elif bitrate < min_bitrate:
-            cq -= 2
+            cq -= 1
 
         if cq < 9 or cq > 27:
             log("⚠️ CQ adjustment out of range. Using default CQ 17.")
