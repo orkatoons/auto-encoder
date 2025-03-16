@@ -221,7 +221,7 @@ def encode_preview(input_file, res, cq, approved_crop):
     if bitrates:
         avg_cq = round(sum(bitrates) / len(bitrates))
         log(f"🔍 Final chosen CQ for {res}: {avg_cq}")
-        return avg_cq
+        return avg_cq, cq
     else:
         log("⚠️ No valid bitrates found.")
         return None
@@ -231,7 +231,7 @@ def adjust_cq_for_bitrate(input_file, res, approved_crop):
     min_bitrate, max_bitrate = BITRATE_RANGES[res]
     cq = 17
     while True:
-        bitrate = encode_preview(input_file, res, cq, approved_crop)
+        bitrate, cq = encode_preview(input_file, res, cq, approved_crop)
         if bitrate is None:
             log("⚠️ Failed to encode preview.")
             return None
