@@ -17,6 +17,9 @@ load_dotenv()
 FLASK_SERVER_URL = os.getenv("FLASK_SERVER_URL")
 HANDBRAKE_CLI = os.getenv("HANDBRAKE_CLI")
 DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
+FFMPEG = os.getenv("FFMPEG")
+FFPROBE = os.getenv("FFPROBE")
+MKVEXTRACT = os.getenv("MKVEXTRACT")
 
 PRESET_SETTINGS = {
     "480p": {"width": 854, "height": 480, "quality": 11},
@@ -98,7 +101,7 @@ def wait_for_approval():
 def get_bitrate(output_file):
     try:
         cmd = [
-            "ffprobe", "-v", "error", "-select_streams", "v:0",
+            FFPROBE, "-v", "error", "-select_streams", "v:0",
             "-show_entries", "format=bit_rate",
             "-of", "default=noprint_wrappers=1:nokey=1",
             output_file
@@ -127,7 +130,7 @@ def detect_black_bars(frame):
 def extract_frame(input_file, start_time, temp_frame):
     print("Getting frame")
     ffmpeg_cmd = [
-        "ffmpeg", "-i", input_file, "-ss", str(start_time), "-vframes", "1", "-y", temp_frame
+        FFMPEG, "-i", input_file, "-ss", str(start_time), "-vframes", "1", "-y", temp_frame
     ]
 
     process = subprocess.run(ffmpeg_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -430,7 +433,7 @@ def extract_subtitles(mkv_path):
                 f"{base_name}_subtitle_{track._track_id}_{language}.{out_ext}"
             )
 
-            cmd = ["mkvextract", "tracks", mkv_path, f"{track._track_id}:{output_file}"]
+            cmd = [MKVEXTRACT, "tracks", mkv_path, f"{track._track_id}:{output_file}"]
             print("Running command:", " ".join(cmd))
             subprocess.run(cmd)
             send_webhook_message(f"✅ Extracted subtitle track {track._track_id} for {base_name}")
