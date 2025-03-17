@@ -7,12 +7,17 @@ import time
 import re
 import requests
 from pymkv import MKVFile
+import cv2
+import numpy as np
+from dotenv import load_dotenv
+
 
 # ----------------- Configuration -----------------
-FLASK_SERVER_URL = "http://localhost:5000"
-HANDBRAKE_CLI = r"C:\Program Files (x86)\HandBrakeCLI-1.9.1-win-x86_64\HandBrakeCLI.exe"
-DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1341674153404792852/rky38iFrH3h0_S1tzvt3E2Iugi8p1GuT0MmFPIb1DRmpb4lKkwjeHeYACjg6FnX4Ji3O"
-#TEST_DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1341674153404792852/rky38iFrH3h0_S1tzvt3E2Iugi8p1GuT0MmFPIb1DRmpb4lKkwjeHeYACjg6FnX4Ji3O"
+load_dotenv()
+FLASK_SERVER_URL = os.getenv("FLASK_SERVER_URL")
+HANDBRAKE_CLI = os.getenv("HANDBRAKE_CLI")
+DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
+
 PRESET_SETTINGS = {
     "480p": {"width": 854, "height": 480, "quality": 11},
     "576p": {"width": 1024, "height": 576, "quality": 13},
@@ -26,12 +31,12 @@ BITRATE_RANGES = {
         "720p": (5000, 7000),
 }
 
-crop_values = {
-    "original": "0:0:0:0",
-    "autocrop": "auto",
-    "zoom_5": "5:5:5:5",
-    "zoom_10": "10:10:10:10"
-}
+cropping_start_times = [300, 800, 1300, 1600]
+
+encode_preview_start_section = ["seconds:300", "seconds:600", "seconds:900"]
+
+cq_range = [9, 27]
+
 
 # ----------------- Utility Functions -----------------
 
@@ -106,64 +111,114 @@ def get_bitrate(output_file):
         log("Error extracting bitrate: " + str(e))
         return None
 
-# ----------------- Core Functions -----------------
+# ----------------- Cropping Functions -----------------
 
-def get_cropping(input_file, res, cq=17):
+def make_even(value):
+    return value if value % 2 == 0 else value + 1
+
+def detect_black_bars(frame):
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    _, thresh = cv2.threshold(gray, 5, 255, cv2.THRESH_BINARY)
+    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    x, y, w, h = cv2.boundingRect(np.vstack(contours))
+    return x, y, w, h
+
+
+def extract_frame(input_file, start_time, temp_frame):
+    print("Getting frame")
+    ffmpeg_cmd = [
+        "ffmpeg", "-i", input_file, "-ss", str(start_time), "-vframes", "1", "-y", temp_frame
+    ]
+
+    process = subprocess.run(ffmpeg_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+
+def get_cropping(input_file, cropped_image, res, cq=17):
+    send_webhook_message(f"Beginning Cropping for {input_file}")
+
     settings = PRESET_SETTINGS.get(res)
     if not settings:
         log(f"❌ No settings found for {res}, skipping...")
         return None
 
+    # Define four start times for consistency check
+    start_times = cropping_start_times
+
+    crops = []
+
+    for start_time in start_times:
+        temp_frame = f'temp_frame_{start_time}_{res}.png'
+        print("Extracting frame")
+        extract_frame(input_file, start_time, temp_frame)
+        frame = cv2.imread(temp_frame)
+        x, y, w, h = detect_black_bars(frame)
+
+        # Calculate crop values
+        top_crop = make_even(y)
+        bottom_crop = make_even(frame.shape[0] - (y + h))
+        left_crop = make_even(x)
+        right_crop = make_even(frame.shape[1] - (x + w))
+
+        crops.append((top_crop, bottom_crop, left_crop, right_crop))
+
+    # Compute median crop values for consistency
+    crops_array = np.array(crops)
+    median_crop = np.median(crops_array, axis=0).astype(int)
+    final_crop_values = f'{median_crop[0]}:{median_crop[1]}:{median_crop[2]}:{median_crop[3]}'
+
     preview_file = f"preview_{res}.mkv"
-    snapshots = {
-        "original": f"preview_snapshot_{res}_original.jpg",
-        "autocrop": f"preview_snapshot_{res}_autocrop.jpg",
-        "zoom_5": f"preview_snapshot_{res}_zoom_5.jpg",
-        "zoom_10": f"preview_snapshot_{res}_zoom_10.jpg"
-    }
 
-    for key, crop in crop_values.items():
-        snapshot_file = snapshots[key]
-        crop_option = ["--crop", crop] if crop != "auto" else []
-        command = [
-            HANDBRAKE_CLI,
-            "-i", input_file,
-            "-o", preview_file,
-            "--encoder", "x264",
-            "--quality", str(cq),
-            "--width", str(settings["width"]),
-            "--height", str(settings["height"]),
-            "--encoder-preset", "placebo",
-            "--encoder-profile", "high",
-            "--encoder-level", "4.1",
-            "--encopts",
-            ("subme=10:deblock=-3,-3:me=umh:merange=32:mbtree=0:"
-             "dct-decimate=0:fast-pskip=0:aq-mode=2:aq-strength=1.0:"
-             "qcomp=0.60:psy-rd=1.0,0.00"),
-            "--start-at", "duration:10",
-            "--stop-at", "duration:12"
-        ] + crop_option
+    command = [
+        HANDBRAKE_CLI,
+        "-i", input_file,
+        "-o", preview_file,
+        "--encoder", "x264",
+        "--quality", str(cq),
+        "--width", str(settings["width"]),
+        "--height", str(settings["height"]),
+        "--encoder-preset", "placebo",
+        "--encoder-profile", "high",
+        "--encoder-level", "4.1",
+        "--encopts",
+        ("subme=10:deblock=-3,-3:me=umh:merange=32:mbtree=0:"
+         "dct-decimate=0:fast-pskip=0:aq-mode=2:aq-strength=1.0:"
+         "qcomp=0.60:psy-rd=1.0,0.00"),
+        '--start-at', f'seconds:{start_times[1]}',  # Using the second start time for preview
+        '--stop-at', 'seconds:2',
+        "--crop", final_crop_values
+    ]
 
-        log(f"\n🎬 Encoding preview snapshot for {res} with crop {key}...")
-        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="ignore")
-        for line in process.stdout:
-            sub_log(line, end="")  # Write subprocess output to subprocess log area
-        process.wait()
+    log(f"🎬 Encoding preview snapshot for {res}...")
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf-8",
+                               errors="ignore")
+    for line in process.stdout:
+        sub_log(line, end="")
+    process.wait()
 
-        ffmpeg_cmd = [
-            "ffmpeg", "-ss", "1", "-i", preview_file, "-vframes", "1", "-y", snapshot_file
-        ]
-        log(f"\n📸 Capturing snapshot: {snapshot_file}\n")
-        process = subprocess.Popen(ffmpeg_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-        for line in process.stdout:
-            sub_log(line, end="")
-        process.wait()
-        log(f"📷 Snapshot saved as {snapshot_file}")
+    ffmpeg_cmd = [
+        "ffmpeg", "-ss", "1", "-i", preview_file, "-vframes", "1", "-y", cropped_image
+    ]
+    log(f"📸 Capturing cropped snapshot: {cropped_image}")
+    process = subprocess.Popen(ffmpeg_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    for line in process.stdout:
+        sub_log(line, end="")
+    process.wait()
+    log(f"📷 Snapshot saved as {cropped_image}")
 
-    send_previews(snapshots)
-    approved_crop = wait_for_approval()
-    log("Received cropping approval: " + str(approved_crop))
-    return approved_crop
+    os.remove(preview_file)
+
+    # Send final detected crop values to Discord
+    discord_message = (
+        f"📏 Final consistent cropping values for {res}:\n"
+        f"Top: {median_crop[0]}px\n"
+        f"Bottom: {median_crop[1]}px\n"
+        f"Left: {median_crop[2]}px\n"
+        f"Right: {median_crop[3]}px"
+    )
+    send_webhook_message(discord_message)
+
+    return final_crop_values
+
 
 def encode_preview(input_file, res, cq, approved_crop):
     settings = PRESET_SETTINGS.get(res)
@@ -171,18 +226,18 @@ def encode_preview(input_file, res, cq, approved_crop):
         log(f"❌ No settings found for {res}, skipping...")
         return None
 
-    start_section = ["duration:300", "duration:600", "duration:900"]  # Start, Middle, End
-    end_section = ["duration:400", "duration:700", "duration:1000"]  # Start, Middle, End
+    start_section = encode_preview_start_section  # Start, Middle, End
     bitrates = []
+    CQs = []
 
-    for start, end in zip(start_section, end_section):
+    for start in start_section:
         while True:
             preview_file = f"preview_{res}_{start}.mkv"
             command = [
                 HANDBRAKE_CLI,
                 "-i", input_file,
                 "-o", preview_file,
-                "--crop", crop_values[approved_crop],
+                "--crop", approved_crop,
                 "--encoder", "x264",
                 "--quality", str(cq),
                 "--width", str(settings["width"]),
@@ -195,10 +250,10 @@ def encode_preview(input_file, res, cq, approved_crop):
                  "dct-decimate=0:fast-pskip=0:aq-mode=2:aq-strength=1.0:"
                  "qcomp=0.60:psy-rd=1.1,0.00"),
                 "--start-at", start,
-                "--stop-at", end
+                "--stop-at", f'seconds:100'
             ]
 
-            log(f"\n🎬 Encoding preview for {res} with CQ {cq} ({start} to {end})...\n")
+            log(f"\n🎬 Encoding preview for {res} with CQ {cq} @ {start} seconds...\n")
             process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="ignore")
             for line in process.stdout:
                 sub_log(line, end="")
@@ -214,14 +269,17 @@ def encode_preview(input_file, res, cq, approved_crop):
                     cq += 1
                 else:
                     bitrates.append(bitrate)
+                    CQs.append(cq)
                     break  # Move to the next section once it's in range
             else:
                 log("⚠️ No valid bitrate found, retrying with adjusted CQ.")
 
     if bitrates:
-        avg_cq = round(sum(bitrates) / len(bitrates))
+        avg_bitrate = round(sum(bitrates) / len(bitrates))
+        avg_cq = round(sum(CQs) / len(CQs))
+        log(f"🔍 Average Bitrate for {res} previews: {avg_bitrate}")
         log(f"🔍 Final chosen CQ for {res}: {avg_cq}")
-        return avg_cq, cq
+        return round((cq+avg_cq)/2), avg_bitrate
     else:
         log("⚠️ No valid bitrates found.")
         return None
@@ -231,7 +289,8 @@ def adjust_cq_for_bitrate(input_file, res, approved_crop):
     min_bitrate, max_bitrate = BITRATE_RANGES[res]
     cq = 17
     while True:
-        bitrate, cq = encode_preview(input_file, res, cq, approved_crop)
+        cq, bitrate = encode_preview(input_file, res, cq, approved_crop)
+        print("CQ is", cq, "Bitrate is ", bitrate)
         if bitrate is None:
             log("⚠️ Failed to encode preview.")
             return None
@@ -245,7 +304,7 @@ def adjust_cq_for_bitrate(input_file, res, approved_crop):
         elif bitrate < min_bitrate:
             cq -= 1
 
-        if cq < 9 or cq > 27:
+        if cq < int(cq_range[0]) or cq > int(cq_range[1]):
             log("⚠️ CQ adjustment out of range. Using default CQ 17.")
             return 17
 
@@ -266,8 +325,6 @@ def extract_audio(input_file, res):
     # Create the output directory if it doesn't already exist
     os.makedirs(output_dir, exist_ok=True)
 
-
-
     print("Input file:", input_file)
     print("Input dir:", input_dir)
     print("Base name:", base_name)
@@ -282,11 +339,13 @@ def extract_audio(input_file, res):
     if result.stderr:
         print(result.stderr)
 
+
     # Find audio tracks
     tracks = re.findall(r"(\d+): .*?, (\d+\.\d) channels", result.stdout)
     if not tracks:
         print("⚠️ No audio tracks found!")
         return
+    print("Continuing encoding")
 
     for track_number, channels in tracks:
         track_number = track_number.strip()
@@ -294,7 +353,7 @@ def extract_audio(input_file, res):
 
         if channels in ["5.1", "7.1"]:
             bitrate = "448" if "480p" in input_file or "576p" in input_file else "640"
-            output_audio = os.path.normpath(os.path.join(output_folder, f"{base_name}-{bitrate}.ac3"))
+
             # Construct the normalized output file path using os.path.join
             output_file = os.path.normpath(os.path.join(output_dir, f"{os.path.splitext(base_name)[0]}@{res}-{bitrate}.ac3"))
             extract_cmd = ["eac3to", f'"{input_file}"', f'{track_number}:"{output_file}"', f"-{bitrate}"]
@@ -310,31 +369,18 @@ def extract_audio(input_file, res):
                 send_webhook_message(f"❌ Audio extraction failed!")
 
             send_webhook_message(f"✅ Audio extraction complete for {base_name}@{res}")
-
-
         else:
-
-            # Ensure the output folder exists
-
-            #os.makedirs(output_folder, exist_ok=True)
-
             # Normalize and format paths correctly
 
             temp_audio = os.path.normpath(os.path.join(output_folder, "temp.aac"))
-
             final_audio = os.path.normpath(os.path.join(output_folder, f"{base_name}.m4a"))
             output_file = os.path.normpath(os.path.join(output_dir, f"{os.path.splitext(base_name)[0]}@{res}.m4a"))
 
             extract_cmd = f'eac3to "{input_file}" {track_number}:"{temp_audio}"'
-
             qaac_cmd = f'qaac64 -V 127 -i "{temp_audio}" --no-delay -o "{output_file}"'
 
             print(f"🎤 Extracting stereo/mono audio track {track_number}...")
-
-            # Run extraction
-
             process = subprocess.run(extract_cmd, shell=True, capture_output=True, text=True)
-
             print("STDOUT:\n", process.stdout)
 
             if process.stderr:
@@ -344,20 +390,18 @@ def extract_audio(input_file, res):
             print("🔄 Converting extracted audio with qaac...")
 
             # Run qaac conversion
-
             process = subprocess.run(qaac_cmd, shell=True, capture_output=True, text=True)
-
             print("STDOUT:\n", process.stdout)
 
             if process.stderr:
                 print("STDERR:\n", process.stderr)
 
             # Cleanup temp file if extraction succeeded
-
             if os.path.exists(temp_audio):
                 os.remove(temp_audio)
 
             send_webhook_message(f"✅ Audio extraction complete for {base_name}@{res}")
+
 
 # --------------------Phase 3--------------------
 def extract_subtitles(mkv_path):
@@ -395,6 +439,7 @@ def extract_subtitles(mkv_path):
 
     print("Extraction complete!")
 
+
 def encode_file(input_file, resolutions, status_callback):
     filename = os.path.basename(input_file)
     send_webhook_message(f"Beginning encoding for {filename} @ {resolutions}")
@@ -408,8 +453,8 @@ def encode_file(input_file, resolutions, status_callback):
             status_callback(filename, res, "Skipped (no settings)")
             continue
         extract_audio(input_file, res)
-
-        approved_crop = get_cropping(input_file, res)
+        print("Audio extracted")
+        approved_crop = get_cropping(input_file, f"preview_snapshot_{res}.png", res)
         if not approved_crop:
             log("⏩ Skipping final encoding due to lack of crop approval.")
             status_callback(filename, res, "Skipped (no crop)")
@@ -441,7 +486,7 @@ def encode_file(input_file, resolutions, status_callback):
             HANDBRAKE_CLI,
             "-i", input_file,
             "-o", output_file,
-            "--crop", crop_values[approved_crop],
+            "--crop", approved_crop,
             "--encoder", "x264",
             "-a", "none",  # disable audio
             "-s", "none",  # disable subtitles
