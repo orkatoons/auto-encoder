@@ -1,84 +1,150 @@
-import cv2
-import numpy as np
-import subprocess
 import os
+import re
+import subprocess
+from imdb import IMDb
+import json
+# --------------------Helper: IMDb Title Lookup--------------------
+def find_movie(filename):
+    ia = IMDb()
+    base_name = os.path.splitext(filename)[0]  # Remove file extension
+    words = re.sub(r'[\._-]+', ' ', base_name).split()  # Normalize separators
 
-def make_even(value):
-    return value if value % 2 == 0 else value + 1
+    # Try stripping words from the right one by one
+    for end in range(len(words), 0, -1):
+        query = ' '.join(words[:end])
+        print(f"Trying IMDb search: {query}")  # Debugging line
 
-def detect_black_bars(frame):
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    _, thresh = cv2.threshold(gray, 10, 255, cv2.THRESH_BINARY)
-    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    x, y, w, h = cv2.boundingRect(np.vstack(contours))
-    return x, y, w, h
+        results = ia.search_movie(query)
+        if results:
+            movie = results[0]  # Take the first result
+            print(movie)
+            print(f"✅ Found movie: {movie['title']} ({movie.get('year')})")
+            return movie
 
-def extract_frame(input_file, time_offset, frame_file):
-    command = [
-        'ffmpeg', '-ss', str(time_offset), '-i', input_file,
-        '-frames:v', '1', '-q:v', '2', frame_file
+    print("❌ No IMDb match found.")
+    return None
+
+
+def detect_languages_ffmpeg(input_file):
+    """
+    Detects languages of audio tracks using FFmpeg.
+    Returns the most common or first detected language (default: 'eng').
+    """
+    cmd = [
+        "ffprobe", "-v", "error",
+        "-show_streams", "-select_streams", "a",
+        "-of", "json", input_file
     ]
-    subprocess.run(command, check=True)
 
-def encode_segment(input_file, output_file, crop_values, start_time, duration):
-    command = [
-        'HandBrakeCLI', '-i', input_file, '-o', output_file,
-        '--crop', crop_values,
-        '--start-at', f'seconds:{start_time}',
-        '--stop-at', f'seconds:{duration}',
-        '--encoder', 'x264', '--quality', '20',
-        '--width', '1280', '--height', '720',
-        '--encoder-preset', 'placebo',
-        '--encoder-profile', 'high',
-        '--encoder-level', '4.1',
-        '--encopts',
-        'subme=10:deblock=-3,-3:me=umh:merange=32:mbtree=0:'
-        'dct-decimate=0:fast-pskip=0:aq-mode=2:aq-strength=1.0:'
-        'qcomp=0.60:psy-rd=1.1,0.00'
+    result = subprocess.run(cmd, capture_output=True, text=True)
+
+    if result.stderr:
+        print("Error:", result.stderr)
+        return "eng"  # Default to English if detection fails
+
+    # Parse JSON output
+    data = json.loads(result.stdout)
+    audio_languages = []
+
+    for stream in data.get("streams", []):
+        lang = stream.get("tags", {}).get("language", "unknown")
+        if lang != "unknown":
+            audio_languages.append(lang)
+
+    # Pick the most common or first detected language
+    return audio_languages[0] if audio_languages else "eng"
+
+
+# --------------------Phase 4 (Multiplexing)--------------------
+def multiplex_file(
+    video_file,
+    audio_files,
+    subtitle_files,
+    language,  # Main language of the film (e.g., 'eng', 'hin', 'undf')
+    resolution,
+    source_format,
+    encoding_used,
+    final_filename,
+    file_title
+):
+
+    print(video_file,audio_files,subtitle_files,language,resolution,source_format,encoding_used,final_filename,file_title)
+    """
+    Combines video, audio, and subtitle files into a final MKV using mkvmerge.
+    """
+
+    # Base command
+    cmd = [
+        "mkvmerge", "-o", final_filename,
+        "--title", file_title,
+        "--no-global-tags", "--no-chapters",
+        video_file
     ]
-    subprocess.run(command, check=True)
 
-def process_video(input_file, start_time, duration, original_image, cropped_image):
-    temp_frame = 'temp_frame.png'
-    extract_frame(input_file, start_time, temp_frame)
+    # Add audio tracks with appropriate language settings
+    for audio_file in audio_files:
+        default_audio = "yes" if language != "undf" else "no"
 
-    frame = cv2.imread(temp_frame)
-    x, y, w, h = detect_black_bars(frame)
+        cmd.extend([
+            "--language", f"0:{language}",
+            "--default-track", f"0:{default_audio}",
+            audio_file
+        ])
 
-    # Calculate final crop values
-    top_crop = y
-    bottom_crop = frame.shape[0] - (y + h)
-    left_crop = x
-    right_crop = frame.shape[1] - (x + w)
+    # Add subtitle tracks
+    for subtitle_file in subtitle_files:
+        default_subtitle = "yes" if language != "eng" else "no"
 
-    # Ensure all crop values are even
-    top_crop = make_even(top_crop)
-    bottom_crop = make_even(bottom_crop)
-    left_crop = make_even(left_crop)
-    right_crop = make_even(right_crop)
+        cmd.extend([
+            "--language", "0:eng",  # Assuming all subs are English
+            "--forced-track", "0:no",  # FIX: changed from --forced-display
+            "--default-track", f"0:{default_subtitle}",
+            subtitle_file
+        ])
 
-    crop_values = f'{top_crop}:{bottom_crop}:{left_crop}:{right_crop}'
+    # Run the command
+    print("Running command:", " ".join(cmd))
+    subprocess.run(cmd)
+    print("✅ Mutliplexing Completed")
 
-    preview_video = 'preview.mp4'
-    encode_segment(input_file, preview_video, crop_values, start_time, duration)
 
-    extract_frame(input_file, start_time + duration / 2, original_image)
-    extract_frame(preview_video, duration / 2, cropped_image)
+# ---------------------------
+# >>> ADD MULTIPLEXING CALL <<<
+# ---------------------------
 
-    print(f'Cropping Values:')
-    print(f'Top: {top_crop} pixels')
-    print(f'Bottom: {bottom_crop} pixels')
-    print(f'Left: {left_crop} pixels')
-    print(f'Right: {right_crop} pixels')
-    os.remove(temp_frame)
-    os.remove(preview_video)
 
-if __name__ == '__main__':
-    input_file = r"W:\Encodes\Bhag Bhaagam\source\Bhagam.Bhag.2006.BluRay.1080p.DTS-HD.MA.5.1.AVC.REMUX-FraMeSToR.mkv"
-    start_time = 1342  # Start at 30 seconds
-    duration = 2     # Encode 2 seconds
-    original_image = 'original_preview.jpg'
-    cropped_image = 'cropped_preview.jpg'
+# 1. Find official IMDb data
+movie_data = find_movie(filename)  # or find_movie(output_file)
+if movie_data:
+    official_title = movie_data['title']
+    official_year = movie_data.get('year', '0000')
+else:
+    # Fallback if IMDb not found
+    official_title = os.path.splitext(filename)[0]
+    official_year = "0000"
 
-    process_video(input_file, start_time, duration, original_image, cropped_image)
+# 2. Construct final output name (Step 13)
+encoding_used = "x264"  # We used x264 in the HandBrake command
+global encoding_source_format
+language = detect_languages_ffmpeg(input_file)  # Adjust or auto-detect
+final_filename = os.path.join(
+    output_dir,
+    f"{official_title.replace(' ', '.')}."
+    f"{official_year}.{res}.{encoding_source_format}.{encoding_used}-HANDJOB.mkv"
+)
 
+# 3. Construct the file title (Step 14)
+file_title = f"{official_title} [{official_year}] {res} {encoding_source_format} - HJ"
+
+# 4. Run the multiplex
+multiplex_file(
+    video_file=output_file,
+    audio_files=audio_files,
+    subtitle_files=subtitle_files,
+    language=language,
+    resolution=res,
+    source_format=encoding_source_format,
+    encoding_used=encoding_used,
+    final_filename=final_filename,
+    file_title=file_title
+)

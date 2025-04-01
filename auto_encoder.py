@@ -10,7 +10,9 @@ from pymkv import MKVFile
 import cv2
 import numpy as np
 from dotenv import load_dotenv
-
+from scipy.stats import mode
+from imdb import IMDb
+import json
 
 # ----------------- Configuration -----------------
 load_dotenv()
@@ -34,23 +36,47 @@ BITRATE_RANGES = {
         "720p": (5000, 7000),
 }
 
-cropping_start_times = [300, 800, 1300, 1600]
+cropping_start_times = [300, 500, 800, 1000]
 
 encode_preview_start_section = ["seconds:300", "seconds:600", "seconds:900"]
 
 cq_range = [9, 27]
 
+encoding_source_format = None
+
 
 # ----------------- Utility Functions -----------------
-
 def determine_encodes(file_path):
+    """
+    Determines the encoding resolutions based on the filename.
+    - BluRay sources get ["720p", "576p", "480p"].
+    - Everything else gets only ["720p"].
+    """
+    global encoding_source_format
+    SOURCE_KEYWORDS = [
+        ("bluray", "BluRay"), ("blu-ray", "BluRay"), ("brrip", "BluRay"),
+        ("bdrip", "BluRay"), ("bd25", "BluRay"), ("bd50", "BluRay"),
+        ("remux", "BluRay"), ("web-dl", "WEB-DL"), ("webdl", "WEB-DL"),
+        ("webrip", "WEB-DL"), ("amzn", "WEB-DL"), ("netflix", "WEB-DL"),
+        ("hdrip", "WEB-DL"), ("dvdrip", "WEB-DL"), ("hdtv", "WEB-DL")
+    ]
+
     filename = os.path.basename(file_path).lower()
-    if "webdl" in filename or "web-dl" in filename:
-        return ["720p"]
-    elif "bluray" in filename:
+
+    # Detect source format
+    source_format = "Unknown"
+    for keyword, fmt in SOURCE_KEYWORDS:
+        if keyword in filename:
+            source_format = fmt
+            encoding_source_format = fmt
+            break  # Stop at first match
+
+    # Assign resolutions based on format
+    if source_format == "BluRay":
         return ["720p", "576p", "480p"]
     else:
-        return []
+        return ["720p"]
+
 
 def send_completion_webhook(completion_bitrate, resolution, input_file):
     message = f"✅ Completed encoding for {input_file} @ {resolution} \n⏩ Bitrate: {completion_bitrate} kbps"
@@ -76,27 +102,6 @@ def send_webhook_message(message):
     except Exception as e:
         log("❌ Exception sending completion webhook: " + str(e))
 
-
-
-def send_previews(preview_files):
-    response = requests.post(f"{FLASK_SERVER_URL}/send_previews", json={"previews": preview_files})
-    if response.status_code == 200:
-        log("✅ Previews sent successfully to Flask.")
-    else:
-        log(f"❌ Failed to send previews: {response.text}")
-
-def wait_for_approval():
-    timeout = 12 * 60 * 60  # 12 hours
-    start_time = time.time()
-    while time.time() - start_time < timeout:
-        response = requests.get(f"{FLASK_SERVER_URL}/get_approval")
-        data = response.json()
-        if data.get("approved_crop"):
-            log(f"✅ Approved crop received: {data['approved_crop']}")
-            return data["approved_crop"]
-        time.sleep(10)
-    log("❌ Approval timed out.")
-    return None
 
 def get_bitrate(output_file):
     try:
@@ -166,8 +171,12 @@ def get_cropping(input_file, cropped_image, res, cq=17):
 
     # Compute median crop values for consistency
     crops_array = np.array(crops)
-    median_crop = np.median(crops_array, axis=0).astype(int)
-    final_crop_values = f'{median_crop[0]}:{median_crop[1]}:{median_crop[2]}:{median_crop[3]}'
+
+    # Compute mode (most frequent values)
+    mode_crop = mode(crops_array, axis=0, keepdims=False).mode
+
+    # Format crop values
+    final_crop_values = f'{mode_crop[0]}:{mode_crop[1]}:{mode_crop[2]}:{mode_crop[3]}'
 
     preview_file = f"preview_{res}.mkv"
 
@@ -213,10 +222,10 @@ def get_cropping(input_file, cropped_image, res, cq=17):
     # Send final detected crop values to Discord
     discord_message = (
         f"📏 Final consistent cropping values for {res}:\n"
-        f"Top: {median_crop[0]}px\n"
-        f"Bottom: {median_crop[1]}px\n"
-        f"Left: {median_crop[2]}px\n"
-        f"Right: {median_crop[3]}px"
+        f"Top: {mode_crop[0]}px\n"
+        f"Bottom: {mode_crop[1]}px\n"
+        f"Left: {mode_crop[2]}px\n"
+        f"Right: {mode_crop[3]}px"
     )
     send_webhook_message(discord_message)
 
@@ -279,10 +288,7 @@ def encode_preview(input_file, res, cq, approved_crop):
 
     if bitrates:
         avg_bitrate = round(sum(bitrates) / len(bitrates))
-        avg_cq = round(sum(CQs) / len(CQs))
-        log(f"🔍 Average Bitrate for {res} previews: {avg_bitrate}")
-        log(f"🔍 Final chosen CQ for {res}: {avg_cq}")
-        return round((cq+avg_cq)/2), avg_bitrate
+        return cq, avg_bitrate
     else:
         log("⚠️ No valid bitrates found.")
         return None
@@ -312,8 +318,12 @@ def adjust_cq_for_bitrate(input_file, res, approved_crop):
             return 17
 
 
-# --------------------Phase 2--------------------
+
+# --------------------Phase 2 (Audio)--------------------
 def extract_audio(input_file, res):
+    """
+    Extracts audio tracks using eac3to and returns a list of paths to the extracted audio files.
+    """
     input_dir = os.path.dirname(input_file)
     base_name = os.path.splitext(os.path.basename(input_file))[0]
     output_folder = os.path.normpath(os.path.join(input_dir, base_name))
@@ -324,8 +334,6 @@ def extract_audio(input_file, res):
 
     # Build the output directory by joining the parent_dir with the resolution folder
     output_dir = os.path.normpath(os.path.join(parent_dir, res))
-
-    # Create the output directory if it doesn't already exist
     os.makedirs(output_dir, exist_ok=True)
 
     print("Input file:", input_file)
@@ -337,47 +345,52 @@ def extract_audio(input_file, res):
     # Run eac3to to list tracks
     list_cmd = ["eac3to", input_file]
     result = subprocess.run(list_cmd, capture_output=True, text=True)
-
     print(result.stdout)  # Show command output
     if result.stderr:
         print(result.stderr)
-
 
     # Find audio tracks
     tracks = re.findall(r"(\d+): .*?, (\d+\.\d) channels", result.stdout)
     if not tracks:
         print("⚠️ No audio tracks found!")
-        return
+        return []  # Return empty list if no audio
+
     print("Continuing encoding")
+    audio_paths = []
 
     for track_number, channels in tracks:
         track_number = track_number.strip()
         channels = channels.strip()
 
         if channels in ["5.1", "7.1"]:
-            bitrate = "448" if "480p" in input_file or "576p" in input_file else "640"
-
-            # Construct the normalized output file path using os.path.join
-            output_file = os.path.normpath(os.path.join(output_dir, f"{os.path.splitext(base_name)[0]}@{res}-{bitrate}.ac3"))
-            extract_cmd = ["eac3to", f'"{input_file}"', f'{track_number}:"{output_file}"', f"-{bitrate}"]
-            print("Running command:", " ".join(extract_cmd))  # Debugging
+            # Decide bitrate
+            bitrate = "448" if ("480p" in input_file or "576p" in input_file) else "640"
+            output_file = os.path.normpath(
+                os.path.join(output_dir, f"{os.path.splitext(base_name)[0]}@{res}-{bitrate}.ac3")
+            )
+            extract_cmd = [
+                "eac3to",
+                f'"{input_file}"',
+                f'{track_number}:"{output_file}"',
+                f"-{bitrate}"
+            ]
+            print("Running command:", " ".join(extract_cmd))
             process = subprocess.run(" ".join(extract_cmd), shell=True, capture_output=True, text=True)
 
-            # Print standard output
             print("STDOUT:\n", process.stdout)
-
-            # Print error output (if any)
             if process.stderr:
                 print("STDERR:\n", process.stderr)
-                send_webhook_message(f"❌ Audio extraction failed!")
+                send_webhook_message("❌ Audio extraction failed!")
 
+            audio_paths.append(output_file)
             send_webhook_message(f"✅ Audio extraction complete for {base_name}@{res}")
         else:
-            # Normalize and format paths correctly
-
+            # Stereo or mono
             temp_audio = os.path.normpath(os.path.join(output_folder, "temp.aac"))
             final_audio = os.path.normpath(os.path.join(output_folder, f"{base_name}.m4a"))
-            output_file = os.path.normpath(os.path.join(output_dir, f"{os.path.splitext(base_name)[0]}@{res}.m4a"))
+            output_file = os.path.normpath(
+                os.path.join(output_dir, f"{os.path.splitext(base_name)[0]}@{res}.m4a")
+            )
 
             extract_cmd = f'eac3to "{input_file}" {track_number}:"{temp_audio}"'
             qaac_cmd = f'qaac64 -V 127 -i "{temp_audio}" --no-delay -o "{output_file}"'
@@ -388,11 +401,9 @@ def extract_audio(input_file, res):
 
             if process.stderr:
                 print("STDERR:\n", process.stderr)
-                send_webhook_message(f"❌ Audio extraction failed!")
+                send_webhook_message("❌ Audio extraction failed!")
 
             print("🔄 Converting extracted audio with qaac...")
-
-            # Run qaac conversion
             process = subprocess.run(qaac_cmd, shell=True, capture_output=True, text=True)
             print("STDOUT:\n", process.stdout)
 
@@ -403,17 +414,24 @@ def extract_audio(input_file, res):
             if os.path.exists(temp_audio):
                 os.remove(temp_audio)
 
+            audio_paths.append(output_file)
             send_webhook_message(f"✅ Audio extraction complete for {base_name}@{res}")
 
+    return audio_paths
 
-# --------------------Phase 3--------------------
+# --------------------Phase 3 (Subtitles)--------------------
 def extract_subtitles(mkv_path):
+    """
+    Extracts subtitle tracks using mkvextract and returns a list of paths to the extracted subtitle files.
+    """
     input_dir = os.path.dirname(mkv_path)
     base_name = os.path.splitext(os.path.basename(mkv_path))[0]
 
     mkv = MKVFile(mkv_path)
     print("MKV merge output:")
     print(mkv)
+
+    subtitle_paths = []
 
     for track in mkv.tracks:
         print("Found track:", track)
@@ -437,16 +455,137 @@ def extract_subtitles(mkv_path):
             print("Running command:", " ".join(cmd))
             subprocess.run(cmd)
             send_webhook_message(f"✅ Extracted subtitle track {track._track_id} for {base_name}")
+
+            subtitle_paths.append(output_file)
         else:
             log(f"Unable to extract {track._track_id} with codec {track._track_codec} for {base_name}")
 
     print("Extraction complete!")
+    return subtitle_paths
 
 
+# --------------------Helper: IMDb Title Lookup--------------------
+def find_movie(filename):
+    ia = IMDb()
+    base_name = os.path.splitext(filename)[0]  # Remove file extension
+    words = re.sub(r'[\._-]+', ' ', base_name).split()  # Normalize separators
+
+    # Try stripping words from the right one by one
+    for end in range(len(words), 0, -1):
+        query = ' '.join(words[:end])
+        print(f"Trying IMDb search: {query}")  # Debugging line
+
+        results = ia.search_movie(query)
+        if results:
+            movie = results[0]  # Take the first result
+            print(movie)
+            print(f"✅ Found movie: {movie['title']} ({movie.get('year')})")
+            return movie
+
+    print("❌ No IMDb match found.")
+    return None
+
+
+def detect_languages_ffmpeg(input_file):
+    """
+    Detects languages of audio tracks using FFmpeg.
+    Returns the most common or first detected language (default: 'eng').
+    """
+    cmd = [
+        "ffprobe", "-v", "error",
+        "-show_streams", "-select_streams", "a",
+        "-of", "json", input_file
+    ]
+
+    result = subprocess.run(cmd, capture_output=True, text=True)
+
+    if result.stderr:
+        print("Error:", result.stderr)
+        return "eng"  # Default to English if detection fails
+
+    # Parse JSON output
+    data = json.loads(result.stdout)
+    audio_languages = []
+
+    for stream in data.get("streams", []):
+        lang = stream.get("tags", {}).get("language", "unknown")
+        if lang != "unknown":
+            audio_languages.append(lang)
+
+    # Pick the most common or first detected language
+    return audio_languages[0] if audio_languages else "eng"
+
+
+# --------------------Phase 4 (Multiplexing)--------------------
+def multiplex_file(
+    video_file,
+    audio_files,
+    subtitle_files,
+    language,  # Main language of the film (e.g., 'eng', 'hin', 'undf')
+    resolution,
+    source_format,
+    encoding_used,
+    final_filename,
+    file_title
+):
+    print(f"""
+    Video File       : {video_file}
+    Audio Files      : {audio_files}
+    Subtitle Files   : {subtitle_files}
+    Language         : {language}
+    Resolution       : {resolution}
+    Source Format    : {source_format}
+    Encoding Used    : {encoding_used}
+    Final Filename   : {final_filename}
+    File Title       : {file_title}
+    """)
+
+    """
+    Combines video, audio, and subtitle files into a final MKV using mkvmerge.
+    """
+
+    # Base command
+    cmd = [
+        "mkvmerge", "-o", final_filename,
+        "--title", file_title,
+        "--no-global-tags", "--no-chapters",
+        video_file
+    ]
+
+    # Add audio tracks with appropriate language settings
+    for audio_file in audio_files:
+        default_audio = "yes" if language != "undf" else "no"
+
+        cmd.extend([
+            "--language", f"0:{language}",
+            "--default-track", f"0:{default_audio}",
+            audio_file
+        ])
+
+    # Add subtitle tracks
+    for subtitle_file in subtitle_files:
+        default_subtitle = "yes" if language != "eng" else "no"
+
+        cmd.extend([
+            "--language", "0:eng",  # Assuming all subs are English
+            "--forced-track", "0:no",  # FIX: changed from --forced-display
+            "--default-track", f"0:{default_subtitle}",
+            subtitle_file
+        ])
+
+    # Run the command
+    print("Running command:", " ".join(cmd))
+    subprocess.run(cmd)
+    send_webhook_message("✅ Mutliplexing Completed")
+
+
+# --------------------Main Encoding Function--------------------
 def encode_file(input_file, resolutions, status_callback):
     filename = os.path.basename(input_file)
     send_webhook_message(f"Beginning encoding for {filename} @ {resolutions}")
-    extract_subtitles(input_file)
+
+    # Extract subtitles & store paths
+    subtitle_files = extract_subtitles(input_file)
 
     for res in resolutions:
         status_callback(filename, res, "Starting...")
@@ -455,8 +594,11 @@ def encode_file(input_file, resolutions, status_callback):
             log(f"❌ No settings found for {res}, skipping...")
             status_callback(filename, res, "Skipped (no settings)")
             continue
-        extract_audio(input_file, res)
+
+        # Extract audio & store paths
+        audio_files = extract_audio(input_file, res)
         print("Audio extracted")
+
         approved_crop = get_cropping(input_file, f"preview_snapshot_{res}.png", res)
         if not approved_crop:
             log("⏩ Skipping final encoding due to lack of crop approval.")
@@ -472,19 +614,18 @@ def encode_file(input_file, resolutions, status_callback):
 
         # Determine the parent directory (one level up from the input file's directory)
         parent_dir = os.path.normpath(os.path.join(os.path.dirname(input_file), ".."))
-
         # Build the output directory by joining the parent_dir with the resolution folder
         output_dir = os.path.normpath(os.path.join(parent_dir, res))
 
-        # Create the output directory if it doesn't already exist
-        #os.makedirs(output_dir, exist_ok=True)
-
         # Construct the normalized output file path using os.path.join
-        output_file = os.path.normpath(os.path.join(output_dir, f"{os.path.splitext(filename)[0]}@{res}.mkv"))
+        output_file = os.path.normpath(
+            os.path.join(output_dir, f"{os.path.splitext(filename)[0]}@{res}.mkv")
+        )
 
         print("Output file path:", output_file)  # Debugging
         log(f"Output file path: {output_file}")  # Debugging
 
+        # Run HandBrake CLI for final encoding
         command = [
             HANDBRAKE_CLI,
             "-i", input_file,
@@ -500,13 +641,16 @@ def encode_file(input_file, resolutions, status_callback):
             "--encoder-profile", "high",
             "--encoder-level", "4.1",
             "--encopts",
-            ("subme=10:deblock=-3,-3:me=umh:merange=32:mbtree=0:"
-             "dct-decimate=0:fast-pskip=0:aq-mode=2:aq-strength=1.0:"
-             "qcomp=0.60:psy-rd=1.1,0.00")
+            (
+                "subme=10:deblock=-3,-3:me=umh:merange=32:mbtree=0:"
+                "dct-decimate=0:fast-pskip=0:aq-mode=2:aq-strength=1.0:"
+                "qcomp=0.60:psy-rd=1.1,0.00"
+            )
         ]
         status_callback(filename, res, "Encoding...")
         log(f"\n🚀 Starting final encode for {res}... at CQ {cq}\n")
-        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf-8",errors="ignore")
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                   text=True, encoding="utf-8", errors="ignore")
         for line in process.stdout:
             sub_log(line, end="")
         process.wait()
@@ -516,10 +660,51 @@ def encode_file(input_file, resolutions, status_callback):
             completion_bitrate = get_bitrate(output_file)
             send_completion_webhook(completion_bitrate, res, input_file)
             status_callback(filename, res, "Completed")
+
+            # ---------------------------
+            # >>> ADD MULTIPLEXING CALL <<<
+            # ---------------------------
+            # 1. Find official IMDb data
+            movie_data = find_movie(filename)  # or find_movie(output_file)
+            if movie_data:
+                official_title = movie_data['title']
+                official_year = movie_data.get('year', '0000')
+            else:
+                # Fallback if IMDb not found
+                official_title = os.path.splitext(filename)[0]
+                official_year = "0000"
+
+            # 2. Construct final output name (Step 13)
+            encoding_used = "x264"  # We used x264 in the HandBrake command
+            global encoding_source_format
+            language = detect_languages_ffmpeg(input_file)         # Adjust or auto-detect
+            final_filename = os.path.join(
+                output_dir,
+                f"{official_title.replace(' ', '.')}."
+                f"{official_year}.{res}.{encoding_source_format}.{encoding_used}-HANDJOB.mkv"
+            )
+
+            # 3. Construct the file title (Step 14)
+            file_title = f"{official_title} [{official_year}] {res} {encoding_source_format} - HJ"
+
+            # 4. Run the multiplex
+            multiplex_file(
+                video_file=output_file,
+                audio_files=audio_files,
+                subtitle_files=subtitle_files,
+                language=language,
+                resolution=res,
+                source_format=encoding_source_format,
+                encoding_used=encoding_used,
+                final_filename=final_filename,
+                file_title=file_title
+            )
+
         else:
             log(f"\n❌ Encoding failed for {res}!\n")
             send_webhook_message(f"Encoding failed for {filename}@{res}")
             status_callback(filename, res, "Failed")
+
 
 # ----------------- GUI Components -----------------
 
