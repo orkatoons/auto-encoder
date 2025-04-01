@@ -36,9 +36,9 @@ BITRATE_RANGES = {
         "720p": (5000, 7000),
 }
 
-cropping_start_times = [300, 500, 800, 1000]
+cropping_start_times = [300, 1000, 1500, 2500]
 
-encode_preview_start_section = ["seconds:300", "seconds:600", "seconds:900"]
+encode_preview_start_section = ["seconds:300", "seconds:1500", "seconds:2500"]
 
 cq_range = [9, 27]
 
@@ -135,10 +135,11 @@ def detect_black_bars(frame):
 def extract_frame(input_file, start_time, temp_frame):
     print("Getting frame")
     ffmpeg_cmd = [
-        FFMPEG, "-i", input_file, "-ss", str(start_time), "-vframes", "1", "-y", temp_frame
+        "ffmpeg", "-i", input_file, "-ss", str(start_time), "-vframes", "1", "-y", temp_frame
     ]
 
     process = subprocess.run(ffmpeg_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
 
 
 def get_cropping(input_file, cropped_image, res, cq=17):
@@ -167,16 +168,17 @@ def get_cropping(input_file, cropped_image, res, cq=17):
         left_crop = make_even(x)
         right_crop = make_even(frame.shape[1] - (x + w))
 
+        print(f"Crop values for frame at {start_time}s: ")
+        send_webhook_message(f"Crop values for frame at {start_time}s: ")
+        print(f"Top: {top_crop}, Bottom: {bottom_crop}, Left: {left_crop}, Right: {right_crop}")
+        send_webhook_message(f"Top: {top_crop}, Bottom: {bottom_crop}, Left: {left_crop}, Right: {right_crop}")
+        
         crops.append((top_crop, bottom_crop, left_crop, right_crop))
 
-    # Compute median crop values for consistency
+        # Compute median crop values for consistency
     crops_array = np.array(crops)
-
-    # Compute mode (most frequent values)
-    mode_crop = mode(crops_array, axis=0, keepdims=False).mode
-
-    # Format crop values
-    final_crop_values = f'{mode_crop[0]}:{mode_crop[1]}:{mode_crop[2]}:{mode_crop[3]}'
+    median_crop = np.median(crops_array, axis=0).astype(int)
+    final_crop_values = f'{median_crop[0]}:{median_crop[1]}:{median_crop[2]}:{median_crop[3]}'
 
     preview_file = f"preview_{res}.mkv"
 
@@ -222,14 +224,15 @@ def get_cropping(input_file, cropped_image, res, cq=17):
     # Send final detected crop values to Discord
     discord_message = (
         f"📏 Final consistent cropping values for {res}:\n"
-        f"Top: {mode_crop[0]}px\n"
-        f"Bottom: {mode_crop[1]}px\n"
-        f"Left: {mode_crop[2]}px\n"
-        f"Right: {mode_crop[3]}px"
+        f"Top: {median_crop[0]}px\n"
+        f"Bottom: {median_crop[1]}px\n"
+        f"Left: {median_crop[2]}px\n"
+        f"Right: {median_crop[3]}px"
     )
     send_webhook_message(discord_message)
 
     return final_crop_values
+
 
 
 def encode_preview(input_file, res, cq, approved_crop):
