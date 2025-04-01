@@ -4,10 +4,13 @@ import subprocess
 from imdb import IMDb
 import json
 # --------------------Helper: IMDb Title Lookup--------------------
+
 def find_movie(filename):
     ia = IMDb()
     base_name = os.path.splitext(filename)[0]  # Remove file extension
-    words = re.sub(r'[\._-]+', ' ', base_name).split()  # Normalize separators
+    # Normalize separators and remove common video quality tags
+    words = re.sub(r'[\._-]+', ' ', base_name)
+    words = re.sub(r'\b(1080p|720p|480p|BluRay|WEB-DL|HDRip|DVDRip|x264|x265|HEVC|AAC|DTS|HD)\b', '', words, flags=re.IGNORECASE).split()
 
     # Try stripping words from the right one by one
     for end in range(len(words), 0, -1):
@@ -17,14 +20,13 @@ def find_movie(filename):
         results = ia.search_movie(query)
         if results:
             movie = results[0]  # Take the first result
-            print(movie)
-            print(f"✅ Found movie: {movie['title']} ({movie.get('year')})")
+            ia.update(movie)  # Fetch complete details
+            year = movie.get('year', 'Unknown')
+            print(f"✅ Found movie: {movie.get('title', 'Unknown Title')} ({year})")
             return movie
 
     print("❌ No IMDb match found.")
     return None
-
-
 def detect_languages_ffmpeg(input_file):
     """
     Detects languages of audio tracks using FFmpeg.
@@ -114,6 +116,8 @@ def multiplex_file(
 
 
 # 1. Find official IMDb data
+filename = "Maine Pyaar Kyun Kiya.2005.DVD9.Untouched NTSC.DRs"
+movie_data = find_movie(filename)  # or find_movie(output_file)
 movie_data = find_movie(filename)  # or find_movie(output_file)
 if movie_data:
     official_title = movie_data['title']
@@ -123,28 +127,4 @@ else:
     official_title = os.path.splitext(filename)[0]
     official_year = "0000"
 
-# 2. Construct final output name (Step 13)
-encoding_used = "x264"  # We used x264 in the HandBrake command
-global encoding_source_format
-language = detect_languages_ffmpeg(input_file)  # Adjust or auto-detect
-final_filename = os.path.join(
-    output_dir,
-    f"{official_title.replace(' ', '.')}."
-    f"{official_year}.{res}.{encoding_source_format}.{encoding_used}-HANDJOB.mkv"
-)
-
-# 3. Construct the file title (Step 14)
-file_title = f"{official_title} [{official_year}] {res} {encoding_source_format} - HJ"
-
-# 4. Run the multiplex
-multiplex_file(
-    video_file=output_file,
-    audio_files=audio_files,
-    subtitle_files=subtitle_files,
-    language=language,
-    resolution=res,
-    source_format=encoding_source_format,
-    encoding_used=encoding_used,
-    final_filename=final_filename,
-    file_title=file_title
-)
+print(official_title, official_year)

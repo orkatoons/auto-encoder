@@ -471,7 +471,9 @@ def extract_subtitles(mkv_path):
 def find_movie(filename):
     ia = IMDb()
     base_name = os.path.splitext(filename)[0]  # Remove file extension
-    words = re.sub(r'[\._-]+', ' ', base_name).split()  # Normalize separators
+    # Normalize separators and remove common video quality tags
+    words = re.sub(r'[\._-]+', ' ', base_name)
+    words = re.sub(r'\b(1080p|720p|480p|BluRay|WEB-DL|HDRip|DVDRip|x264|x265|HEVC|AAC|DTS|HD)\b', '', words, flags=re.IGNORECASE).split()
 
     # Try stripping words from the right one by one
     for end in range(len(words), 0, -1):
@@ -481,8 +483,9 @@ def find_movie(filename):
         results = ia.search_movie(query)
         if results:
             movie = results[0]  # Take the first result
-            print(movie)
-            print(f"✅ Found movie: {movie['title']} ({movie.get('year')})")
+            ia.update(movie)  # Fetch complete details
+            year = movie.get('year', 'Unknown')
+            print(f"✅ Found movie: {movie.get('title', 'Unknown Title')} ({year})")
             return movie
 
     print("❌ No IMDb match found.")
