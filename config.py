@@ -1,130 +1,77 @@
+import cv2
+import numpy as np
+from moviepy import VideoFileClip
 import os
-import re
-import subprocess
-from imdb import IMDb
-import json
-# --------------------Helper: IMDb Title Lookup--------------------
-
-def find_movie(filename):
-    ia = IMDb()
-    base_name = os.path.splitext(filename)[0]  # Remove file extension
-    # Normalize separators and remove common video quality tags
-    words = re.sub(r'[\._-]+', ' ', base_name)
-    words = re.sub(r'\b(1080p|720p|480p|BluRay|WEB-DL|HDRip|DVDRip|x264|x265|HEVC|AAC|DTS|HD)\b', '', words, flags=re.IGNORECASE).split()
-
-    # Try stripping words from the right one by one
-    for end in range(len(words), 0, -1):
-        query = ' '.join(words[:end])
-        print(f"Trying IMDb search: {query}")  # Debugging line
-
-        results = ia.search_movie(query)
-        if results:
-            movie = results[0]  # Take the first result
-            ia.update(movie)  # Fetch complete details
-            year = movie.get('year', 'Unknown')
-            print(f"✅ Found movie: {movie.get('title', 'Unknown Title')} ({year})")
-            return movie
-
-    print("❌ No IMDb match found.")
-    return None
-def detect_languages_ffmpeg(input_file):
-    """
-    Detects languages of audio tracks using FFmpeg.
-    Returns the most common or first detected language (default: 'eng').
-    """
-    cmd = [
-        "ffprobe", "-v", "error",
-        "-show_streams", "-select_streams", "a",
-        "-of", "json", input_file
-    ]
-
-    result = subprocess.run(cmd, capture_output=True, text=True)
-
-    if result.stderr:
-        print("Error:", result.stderr)
-        return "eng"  # Default to English if detection fails
-
-    # Parse JSON output
-    data = json.loads(result.stdout)
-    audio_languages = []
-
-    for stream in data.get("streams", []):
-        lang = stream.get("tags", {}).get("language", "unknown")
-        if lang != "unknown":
-            audio_languages.append(lang)
-
-    # Pick the most common or first detected language
-    return audio_languages[0] if audio_languages else "eng"
 
 
-# --------------------Phase 4 (Multiplexing)--------------------
-def multiplex_file(
-    video_file,
-    audio_files,
-    subtitle_files,
-    language,  # Main language of the film (e.g., 'eng', 'hin', 'undf')
-    resolution,
-    source_format,
-    encoding_used,
-    final_filename,
-    file_title
-):
-
-    print(video_file,audio_files,subtitle_files,language,resolution,source_format,encoding_used,final_filename,file_title)
-    """
-    Combines video, audio, and subtitle files into a final MKV using mkvmerge.
-    """
-
-    # Base command
-    cmd = [
-        "mkvmerge", "-o", final_filename,
-        "--title", file_title,
-        "--no-global-tags", "--no-chapters",
-        video_file
-    ]
-
-    # Add audio tracks with appropriate language settings
-    for audio_file in audio_files:
-        default_audio = "yes" if language != "undf" else "no"
-
-        cmd.extend([
-            "--language", f"0:{language}",
-            "--default-track", f"0:{default_audio}",
-            audio_file
-        ])
-
-    # Add subtitle tracks
-    for subtitle_file in subtitle_files:
-        default_subtitle = "yes" if language != "eng" else "no"
-
-        cmd.extend([
-            "--language", "0:eng",  # Assuming all subs are English
-            "--forced-track", "0:no",  # FIX: changed from --forced-display
-            "--default-track", f"0:{default_subtitle}",
-            subtitle_file
-        ])
-
-    # Run the command
-    print("Running command:", " ".join(cmd))
-    subprocess.run(cmd)
-    print("✅ Mutliplexing Completed")
+def calculate_brightness(image):
+    grayscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    return np.mean(grayscale)
 
 
-# ---------------------------
-# >>> ADD MULTIPLEXING CALL <<<
-# ---------------------------
+def calculate_contrast(image):
+    grayscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    return grayscale.std()
 
 
-# 1. Find official IMDb data
-filename = "Maine Pyaar Kyun Kiya.2005.DVD9.Untouched NTSC.DRs"
-movie_data = find_movie(filename)  # or find_movie(output_file)
-movie_data = find_movie(filename)  # or find_movie(output_file)
-if movie_data:
-    official_title = movie_data['title']
-    official_year = movie_data.get('year', '0000')
-else:
-    # Fallback if IMDb not found
-    official_title = os.path.splitext(filename)[0]
-    official_year = "0000"
+def is_well_lit(brightness, contrast, brightness_threshold=80, contrast_threshold=50):
+    return brightness >= brightness_threshold and contrast >= contrast_threshold
 
-print(official_title, official_year)
+
+def extract_well_lit_screenshots(video_path, output_dir, num_screenshots=3, max_attempts=5, retry_gap=120):
+    clip = VideoFileClip(video_path)
+    duration = clip.duration
+    segment_length = duration / num_screenshots
+    best_screenshots = []
+
+    os.makedirs(output_dir, exist_ok=True)
+
+    for i in range(num_screenshots):
+        segment_midpoint = (i + 0.5) * segment_length
+        best_brightness = 0
+        best_contrast = 0
+        best_frame = None
+
+        for attempt in range(max_attempts):
+            current_time = segment_midpoint + attempt * retry_gap
+            if current_time >= duration:
+                break
+
+            try:
+                frame = clip.get_frame(current_time)
+            except Exception as e:
+                print(f"[ERROR] Failed to grab frame at {current_time:.2f}s: {e}")
+                continue
+
+            brightness = calculate_brightness(frame)
+            contrast = calculate_contrast(frame)
+
+            print(f"[INFO] Attempt {attempt + 1} - Time: {current_time:.2f}s - Brightness: {brightness:.2f}, Contrast: {contrast:.2f}")
+
+            if is_well_lit(brightness, contrast):
+                output_path = os.path.join(output_dir, f"screenshot_{i + 1}.png")
+                cv2.imwrite(output_path, cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
+                print(f"[INFO] Well-lit screenshot saved at: {output_path}")
+                best_screenshots.append(output_path)
+                break
+            elif brightness + contrast > best_brightness + best_contrast:
+                best_brightness = brightness
+                best_contrast = contrast
+                best_frame = frame
+
+        if not best_screenshots or len(best_screenshots) < i + 1:
+            output_path = os.path.join(output_dir, f"screenshot_{i + 1}.png")
+            if best_frame is not None:
+                cv2.imwrite(output_path, cv2.cvtColor(best_frame, cv2.COLOR_RGB2BGR))
+                print(f"[WARNING] Saved best available frame at: {output_path}")
+            else:
+                print(f"[ERROR] Could not save screenshot for segment {i + 1}")
+
+    clip.close()
+    print(f"[INFO] Screenshot extraction completed. Total screenshots: {len(best_screenshots)}")
+
+
+# Example usage
+video_path = r'C:\Users\thevi\Videos\The Witcher 3\720p\Young.Sheldon.S07E01.1080p.x265-ELiTE[EZTVx.to]webdl@720p.mkv'
+output_dir = 'screenshots'
+extract_well_lit_screenshots(video_path, output_dir)
