@@ -13,6 +13,8 @@ from dotenv import load_dotenv
 from scipy.stats import mode
 from imdb import IMDb
 import json
+from config import extract_mediainfo
+
 
 # ----------------- Configuration -----------------
 load_dotenv()
@@ -705,6 +707,8 @@ def encode_file(input_file, resolutions, status_callback):
                 final_filename=final_filename,
                 file_title=file_title
             )
+
+
 
         else:
             log(f"\n❌ Encoding failed for {res}!\n")

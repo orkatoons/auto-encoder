@@ -1,7 +1,49 @@
 import cv2
 import numpy as np
-from moviepy import VideoFileClip
 import os
+import requests
+import subprocess
+import shlex
+import re
+from moviepy import VideoFileClip
+from ptpapi import API, login as ptp_login
+from flask.cli import load_dotenv
+
+
+load_dotenv()
+
+# ========== CONFIGURATION ==========
+# Media file configuration
+SOURCE_FILE_PATH = r"W:\Encodes\Bhagam Bhag\source\Bhagam.Bhag.2006.BluRay.1080p.DTS-HD.MA.5.1.AVC.REMUX-FraMeSToR.mkv"
+MOVIE_TITLE = "Bhagam Bhag"
+RELEASE_YEAR = 2006
+
+# Path configuration
+MEDIAINFO_PATH = r"C:\Program Files\MediaInfo_CLI_25.03_Windows_x64\MediaInfo.exe"
+SCREENSHOT_OUTPUT_DIR = "screenshots"
+APPROVAL_FILENAME = "approved.txt"
+
+# PTP configuration
+PTPIMG_API_KEY = os.getenv("API_KEY")  # Set in .env file
+UPLOAD_TO_PTPIMG = True
+
+
+# ====================================
+
+def extract_mediainfo(source_file):
+    """Extract technical metadata using MediaInfo CLI"""
+    try:
+        result = subprocess.run(
+            [MEDIAINFO_PATH, source_file],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        print(result)
+        return result.stdout
+    except Exception as e:
+        print(f"MediaInfo Error: {str(e)}")
+        return None
 
 
 def calculate_brightness(image):
@@ -18,60 +60,214 @@ def is_well_lit(brightness, contrast, brightness_threshold=80, contrast_threshol
     return brightness >= brightness_threshold and contrast >= contrast_threshold
 
 
-def extract_well_lit_screenshots(video_path, output_dir, num_screenshots=3, max_attempts=5, retry_gap=120):
-    clip = VideoFileClip(video_path)
+def upload_to_ptpimg(file_path):
+    """Upload image to ptpimg.me and return BBCode"""
+    with open(file_path, 'rb') as img_file:
+        response = requests.post(
+            'https://ptpimg.me/upload.php',
+            files={'file-upload[0]': img_file},
+            data={'api_key': PTPIMG_API_KEY}
+        )
+    if response.status_code == 200:
+        return f"[img]https://ptpimg.me/{response.json()[0]['code']}.jpg[/img]"
+    return None
+
+
+def extract_screenshots():
+    """Extract and upload screenshots"""
+    clip = VideoFileClip(SOURCE_FILE_PATH)
     duration = clip.duration
-    segment_length = duration / num_screenshots
-    best_screenshots = []
+    screenshot_data = []
 
-    os.makedirs(output_dir, exist_ok=True)
+    os.makedirs(SCREENSHOT_OUTPUT_DIR, exist_ok=True)
 
-    for i in range(num_screenshots):
-        segment_midpoint = (i + 0.5) * segment_length
-        best_brightness = 0
-        best_contrast = 0
-        best_frame = None
+    for i in range(3):
+        best_time = None
+        best_score = -1
 
-        for attempt in range(max_attempts):
-            current_time = segment_midpoint + attempt * retry_gap
-            if current_time >= duration:
-                break
-
+        # sample 5 points in this third of the video
+        for t in np.linspace(i/3 * duration, (i+1)/3 * duration, num=5):
             try:
-                frame = clip.get_frame(current_time)
+                frame = clip.get_frame(t)
+                score = calculate_brightness(frame) + calculate_contrast(frame)
+                if score > best_score:
+                    best_score = score
+                    best_time = t
             except Exception as e:
-                print(f"[ERROR] Failed to grab frame at {current_time:.2f}s: {e}")
-                continue
+                print(f"Frame error at {t:.2f}s: {e}")
 
-            brightness = calculate_brightness(frame)
-            contrast = calculate_contrast(frame)
-
-            print(f"[INFO] Attempt {attempt + 1} - Time: {current_time:.2f}s - Brightness: {brightness:.2f}, Contrast: {contrast:.2f}")
-
-            if is_well_lit(brightness, contrast):
-                output_path = os.path.join(output_dir, f"screenshot_{i + 1}.png")
-                cv2.imwrite(output_path, cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
-                print(f"[INFO] Well-lit screenshot saved at: {output_path}")
-                best_screenshots.append(output_path)
-                break
-            elif brightness + contrast > best_brightness + best_contrast:
-                best_brightness = brightness
-                best_contrast = contrast
-                best_frame = frame
-
-        if not best_screenshots or len(best_screenshots) < i + 1:
-            output_path = os.path.join(output_dir, f"screenshot_{i + 1}.png")
-            if best_frame is not None:
-                cv2.imwrite(output_path, cv2.cvtColor(best_frame, cv2.COLOR_RGB2BGR))
-                print(f"[WARNING] Saved best available frame at: {output_path}")
-            else:
-                print(f"[ERROR] Could not save screenshot for segment {i + 1}")
+        if best_time is not None:
+            out_path = os.path.join(SCREENSHOT_OUTPUT_DIR, f"screenshot_{i+1}.png")
+            # <-- this writes the frame at best_time directly to file
+            clip.save_frame(out_path, t=best_time)
+            screenshot_data.append(out_path)
 
     clip.close()
-    print(f"[INFO] Screenshot extraction completed. Total screenshots: {len(best_screenshots)}")
+
+    # Upload screenshots
+    bbcodes = []
+    for path in screenshot_data:
+        if UPLOAD_TO_PTPIMG:
+            bbcode = upload_to_ptpimg(path)
+            if bbcode:
+                bbcodes.append(bbcode)
+
+    return bbcodes
 
 
-# Example usage
-video_path = r'C:\Users\thevi\Videos\The Witcher 3\720p\Young.Sheldon.S07E01.1080p.x265-ELiTE[EZTVx.to]webdl@720p.mkv'
-output_dir = 'screenshots'
-extract_well_lit_screenshots(video_path, output_dir)
+def find_torrent_id_cli(movie_title, source_filename):
+    """
+    Uses the ptp CLI to search for movie_title, then picks the torrent whose
+    ReleaseName matches source_filename (exactly or via substring).
+    Returns the torrent ID as a string, or None if not found.
+    """
+    source_filename = os.path.splitext(os.path.basename(source_filename))[0].strip()
+    print(f"[DEBUG] Source filename: {source_filename}")
+
+    cmd = f'ptp search "{movie_title}" --torrent-format="{{{{Id}}}} - {{{{ReleaseName}}}}"'
+    args = shlex.split(cmd)
+
+
+    try:
+        process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        stdout, stderr = process.communicate()
+
+        if process.returncode != 0:
+            print(f"[ERROR] ptp search failed: {stderr.strip()}")
+            return None
+
+    except Exception as e:
+        print(f"[ERROR] Exception during subprocess: {e}")
+        return None
+
+    pattern = re.compile(r'^\s*(\d+)\s*-\s*(.+?)\s*$')
+
+    for line in stdout.splitlines():
+        print(f"[DEBUG] Parsing line: {line}")
+        match = pattern.match(line)
+        if not match:
+            continue
+        torrent_id, release_name = match.group(1), match.group(2).strip()
+        if release_name == source_filename or str(source_filename) in release_name:
+            print(f"[INFO] Match found: {torrent_id} -> {release_name}")
+            return torrent_id
+
+    print("[WARN] No matching torrent found in CLI output.")
+    return None
+
+
+def get_ptp_permalink(movie_title, release_year, source_filename):
+    """
+    Combines API lookup for the PTP movie ID with CLI-based torrent ID extraction.
+    Falls back to API-based torrent lookup if CLI fails.
+    """
+    # First, get the movie ID via the API
+    ptp_login()
+    api = API()
+    filters = {'searchstr': movie_title, 'year': str(release_year)}
+    results = api.search(filters=filters)
+    if not results:
+        print("[ERROR] No movie found via API.")
+        return None
+
+    movie = results[0]
+    movie_id = movie['Id']
+
+    # Next, try the CLI approach to get torrent ID
+    torrent_id = find_torrent_id_cli(movie_title, source_filename)
+    print(torrent_id)
+    # Build the final URL
+    if torrent_id:
+        return f"https://passthepopcorn.me/torrents.php?id={movie_id}&torrentid={torrent_id}"
+    else:
+        return f"https://passthepopcorn.me/torrents.php?id={movie_id}"
+
+
+def find_movie_source_cli(torrent_link):
+
+    cmd = f'ptp search "{torrent_link}"'
+    args = shlex.split(cmd)
+    try:
+        process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        stdout, stderr = process.communicate()
+
+        print(stdout)
+
+
+        match = re.search(r"^- (.+?) - ", stdout.strip())
+
+        if match:
+            print("Matching source")
+            raw_format = match.group(1).strip()
+            spaced_format = raw_format.replace("/", " / ")
+            print("returning spaced format ", spaced_format)
+            return spaced_format
+        else:
+            print("No match found.")
+        return None
+
+    except Exception as e:
+        print(f"[ERROR] Exception during subprocess: {e}")
+        return None
+
+
+
+
+
+def generate_approval_form(ptp_url, mediainfo_text, screenshot_bbcodes, ptp_sources):
+    """Generate approval.txt in final BBCode format for forum use"""
+
+    bbcode_screenshots = "\n".join(screenshot_bbcodes)
+
+    content = f"""[align=center][b][size=8] [color=#3d85c6]HANDJOB Encode[/color] [/size][/b][/align]
+[hr][align=center][size=3]Encode with: [color=#c5c5c5][i][url={ptp_url}] {MOVIE_TITLE} - {ptp_sources}[/url][/i][/color][/size][/align][hr]
+[pre]
+
+[/pre]
+[mediainfo]
+{mediainfo_text}
+[/mediainfo]
+[pre]
+
+[/pre]
+[align=center][img]https://ptpimg.me/9w353i.png[/img]
+[pre]
+
+[/pre]
+{bbcode_screenshots}
+[pre]
+
+[/pre]
+[img]https://ptpimg.me/s91993.png[/img][/align]"""
+
+    with open(APPROVAL_FILENAME, 'w', encoding='utf-8') as f:
+        f.write(content)
+
+
+def main():
+    # Step 1: Get technical metadata
+    print("Extracting MediaInfo...")
+    mediainfo_text = extract_mediainfo(SOURCE_FILE_PATH)
+
+    # Step 2: Create and upload screenshots
+    print("\nExtracting screenshots...")
+    screenshot_bbcodes = extract_screenshots()
+
+    # Step 3: Get PTP permalink
+    print("\nSearching PTP...")
+    ptp_url = get_ptp_permalink(MOVIE_TITLE, RELEASE_YEAR, SOURCE_FILE_PATH)
+
+    #Step 4: Get movie sources
+    print("\nGetting torrent sources")
+    ptp_sources = find_movie_source_cli(ptp_url)
+    print(ptp_sources)
+
+    # Step 4: Generate approval file
+    print("\nGenerating approval document...")
+    generate_approval_form(ptp_url, mediainfo_text, screenshot_bbcodes, ptp_sources)
+
+    print(f"\nProcess complete! Approval file saved to {APPROVAL_FILENAME}")
+
+
+if __name__ == "__main__":
+    main()
