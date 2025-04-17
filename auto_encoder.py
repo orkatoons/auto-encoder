@@ -3,27 +3,27 @@ import os
 import sys
 import threading
 import subprocess
-import time
 import re
 import requests
 from pymkv import MKVFile
-import cv2
 import numpy as np
-from dotenv import load_dotenv
-from scipy.stats import mode
 from imdb import IMDb
 import json
-from config import extract_mediainfo
+import config
+import cv2
+from flask.cli import load_dotenv
 
 
 # ----------------- Configuration -----------------
 load_dotenv()
-FLASK_SERVER_URL = os.getenv("FLASK_SERVER_URL")
 HANDBRAKE_CLI = os.getenv("HANDBRAKE_CLI")
 DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
 FFMPEG = os.getenv("FFMPEG")
 FFPROBE = os.getenv("FFPROBE")
+MEDIAINFO_PATH = os.getenv("MEDIAINFO_PATH")
 MKVEXTRACT = os.getenv("MKVEXTRACT")
+PTPIMG_API_KEY = os.getenv("API_KEY")
+UPLOAD_TO_PTPIMG = True
 
 PRESET_SETTINGS = {
     "480p": {"width": 854, "height": 480, "quality": 11},
@@ -46,8 +46,11 @@ cq_range = [9, 27]
 
 encoding_source_format = None
 
+APPROVAL_FILENAME = "approval.txt"
+
 
 # ----------------- Utility Functions -----------------
+
 def determine_encodes(file_path):
     """
     Determines the encoding resolutions based on the filename.
@@ -55,7 +58,7 @@ def determine_encodes(file_path):
     - Everything else gets only ["720p"].
     """
     global encoding_source_format
-    SOURCE_KEYWORDS = [
+    source_keywords = [
         ("bluray", "BluRay"), ("blu-ray", "BluRay"), ("brrip", "BluRay"),
         ("bdrip", "BluRay"), ("bd25", "BluRay"), ("bd50", "BluRay"),
         ("remux", "BluRay"), ("web-dl", "WEB-DL"), ("webdl", "WEB-DL"),
@@ -67,7 +70,7 @@ def determine_encodes(file_path):
 
     # Detect source format
     source_format = "Unknown"
-    for keyword, fmt in SOURCE_KEYWORDS:
+    for keyword, fmt in source_keywords:
         if keyword in filename:
             source_format = fmt
             encoding_source_format = fmt
@@ -93,8 +96,9 @@ def send_completion_webhook(completion_bitrate, resolution, input_file):
         log("❌ Exception sending completion webhook: " + str(e))
     return True
 
+
 def send_webhook_message(message):
-    data = {"content":message}
+    data = {"content": message}
     try:
         response = requests.post(DISCORD_WEBHOOK_URL, data=data)
         if response.status_code in (200, 204):
@@ -587,6 +591,55 @@ def multiplex_file(
     send_webhook_message("✅ Mutliplexing Completed")
 
 
+# --------------------Phase 5 (Screenshots)--------------------
+def calculate_brightness(image):
+    grayscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    return np.mean(grayscale)
+
+
+def calculate_contrast(image):
+    grayscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    return grayscale.std()
+
+
+def is_well_lit(brightness, contrast, brightness_threshold=80, contrast_threshold=50):
+    return brightness >= brightness_threshold and contrast >= contrast_threshold
+
+
+def upload_to_ptpimg(file_path):
+    """Upload image to ptpimg.me and return BBCode"""
+    with open(file_path, 'rb') as img_file:
+        response = requests.post(
+            'https://ptpimg.me/upload.php',
+            files={'file-upload[0]': img_file},
+            data={'api_key': PTPIMG_API_KEY}
+        )
+    if response.status_code == 200:
+        return f"[img]https://ptpimg.me/{response.json()[0]['code']}.jpg[/img]"
+    return None
+
+
+
+
+# --------------------Phase 6 (Approval Doc)--------------------
+def extract_mediainfo(source_file):
+    """Extract technical metadata using MediaInfo CLI"""
+    try:
+        result = subprocess.run(
+            [MEDIAINFO_PATH, source_file],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        print(result)
+        return result.stdout
+    except Exception as e:
+        print(f"MediaInfo Error: {str(e)}")
+        return None
+
+
+
+
 # --------------------Main Encoding Function--------------------
 def encode_file(input_file, resolutions, status_callback):
     filename = os.path.basename(input_file)
@@ -707,6 +760,28 @@ def encode_file(input_file, resolutions, status_callback):
                 final_filename=final_filename,
                 file_title=file_title
             )
+
+            #---------------Screenshots---------------
+            output_dir = os.path.normpath(os.path.join(parent_dir, res))
+            screenshot_output_dir = os.path.join(output_dir, "screenshots")
+
+            screenshot_bbcodes = config.extract_screenshots(screenshot_output_dir, final_filename)
+
+            log("Extracting MediaInfo...")
+            mediainfo_text = config.extract_mediainfo(final_filename)
+
+            log("\nSearching PTP...")
+            ptp_url = config.get_ptp_permalink({official_title.replace(' ', '.')}, official_year, final_filename)
+
+            # Step 4: Get movie sources
+            log("\nGetting torrent sources")
+            ptp_sources = config.find_movie_source_cli(ptp_url)
+
+            # Step 5: Generate approval file
+            log("\nGenerating approval document...")
+            config.generate_approval_form(ptp_url, mediainfo_text, screenshot_bbcodes, ptp_sources)
+
+            print(f"\nProcess complete! Approval file saved to {APPROVAL_FILENAME}")
 
 
 

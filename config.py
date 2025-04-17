@@ -73,7 +73,7 @@ def upload_to_ptpimg(file_path):
     return None
 
 
-def extract_screenshots():
+def extract_screenshots(SCREENSHOT_OUTPUT_DIR, SOURCE_FILE_PATH):
     """Extract and upload screenshots"""
     clip = VideoFileClip(SOURCE_FILE_PATH)
     duration = clip.duration
