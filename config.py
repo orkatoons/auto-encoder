@@ -45,6 +45,41 @@ def extract_mediainfo(source_file):
         print(f"MediaInfo Error: {str(e)}")
         return None
 
+def parse_video_metadata(source_file_path, settings):
+    """Extract metadata and adjust target height based on aspect ratio."""
+    mediainfo_text = extract_mediainfo(source_file_path)
+
+    metadata = {}
+
+    # Raw metadata extraction
+    width_match = re.search(r"Width\s+:\s+(\d+)\s+pixels", mediainfo_text)
+    height_match = re.search(r"Height\s+:\s+(\d+)\s+pixels", mediainfo_text)
+    aspect_ratio_match = re.search(r"Display aspect ratio\s+:\s+([\d.]+:\d+)", mediainfo_text)
+
+    if width_match:
+        metadata['source_width'] = int(width_match.group(1))
+    if height_match:
+        metadata['source_height'] = int(height_match.group(1))
+    if aspect_ratio_match:
+        metadata['aspect_ratio'] = aspect_ratio_match.group(1)
+    else:
+        raise ValueError("Aspect ratio not found in metadata.")
+
+    # Target width from preset
+    target_width = settings["width"]
+
+    # Compute target height
+    try:
+        num, denom = map(float, metadata["aspect_ratio"].split(":"))
+        target_height = int(round(target_width / (num / denom)))
+    except Exception as e:
+        raise ValueError(f"Failed to compute height from aspect ratio: {e}")
+
+    metadata["width"] = target_width
+    metadata["height"] = target_height
+
+    return metadata
+
 
 def calculate_brightness(image):
     grayscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -74,10 +109,14 @@ def upload_to_ptpimg(file_path):
 
 
 def extract_screenshots(SCREENSHOT_OUTPUT_DIR, SOURCE_FILE_PATH):
-    """Extract and upload screenshots"""
+    """Extract and upload screenshots (skipping first 5 minutes)"""
     clip = VideoFileClip(SOURCE_FILE_PATH)
     duration = clip.duration
     screenshot_data = []
+
+    # Skip first 300 seconds (5 minutes)
+    start_offset = 300 if duration > 300 else 0
+    usable_duration = duration - start_offset
 
     os.makedirs(SCREENSHOT_OUTPUT_DIR, exist_ok=True)
 
@@ -85,8 +124,12 @@ def extract_screenshots(SCREENSHOT_OUTPUT_DIR, SOURCE_FILE_PATH):
         best_time = None
         best_score = -1
 
-        # sample 5 points in this third of the video
-        for t in np.linspace(i/3 * duration, (i+1)/3 * duration, num=5):
+        # Calculate section bounds with offset
+        section_start = start_offset + (i / 3) * usable_duration
+        section_end = start_offset + ((i + 1) / 3) * usable_duration
+
+        # Sample 5 points in this third of usable video
+        for t in np.linspace(section_start, section_end, num=5):
             try:
                 frame = clip.get_frame(t)
                 score = calculate_brightness(frame) + calculate_contrast(frame)
@@ -98,7 +141,6 @@ def extract_screenshots(SCREENSHOT_OUTPUT_DIR, SOURCE_FILE_PATH):
 
         if best_time is not None:
             out_path = os.path.join(SCREENSHOT_OUTPUT_DIR, f"screenshot_{i+1}.png")
-            # <-- this writes the frame at best_time directly to file
             clip.save_frame(out_path, t=best_time)
             screenshot_data.append(out_path)
 
@@ -113,6 +155,7 @@ def extract_screenshots(SCREENSHOT_OUTPUT_DIR, SOURCE_FILE_PATH):
                 bbcodes.append(bbcode)
 
     return bbcodes
+
 
 
 def find_torrent_id_cli(movie_title, source_filename, original_filename):
@@ -248,6 +291,9 @@ def main():
     # Step 1: Get technical metadata
     print("Extracting MediaInfo...")
     mediainfo_text = extract_mediainfo(SOURCE_FILE_PATH)
+
+    metadata = parse_video_metadata(SOURCE_FILE_PATH)
+    print(metadata)
 
     # Step 2: Create and upload screenshots
     print("\nExtracting screenshots...")

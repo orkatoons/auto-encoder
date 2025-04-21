@@ -1,108 +1,59 @@
-import cv2
-import numpy as np
-from flask.cli import load_dotenv
-from moviepy import VideoFileClip
+
+# --------------------Helper: IMDb Title Lookup--------------------
+import time
+from imdb import IMDb, IMDbError
 import os
-import requests
-import os
+import re
 
-load_dotenv()
-# ========== SETTINGS ==========
-PTPIMG_API_KEY = os.getenv("API_KEY") # replace with your actual key
-UPLOAD_TO_PTPIMG = True  # Set to False to disable upload
-# ==============================
 
-def calculate_brightness(image):
-    grayscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    return np.mean(grayscale)
+def find_movie(filename):
+    max_retries = 3
+    retry_delay_minutes = 30
+    ia = IMDb()
+    base_name = os.path.splitext(filename)[0]
+    words = re.sub(r'[\._-]+', ' ', base_name)
+    words = re.sub(
+        r'\b(1080p|720p|480p|BluRay|WEB-DL|HDRip|DVDRip|x264|x265|HEVC|AAC|DTS|HD)\b',
+        '', words, flags=re.IGNORECASE
+    ).split()
 
-def calculate_contrast(image):
-    grayscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    return grayscale.std()
+    for end in range(len(words), 0, -1):
+        query = ' '.join(words[:end])
+        print(f"Trying IMDb search: {query}")
 
-def is_well_lit(brightness, contrast, brightness_threshold=80, contrast_threshold=50):
-    return brightness >= brightness_threshold and contrast >= contrast_threshold
-
-def upload_to_ptpimg(file_path):
-    with open(file_path, 'rb') as img_file:
-        response = requests.post(
-            'https://ptpimg.me/upload.php',
-            files={'file-upload[0]': img_file},
-            data={'api_key': PTPIMG_API_KEY}
-        )
-    if response.status_code == 200:
-        resp_data = response.json()
-        print(resp_data)
-        image_code = resp_data[0]['code']
-        return f"https://ptpimg.me/{image_code}.jpg"
-    else:
-        print(f"[ERROR] Upload failed for {file_path} - Status: {response.status_code}")
-        return None
-
-def extract_well_lit_screenshots(video_path, output_dir, num_screenshots=3, max_attempts=10, retry_gap=60):
-    clip = VideoFileClip(video_path)
-    duration = clip.duration
-    segment_length = duration / num_screenshots
-    best_screenshots = []
-
-    os.makedirs(output_dir, exist_ok=True)
-
-    for i in range(num_screenshots):
-        segment_midpoint = (i + 0.5) * segment_length
-        best_brightness = 0
-        best_contrast = 0
-        best_frame = None
-
-        for attempt in range(max_attempts):
-            current_time = segment_midpoint + attempt * retry_gap
-            if current_time >= duration:
-                break
-
+        for attempt in range(max_retries):
             try:
-                frame = clip.get_frame(current_time)
-            except Exception as e:
-                print(f"[ERROR] Failed to grab frame at {current_time:.2f}s: {e}")
-                continue
+                results = ia.search_movie(query)
+                if results:
+                    movie = results[0]
+                    print(movie.keys())
+                    ia.update(movie)
+                    print(movie.keys())
+                    year = movie.get('year', 'Unknown')
+                    print(f"✅ Found movie: {movie.get('title', 'Unknown Title')} ({year})")
+                    return movie
+                break  # If no results, skip to next shorter query
+            except (IMDbError, Exception) as e:
+                print(f"⚠️ IMDb fetch failed (attempt {attempt + 1}/{max_retries}): {e}")
+                if attempt < max_retries - 1:
+                    print(f"⏳ Retrying after {retry_delay_minutes} minutes...")
+                    time.sleep(retry_delay_minutes * 60)
 
-            brightness = calculate_brightness(frame)
-            contrast = calculate_contrast(frame)
+    print("❌ No IMDb match found.")
+    return None
 
-            print(f"[INFO] Attempt {attempt + 1} - Time: {current_time:.2f}s - Brightness: {brightness:.2f}, Contrast: {contrast:.2f}")
+filename = "Maine Pyaar Kyu Kiya"
+'''
+movie_data = find_movie(filename)  # or find_movie(output_file)
+if movie_data:
+    official_title = movie_data['original title']
+    official_year = movie_data.get('year', '0000')
+else:
+                # Fallback if IMDb not found
+    official_title = os.path.splitext(filename)[0]
+    official_year = "0000"
 
-            if is_well_lit(brightness, contrast):
-                output_path = os.path.join(output_dir, f"screenshot_{i + 1}.png")
-                cv2.imwrite(output_path, cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
-                print(f"[INFO] Well-lit screenshot saved at: {output_path}")
-                best_screenshots.append(output_path)
-                break
-            elif brightness + contrast > best_brightness + best_contrast:
-                best_brightness = brightness
-                best_contrast = contrast
-                best_frame = frame
-
-        if not best_screenshots or len(best_screenshots) < i + 1:
-            output_path = os.path.join(output_dir, f"screenshot_{i + 1}.png")
-            if best_frame is not None:
-                cv2.imwrite(output_path, cv2.cvtColor(best_frame, cv2.COLOR_RGB2BGR))
-                print(f"[WARNING] Saved best available frame at: {output_path}")
-                best_screenshots.append(output_path)
-            else:
-                print(f"[ERROR] Could not save screenshot for segment {i + 1}")
-
-    clip.close()
-    print(f"[INFO] Screenshot extraction completed. Total screenshots: {len(best_screenshots)}")
-
-    if UPLOAD_TO_PTPIMG:
-        print("\n[INFO] Uploading screenshots to PTPImg...")
-        for path in best_screenshots:
-            url = upload_to_ptpimg(path)
-            if url:
-                print(f"[BBCode] [img]{url}[/img]")
-            else:
-                print(f"[UPLOAD FAILED] {path}")
-
-
-# ======= Example usage =======
-video_path = r'W:\Encodes\Final N Fool\720p\Fool.N.Final.0000.720p.WEB-DL.x264-HANDJOB.mkv'
-output_dir = 'screenshots'
-extract_well_lit_screenshots(video_path, output_dir)
+print(official_title, official_year)'''
+file_path = r"C:\Users\thevi\Documents\GeekyandtheBrain\auto_encoder\auto-encoder\bot.py"
+grandparent_dir = os.path.basename(os.path.dirname(os.path.dirname(file_path)))
+print(grandparent_dir)

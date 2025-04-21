@@ -665,6 +665,10 @@ def encode_file(input_file, resolutions, status_callback):
     for res in resolutions:
         status_callback(filename, res, "Starting...")
         settings = PRESET_SETTINGS.get(res)
+        metadata = config.parse_video_metadata(input_file, settings)
+        settings["width"] = metadata["width"]
+        settings["height"] = metadata["height"]
+
         if not settings:
             log(f"❌ No settings found for {res}, skipping...")
             status_callback(filename, res, "Skipped (no settings)")
@@ -740,9 +744,10 @@ def encode_file(input_file, resolutions, status_callback):
             # >>> ADD MULTIPLEXING CALL <<<
             # ---------------------------
             # 1. Find official IMDb data
-            movie_data = find_movie(filename)  # or find_movie(output_file)
+            grandparent_dir = os.path.basename(os.path.dirname(os.path.dirname(input_file)))
+            movie_data = find_movie(grandparent_dir)  # or find_movie(output_file)
             if movie_data:
-                official_title = movie_data['title']
+                official_title = movie_data['original title']
                 official_year = movie_data.get('year', '0000')
             else:
                 # Fallback if IMDb not found
