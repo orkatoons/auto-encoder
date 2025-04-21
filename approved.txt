@@ -1,50 +1,47 @@
 [align=center][b][size=8] [color=#3d85c6]HANDJOB Encode[/color] [/size][/b][/align]
-[hr][align=center][size=3]Encode with: [color=#c5c5c5][i][url=https://passthepopcorn.me/torrents.php?id=79089&torrentid=571014] Bhagam Bhag - H.264 / MKV / Blu-ray / 1080p[/url][/i][/color][/size][/align][hr]
+[hr][align=center][size=3]Encode with: [color=#c5c5c5][i][url=None] Bhagam Bhag - None[/url][/i][/color][/size][/align][hr]
 [pre]
 
 [/pre]
 [mediainfo]
 General
-Unique ID                                : 321700857719786262087714837932922415865 (0xF20554DD4C9F33BEE932C11FEC8CAAF9)
-Complete name                            : W:\Encodes\Bhagam Bhag\source\Bhagam.Bhag.2006.BluRay.1080p.DTS-HD.MA.5.1.AVC.REMUX-FraMeSToR.mkv
+Unique ID                                : 40832151514550889113012001296023267110 (0x1EB7FC8018203DBD8FD68D89ED13A726)
+Complete name                            : W:\Encodes\Final N Fool\720p\Fool.N.Final.2007.720p.WEB-DL.x264-HANDJOB.mkv
 Format                                   : Matroska
 Format version                           : Version 4
-File size                                : 38.2 GiB
-Duration                                 : 2 h 38 min
-Overall bit rate mode                    : Variable
-Overall bit rate                         : 34.4 Mb/s
-Frame rate                               : 24.000 FPS
-Movie name                               : Bhagam Bhag (2006)
-Encoded date                             : 2018-05-31 17:07:33 UTC
-Writing application                      : mkvmerge v23.0.0 ('The Bride Said No') 64-bit
-Writing library                          : libebml v1.3.6 + libmatroska v1.4.9
+File size                                : 6.32 GiB
+Duration                                 : 2 h 18 min
+Overall bit rate                         : 6 549 kb/s
+Frame rate                               : 25.000 FPS
+Movie name                               : Fool N Final [2007] 720p WEB-DL - HJ
+Encoded date                             : 2025-04-18 03:38:30 UTC
+Writing application                      : mkvmerge v90.0 ('Hanging On') 64-bit
+Writing library                          : libebml v1.4.5 + libmatroska v1.7.1
 
 Video
 ID                                       : 1
 Format                                   : AVC
 Format/Info                              : Advanced Video Codec
 Format profile                           : High@L4.1
-Format settings                          : CABAC / 4 Ref Frames
+Format settings                          : CABAC / 9 Ref Frames
 Format settings, CABAC                   : Yes
-Format settings, Reference frames        : 4 frames
-Format settings, Slice count             : 4 slices per frame
+Format settings, Reference frames        : 9 frames
 Codec ID                                 : V_MPEG4/ISO/AVC
-Duration                                 : 2 h 38 min
-Bit rate mode                            : Variable
-Bit rate                                 : 30.0 Mb/s
-Maximum bit rate                         : 35.0 Mb/s
-Width                                    : 1 920 pixels
-Height                                   : 1 080 pixels
-Display aspect ratio                     : 16:9
+Duration                                 : 2 h 18 min
+Bit rate                                 : 5 907 kb/s
+Width                                    : 1 280 pixels
+Height                                   : 720 pixels
+Display aspect ratio                     : 2.35:1
 Frame rate mode                          : Constant
-Frame rate                               : 24.000 FPS
-Standard                                 : NTSC
+Frame rate                               : 25.000 FPS
 Color space                              : YUV
 Chroma subsampling                       : 4:2:0
 Bit depth                                : 8 bits
 Scan type                                : Progressive
-Bits/(Pixel*Frame)                       : 0.603
-Stream size                              : 33.3 GiB (87%)
+Bits/(Pixel*Frame)                       : 0.256
+Stream size                              : 5.70 GiB (90%)
+Writing library                          : x264 core 164 r3186 585e0199
+Encoding settings                        : cabac=1 / ref=9 / deblock=1:-3:-3 / analyse=0x3:0x133 / me=umh / subme=10 / psy=1 / psy_rd=1.10:0.00 / mixed_ref=1 / me_range=32 / chroma_me=1 / trellis=2 / 8x8dct=1 / cqm=0 / deadzone=21,11 / fast_pskip=0 / chroma_qp_offset=-2 / threads=22 / lookahead_threads=5 / sliced_threads=0 / nr=0 / decimate=0 / interlaced=0 / bluray_compat=0 / constrained_intra=0 / bframes=16 / b_pyramid=2 / b_adapt=2 / b_bias=0 / direct=3 / weightb=1 / open_gop=0 / weightp=2 / keyint=250 / keyint_min=25 / scenecut=40 / intra_refresh=0 / rc_lookahead=60 / rc=crf / mbtree=0 / crf=17.0 / qcomp=0.60 / qpmin=0 / qpmax=69 / qpstep=4 / vbv_maxrate=62500 / vbv_bufsize=78125 / crf_max=0.0 / nal_hrd=none / filler=0 / ip_ratio=1.40 / pb_ratio=1.30 / aq=2:1.00
 Default                                  : Yes
 Forced                                   : No
 Color range                              : Limited
@@ -54,61 +51,43 @@ Matrix coefficients                      : BT.709
 
 Audio
 ID                                       : 2
-Format                                   : DTS XLL
-Format/Info                              : Digital Theater Systems
-Commercial name                          : DTS-HD Master Audio
-Codec ID                                 : A_DTS
-Duration                                 : 2 h 38 min
-Bit rate mode                            : Variable
-Bit rate                                 : 4 377 kb/s
+Format                                   : AC-3
+Format/Info                              : Audio Coding 3
+Commercial name                          : Dolby Digital
+Codec ID                                 : A_AC3
+Duration                                 : 2 h 18 min
+Bit rate mode                            : Constant
+Bit rate                                 : 640 kb/s
 Channel(s)                               : 6 channels
-Channel layout                           : C L R Ls Rs LFE
+Channel layout                           : L R C LFE Ls Rs
 Sampling rate                            : 48.0 kHz
-Frame rate                               : 93.750 FPS (512 SPF)
-Bit depth                                : 24 bits
-Compression mode                         : Lossless
-Stream size                              : 4.85 GiB (13%)
-Title                                    : DTS-HD MA 5.1
+Frame rate                               : 31.250 FPS (1536 SPF)
+Compression mode                         : Lossy
+Stream size                              : 633 MiB (10%)
 Language                                 : Hindi
+Service kind                             : Complete Main
 Default                                  : Yes
 Forced                                   : No
+Dialog Normalization                     : -31 dB
+cmixlev                                  : -3.0 dB
+surmixlev                                : -3 dB
+dialnorm_Average                         : -31 dB
+dialnorm_Minimum                         : -31 dB
+dialnorm_Maximum                         : -31 dB
 
 Text
 ID                                       : 3
-Format                                   : PGS
-Codec ID                                 : S_HDMV/PGS
-Codec ID/Info                            : Picture based subtitle format used on BDs/HD-DVDs
-Duration                                 : 2 h 32 min
-Bit rate                                 : 35.5 kb/s
-Frame rate                               : 0.499 FPS
-Count of elements                        : 4577
-Stream size                              : 38.8 MiB (0%)
-Title                                    : English
+Format                                   : UTF-8
+Codec ID                                 : S_TEXT/UTF8
+Codec ID/Info                            : UTF-8 Plain Text
+Duration                                 : 2 h 15 min
+Bit rate                                 : 68 b/s
+Frame rate                               : 0.268 FPS
+Count of elements                        : 2190
+Stream size                              : 68.5 KiB (0%)
 Language                                 : English
 Default                                  : Yes
 Forced                                   : No
-
-Menu
-00:00:00.000                             : en:1. Beginning (Credits)
-00:01:47.750                             : en:2. Signal
-00:06:10.000                             : en:3. Bunty Punished
-00:17:49.000                             : en:4. Search for Heroine
-00:22:19.500                             : en:5. Misunderstanding
-00:38:06.000                             : en:6. Introduction with Guru
-00:45:32.833                             : en:7. Encounter with Nisha
-00:49:35.625                             : en:8. Heroine Selected
-01:03:23.000                             : en:9. Tere Bin
-01:07:28.000                             : en:10. Nisha's Tragedy
-01:19:03.917                             : en:11. Nisha's Reappearance
-01:24:21.417                             : en:12. Hidding the Dead Body
-01:28:00.625                             : en:13. Afreen
-01:35:10.417                             : en:14. Trio Arrested / Escape
-01:40:48.000                             : en:15. Trio Wanted
-01:47:21.000                             : en:16. Finding the Clue
-02:05:53.000                             : en:17. Champak Seth Kidnapped
-02:13:36.000                             : en:18. Nisha Speaks Out
-02:26:32.625                             : en:19. Climax
-02:35:37.000                             : en:20. Bhagam Bhag / End (Credits)
 
 
 
@@ -120,9 +99,9 @@ Menu
 [pre]
 
 [/pre]
-[img]https://ptpimg.me/w62j25.jpg[/img]
-[img]https://ptpimg.me/cvg229.jpg[/img]
-[img]https://ptpimg.me/590s4o.jpg[/img]
+[img]https://ptpimg.me/8y64bo.jpg[/img]
+[img]https://ptpimg.me/6mv1y2.jpg[/img]
+[img]https://ptpimg.me/8qoykv.jpg[/img]
 [pre]
 
 [/pre]

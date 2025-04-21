@@ -3,6 +3,7 @@ import os
 import sys
 import threading
 import subprocess
+import time
 import re
 import requests
 from pymkv import MKVFile
@@ -175,10 +176,8 @@ def get_cropping(input_file, cropped_image, res, cq=17):
         right_crop = make_even(frame.shape[1] - (x + w))
 
         print(f"Crop values for frame at {start_time}s: ")
-        send_webhook_message(f"Crop values for frame at {start_time}s: ")
         print(f"Top: {top_crop}, Bottom: {bottom_crop}, Left: {left_crop}, Right: {right_crop}")
-        send_webhook_message(f"Top: {top_crop}, Bottom: {bottom_crop}, Left: {left_crop}, Right: {right_crop}")
-        
+
         crops.append((top_crop, bottom_crop, left_crop, right_crop))
 
         # Compute median crop values for consistency
@@ -238,7 +237,6 @@ def get_cropping(input_file, cropped_image, res, cq=17):
     send_webhook_message(discord_message)
 
     return final_crop_values
-
 
 
 def encode_preview(input_file, res, cq, approved_crop):
@@ -335,8 +333,6 @@ def extract_audio(input_file, res):
     """
     input_dir = os.path.dirname(input_file)
     base_name = os.path.splitext(os.path.basename(input_file))[0]
-    output_folder = os.path.normpath(os.path.join(input_dir, base_name))
-    os.makedirs(output_folder, exist_ok=True)
 
     # Determine the parent directory (one level up from the input file's directory)
     parent_dir = os.path.normpath(os.path.join(os.path.dirname(input_file), ".."))
@@ -348,7 +344,7 @@ def extract_audio(input_file, res):
     print("Input file:", input_file)
     print("Input dir:", input_dir)
     print("Base name:", base_name)
-    print("Output folder:", output_folder)
+    print("Output folder:", output_dir)
     print(f"🎵 Detecting audio tracks for {base_name}...")
 
     # Run eac3to to list tracks
@@ -395,8 +391,8 @@ def extract_audio(input_file, res):
             send_webhook_message(f"✅ Audio extraction complete for {base_name}@{res}")
         else:
             # Stereo or mono
-            temp_audio = os.path.normpath(os.path.join(output_folder, "temp.aac"))
-            final_audio = os.path.normpath(os.path.join(output_folder, f"{base_name}.m4a"))
+            temp_audio = os.path.normpath(os.path.join(output_dir, "temp.aac"))
+            final_audio = os.path.normpath(os.path.join(output_dir, f"{base_name}.m4a"))
             output_file = os.path.normpath(
                 os.path.join(output_dir, f"{os.path.splitext(base_name)[0]}@{res}.m4a")
             )
@@ -474,25 +470,42 @@ def extract_subtitles(mkv_path):
 
 
 # --------------------Helper: IMDb Title Lookup--------------------
-def find_movie(filename):
-    ia = IMDb()
-    base_name = os.path.splitext(filename)[0]  # Remove file extension
-    # Normalize separators and remove common video quality tags
-    words = re.sub(r'[\._-]+', ' ', base_name)
-    words = re.sub(r'\b(1080p|720p|480p|BluRay|WEB-DL|HDRip|DVDRip|x264|x265|HEVC|AAC|DTS|HD)\b', '', words, flags=re.IGNORECASE).split()
+import time
+from imdb import IMDb, IMDbError
+import os
+import re
 
-    # Try stripping words from the right one by one
+
+def find_movie(filename):
+    max_retries = 3
+    retry_delay_minutes = 30
+    ia = IMDb()
+    base_name = os.path.splitext(filename)[0]
+    words = re.sub(r'[\._-]+', ' ', base_name)
+    words = re.sub(
+        r'\b(1080p|720p|480p|BluRay|WEB-DL|HDRip|DVDRip|x264|x265|HEVC|AAC|DTS|HD)\b',
+        '', words, flags=re.IGNORECASE
+    ).split()
+
     for end in range(len(words), 0, -1):
         query = ' '.join(words[:end])
-        print(f"Trying IMDb search: {query}")  # Debugging line
+        print(f"Trying IMDb search: {query}")
 
-        results = ia.search_movie(query)
-        if results:
-            movie = results[0]  # Take the first result
-            ia.update(movie)  # Fetch complete details
-            year = movie.get('year', 'Unknown')
-            print(f"✅ Found movie: {movie.get('title', 'Unknown Title')} ({year})")
-            return movie
+        for attempt in range(max_retries):
+            try:
+                results = ia.search_movie(query)
+                if results:
+                    movie = results[0]
+                    ia.update(movie)
+                    year = movie.get('year', 'Unknown')
+                    print(f"✅ Found movie: {movie.get('title', 'Unknown Title')} ({year})")
+                    return movie
+                break  # If no results, skip to next shorter query
+            except (IMDbError, Exception) as e:
+                print(f"⚠️ IMDb fetch failed (attempt {attempt + 1}/{max_retries}): {e}")
+                if attempt < max_retries - 1:
+                    print(f"⏳ Retrying after {retry_delay_minutes} minutes...")
+                    time.sleep(retry_delay_minutes * 60)
 
     print("❌ No IMDb match found.")
     return None
@@ -643,6 +656,7 @@ def extract_mediainfo(source_file):
 # --------------------Main Encoding Function--------------------
 def encode_file(input_file, resolutions, status_callback):
     filename = os.path.basename(input_file)
+    original_filename = os.path.splitext(os.path.basename(input_file))[0]
     send_webhook_message(f"Beginning encoding for {filename} @ {resolutions}")
 
     # Extract subtitles & store paths
@@ -673,9 +687,9 @@ def encode_file(input_file, resolutions, status_callback):
             continue
         send_webhook_message(f"Proceeding to Final Encode for {filename}@{res}")
 
-        # Determine the parent directory (one level up from the input file's directory)
+
         parent_dir = os.path.normpath(os.path.join(os.path.dirname(input_file), ".."))
-        # Build the output directory by joining the parent_dir with the resolution folder
+
         output_dir = os.path.normpath(os.path.join(parent_dir, res))
 
         # Construct the normalized output file path using os.path.join
@@ -719,7 +733,7 @@ def encode_file(input_file, resolutions, status_callback):
         if process.returncode == 0:
             log(f"\n✅ Successfully encoded: {output_file}\n")
             completion_bitrate = get_bitrate(output_file)
-            send_completion_webhook(completion_bitrate, res, input_file)
+
             status_callback(filename, res, "Completed")
 
             # ---------------------------
@@ -764,14 +778,19 @@ def encode_file(input_file, resolutions, status_callback):
             #---------------Screenshots---------------
             output_dir = os.path.normpath(os.path.join(parent_dir, res))
             screenshot_output_dir = os.path.join(output_dir, "screenshots")
-
+            send_webhook_message("Extracting Screenshots for ptp upload")
             screenshot_bbcodes = config.extract_screenshots(screenshot_output_dir, final_filename)
 
+            send_webhook_message("Creating Approval Document")
             log("Extracting MediaInfo...")
             mediainfo_text = config.extract_mediainfo(final_filename)
 
             log("\nSearching PTP...")
-            ptp_url = config.get_ptp_permalink({official_title.replace(' ', '.')}, official_year, final_filename)
+            movie_title = official_title.replace('.', ' ')
+
+            print(f"Sending {movie_title}, {official_year}, {final_filename}, {original_filename}")
+
+            ptp_url = config.get_ptp_permalink(movie_title, official_year, final_filename, original_filename)
 
             # Step 4: Get movie sources
             log("\nGetting torrent sources")
@@ -779,10 +798,11 @@ def encode_file(input_file, resolutions, status_callback):
 
             # Step 5: Generate approval file
             log("\nGenerating approval document...")
-            config.generate_approval_form(ptp_url, mediainfo_text, screenshot_bbcodes, ptp_sources)
+            approval_output_dir = os.path.join(output_dir, "approval.txt")
+            config.generate_approval_form(ptp_url, mediainfo_text, screenshot_bbcodes, ptp_sources, approval_output_dir, movie_title)
 
             print(f"\nProcess complete! Approval file saved to {APPROVAL_FILENAME}")
-
+            send_completion_webhook(completion_bitrate, res, input_file)
 
 
         else:

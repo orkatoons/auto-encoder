@@ -115,7 +115,7 @@ def extract_screenshots(SCREENSHOT_OUTPUT_DIR, SOURCE_FILE_PATH):
     return bbcodes
 
 
-def find_torrent_id_cli(movie_title, source_filename):
+def find_torrent_id_cli(movie_title, source_filename, original_filename):
     """
     Uses the ptp CLI to search for movie_title, then picks the torrent whose
     ReleaseName matches source_filename (exactly or via substring).
@@ -148,7 +148,7 @@ def find_torrent_id_cli(movie_title, source_filename):
         if not match:
             continue
         torrent_id, release_name = match.group(1), match.group(2).strip()
-        if release_name == source_filename or str(source_filename) in release_name:
+        if release_name == original_filename or str(original_filename) in release_name:
             print(f"[INFO] Match found: {torrent_id} -> {release_name}")
             return torrent_id
 
@@ -156,7 +156,7 @@ def find_torrent_id_cli(movie_title, source_filename):
     return None
 
 
-def get_ptp_permalink(movie_title, release_year, source_filename):
+def get_ptp_permalink(movie_title, release_year, source_filename, original_filename):
     """
     Combines API lookup for the PTP movie ID with CLI-based torrent ID extraction.
     Falls back to API-based torrent lookup if CLI fails.
@@ -174,7 +174,7 @@ def get_ptp_permalink(movie_title, release_year, source_filename):
     movie_id = movie['Id']
 
     # Next, try the CLI approach to get torrent ID
-    torrent_id = find_torrent_id_cli(movie_title, source_filename)
+    torrent_id = find_torrent_id_cli(movie_title, source_filename, original_filename)
     print(torrent_id)
     # Build the final URL
     if torrent_id:
@@ -214,13 +214,13 @@ def find_movie_source_cli(torrent_link):
 
 
 
-def generate_approval_form(ptp_url, mediainfo_text, screenshot_bbcodes, ptp_sources):
+def generate_approval_form(ptp_url, mediainfo_text, screenshot_bbcodes, ptp_sources, approval_file, movie_title):
     """Generate approval.txt in final BBCode format for forum use"""
 
     bbcode_screenshots = "\n".join(screenshot_bbcodes)
 
     content = f"""[align=center][b][size=8] [color=#3d85c6]HANDJOB Encode[/color] [/size][/b][/align]
-[hr][align=center][size=3]Encode with: [color=#c5c5c5][i][url={ptp_url}] {MOVIE_TITLE} - {ptp_sources}[/url][/i][/color][/size][/align][hr]
+[hr][align=center][size=3]Encode with: [color=#c5c5c5][i][url={ptp_url}] {movie_title} - {ptp_sources}[/url][/i][/color][/size][/align][hr]
 [pre]
 
 [/pre]
@@ -240,7 +240,7 @@ def generate_approval_form(ptp_url, mediainfo_text, screenshot_bbcodes, ptp_sour
 [/pre]
 [img]https://ptpimg.me/s91993.png[/img][/align]"""
 
-    with open(APPROVAL_FILENAME, 'w', encoding='utf-8') as f:
+    with open(approval_file, 'w', encoding='utf-8') as f:
         f.write(content)
 
 
