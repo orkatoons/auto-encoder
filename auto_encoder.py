@@ -711,12 +711,12 @@ def encode_file(input_file, resolutions, status_callback):
             "-i", input_file,
             "-o", output_file,
             "--crop", approved_crop,
+            "--non-anamorphic",  # 👈 Force proper scaling
             "--encoder", "x264",
-            "-a", "none",  # disable audio
-            "-s", "none",  # disable subtitles
+            "-a", "none",
+            "-s", "none",
             "--quality", str(cq),
             "--width", str(settings["width"]),
-            "--height", str(settings["height"]),
             "--encoder-preset", "placebo",
             "--encoder-profile", "high",
             "--encoder-level", "4.1",
