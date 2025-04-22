@@ -1,0 +1,12 @@
+eac3to v3.52
+command line: eac3to "W:/Encodes/Maine Pyar Kiya/source/Maine.Pyar.Kiya.1989.1080p.BluRay.Remux.AVC.DTS-HDMA.5.1-BDR.mkv"
+------------------------------------------------------------------------------
+Running in fast mode
+Keeping dialnorm
+MKV, 1 video track, 1 audio track, 1 subtitle track, 3:12:17, 24p
+1: h264/AVC, zxx, 1080p24 (16:9)
+   "MPEG-4 AVC Video / 17000 kbps / 1080p / 24 fps / 16:9 / High Profile 4.1"
+2: DTS Master Audio, Hindi, 5.1 channels, 24 bits, 48kHz, dialnorm: 0dB
+   (core: DTS, 5.1 channels, 1509kbps, 48kHz, dialnorm: 0dB)
+   "DTS-HD Master Audio / 3808 kbps / 5.1 / 48 kHz / 24-bit"
+3: Subtitle (PGS), English

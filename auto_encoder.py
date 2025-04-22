@@ -133,7 +133,7 @@ def make_even(value):
 
 def detect_black_bars(frame):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    _, thresh = cv2.threshold(gray, 5, 255, cv2.THRESH_BINARY)
+    _, thresh = cv2.threshold(gray, 10, 255, cv2.THRESH_BINARY)
     contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     x, y, w, h = cv2.boundingRect(np.vstack(contours))
     return x, y, w, h
@@ -150,7 +150,7 @@ def extract_frame(input_file, start_time, temp_frame):
 
 
 def get_cropping(input_file, cropped_image, res, cq=17):
-    send_webhook_message(f"Beginning Cropping for {input_file}")
+    send_webhook_message(f"✂Beginning Cropping for {input_file}")
 
     settings = PRESET_SETTINGS.get(res)
     if not settings:
@@ -182,6 +182,7 @@ def get_cropping(input_file, cropped_image, res, cq=17):
 
         # Compute median crop values for consistency
     crops_array = np.array(crops)
+    send_webhook_message(crops_array)
     median_crop = np.median(crops_array, axis=0).astype(int)
     final_crop_values = f'{median_crop[0]}:{median_crop[1]}:{median_crop[2]}:{median_crop[3]}'
 
@@ -420,7 +421,7 @@ def extract_audio(input_file, res):
                 os.remove(temp_audio)
 
             audio_paths.append(output_file)
-            send_webhook_message(f"✅ Audio extraction complete for {base_name}@{res}")
+            send_webhook_message(f"🔊 Audio extraction complete for {base_name}@{res}")
 
     return audio_paths
 
@@ -459,7 +460,7 @@ def extract_subtitles(mkv_path):
             cmd = [MKVEXTRACT, "tracks", mkv_path, f"{track._track_id}:{output_file}"]
             print("Running command:", " ".join(cmd))
             subprocess.run(cmd)
-            send_webhook_message(f"✅ Extracted subtitle track {track._track_id} for {base_name}")
+            send_webhook_message(f"🖨 Extracted subtitle track {track._track_id} for {base_name}")
 
             subtitle_paths.append(output_file)
         else:
@@ -601,7 +602,7 @@ def multiplex_file(
     # Run the command
     print("Running command:", " ".join(cmd))
     subprocess.run(cmd)
-    send_webhook_message("✅ Mutliplexing Completed")
+    send_webhook_message("🎟 Multiplexing Completed")
 
 
 # --------------------Phase 5 (Screenshots)--------------------
@@ -657,7 +658,7 @@ def extract_mediainfo(source_file):
 def encode_file(input_file, resolutions, status_callback):
     filename = os.path.basename(input_file)
     original_filename = os.path.splitext(os.path.basename(input_file))[0]
-    send_webhook_message(f"Beginning encoding for {filename} @ {resolutions}")
+    send_webhook_message(f"🎞Beginning encoding for {filename} @ {resolutions}")
 
     # Extract subtitles & store paths
     subtitle_files = extract_subtitles(input_file)
@@ -689,7 +690,7 @@ def encode_file(input_file, resolutions, status_callback):
             log(f"⏩ Final encoding for {res} was cancelled.")
             status_callback(filename, res, "Cancelled")
             continue
-        send_webhook_message(f"Proceeding to Final Encode for {filename}@{res}")
+        send_webhook_message(f"🎞Proceeding to Final Encode for {filename}@{res}")
 
 
         parent_dir = os.path.normpath(os.path.join(os.path.dirname(input_file), ".."))
@@ -783,10 +784,10 @@ def encode_file(input_file, resolutions, status_callback):
             #---------------Screenshots---------------
             output_dir = os.path.normpath(os.path.join(parent_dir, res))
             screenshot_output_dir = os.path.join(output_dir, "screenshots")
-            send_webhook_message("Extracting Screenshots for ptp upload")
+            send_webhook_message("📸Extracting Screenshots for ptp upload")
             screenshot_bbcodes = config.extract_screenshots(screenshot_output_dir, final_filename)
 
-            send_webhook_message("Creating Approval Document")
+            send_webhook_message("🖨Creating Approval Document")
             log("Extracting MediaInfo...")
             mediainfo_text = config.extract_mediainfo(final_filename)
 
