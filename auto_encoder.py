@@ -12,7 +12,12 @@ from imdb import IMDb
 import json
 import config
 import cv2
-from flask.cli import load_dotenv
+from dotenv import load_dotenv
+import logging
+logging.basicConfig(level=logging.INFO)
+
+import sys
+sys.stdout.reconfigure(encoding='utf-8')
 
 
 # ----------------- Configuration -----------------
@@ -27,10 +32,10 @@ PTPIMG_API_KEY = os.getenv("API_KEY")
 UPLOAD_TO_PTPIMG = True
 
 PRESET_SETTINGS = {
-    "480p": {"width": 854, "height": 480, "quality": 11},
-    "576p": {"width": 1024, "height": 576, "quality": 13},
-    "720p": {"width": 1280, "height": 720, "quality": 15},
-    "1080p": {"width": 1920, "height": 1080, "quality": 17},
+    "480p": {"width": 854, "height": 480, "quality": 11, "ratio": "16:9"},
+    "576p": {"width": 1024, "height": 576, "quality": 13, "ratio": "16:9"},
+    "720p": {"width": 1280, "height": 720, "quality": 15, "ratio": "16:9"},
+    "1080p": {"width": 1920, "height": 1080, "quality": 17, "ratio": "16:9"},
 }
 
 BITRATE_RANGES = {
@@ -52,36 +57,7 @@ APPROVAL_FILENAME = "approval.txt"
 
 # ----------------- Utility Functions -----------------
 
-def determine_encodes(file_path):
-    """
-    Determines the encoding resolutions based on the filename.
-    - BluRay sources get ["720p", "576p", "480p"].
-    - Everything else gets only ["720p"].
-    """
-    global encoding_source_format
-    source_keywords = [
-        ("bluray", "BluRay"), ("blu-ray", "BluRay"), ("brrip", "BluRay"),
-        ("bdrip", "BluRay"), ("bd25", "BluRay"), ("bd50", "BluRay"),
-        ("remux", "BluRay"), ("web-dl", "WEB-DL"), ("webdl", "WEB-DL"),
-        ("webrip", "WEB-DL"), ("amzn", "WEB-DL"), ("netflix", "WEB-DL"),
-        ("hdrip", "WEB-DL"), ("dvdrip", "WEB-DL"), ("hdtv", "WEB-DL")
-    ]
 
-    filename = os.path.basename(file_path).lower()
-
-    # Detect source format
-    source_format = "Unknown"
-    for keyword, fmt in source_keywords:
-        if keyword in filename:
-            source_format = fmt
-            encoding_source_format = fmt
-            break  # Stop at first match
-
-    # Assign resolutions based on format
-    if source_format == "BluRay":
-        return ["720p", "576p", "480p"]
-    else:
-        return ["720p"]
 
 
 def send_completion_webhook(completion_bitrate, resolution, input_file):
@@ -133,7 +109,7 @@ def make_even(value):
 
 def detect_black_bars(frame):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    _, thresh = cv2.threshold(gray, 10, 255, cv2.THRESH_BINARY)
+    _, thresh = cv2.threshold(gray, 5, 255, cv2.THRESH_BINARY)
     contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     x, y, w, h = cv2.boundingRect(np.vstack(contours))
     return x, y, w, h
@@ -149,10 +125,9 @@ def extract_frame(input_file, start_time, temp_frame):
 
 
 
-def get_cropping(input_file, cropped_image, res, cq=17):
-    send_webhook_message(f"✂Beginning Cropping for {input_file}")
+def get_cropping(settings, input_file, cropped_image, res, cq=17):
+    send_webhook_message(f"Beginning Cropping for {input_file}")
 
-    settings = PRESET_SETTINGS.get(res)
     if not settings:
         log(f"❌ No settings found for {res}, skipping...")
         return None
@@ -182,7 +157,6 @@ def get_cropping(input_file, cropped_image, res, cq=17):
 
         # Compute median crop values for consistency
     crops_array = np.array(crops)
-    send_webhook_message(crops_array)
     median_crop = np.median(crops_array, axis=0).astype(int)
     final_crop_values = f'{median_crop[0]}:{median_crop[1]}:{median_crop[2]}:{median_crop[3]}'
 
@@ -421,7 +395,7 @@ def extract_audio(input_file, res):
                 os.remove(temp_audio)
 
             audio_paths.append(output_file)
-            send_webhook_message(f"🔊 Audio extraction complete for {base_name}@{res}")
+            send_webhook_message(f"✅ Audio extraction complete for {base_name}@{res}")
 
     return audio_paths
 
@@ -460,7 +434,7 @@ def extract_subtitles(mkv_path):
             cmd = [MKVEXTRACT, "tracks", mkv_path, f"{track._track_id}:{output_file}"]
             print("Running command:", " ".join(cmd))
             subprocess.run(cmd)
-            send_webhook_message(f"🖨 Extracted subtitle track {track._track_id} for {base_name}")
+            send_webhook_message(f"✅ Extracted subtitle track {track._track_id} for {base_name}")
 
             subtitle_paths.append(output_file)
         else:
@@ -471,10 +445,6 @@ def extract_subtitles(mkv_path):
 
 
 # --------------------Helper: IMDb Title Lookup--------------------
-import time
-from imdb import IMDb, IMDbError
-import os
-import re
 
 
 def find_movie(filename):
@@ -602,7 +572,7 @@ def multiplex_file(
     # Run the command
     print("Running command:", " ".join(cmd))
     subprocess.run(cmd)
-    send_webhook_message("🎟 Multiplexing Completed")
+    send_webhook_message("✅ Mutliplexing Completed")
 
 
 # --------------------Phase 5 (Screenshots)--------------------
@@ -655,14 +625,14 @@ def extract_mediainfo(source_file):
 
 
 # --------------------Main Encoding Function--------------------
-def encode_file(input_file, resolutions, status_callback):
+def encode_file(input_file, resolutions):
     filename = os.path.basename(input_file)
     original_filename = os.path.splitext(os.path.basename(input_file))[0]
-    send_webhook_message(f"🎞Beginning encoding for {filename} @ {resolutions}")
+    send_webhook_message(f"Beginning encoding for {filename} @ {resolutions}")
 
     # Extract subtitles & store paths
     subtitle_files = extract_subtitles(input_file)
-
+    report_progress(filename, 5)
     for res in resolutions:
         status_callback(filename, res, "Starting...")
         settings = PRESET_SETTINGS.get(res)
@@ -678,19 +648,21 @@ def encode_file(input_file, resolutions, status_callback):
         # Extract audio & store paths
         audio_files = extract_audio(input_file, res)
         print("Audio extracted")
-
-        approved_crop = get_cropping(input_file, f"preview_snapshot_{res}.png", res)
+        report_progress(filename, 10)
+        approved_crop = get_cropping(settings, input_file, f"preview_snapshot_{res}.png", res)
         if not approved_crop:
             log("⏩ Skipping final encoding due to lack of crop approval.")
             status_callback(filename, res, "Skipped (no crop)")
             continue
 
+        report_progress(filename, 20)
         cq = adjust_cq_for_bitrate(input_file, res, approved_crop)
         if cq is None:
             log(f"⏩ Final encoding for {res} was cancelled.")
             status_callback(filename, res, "Cancelled")
             continue
-        send_webhook_message(f"🎞Proceeding to Final Encode for {filename}@{res}")
+        report_progress(filename, 30)
+        send_webhook_message(f"Proceeding to Final Encode for {filename}@{res}")
 
 
         parent_dir = os.path.normpath(os.path.join(os.path.dirname(input_file), ".."))
@@ -711,12 +683,12 @@ def encode_file(input_file, resolutions, status_callback):
             "-i", input_file,
             "-o", output_file,
             "--crop", approved_crop,
-            "--non-anamorphic",  # 👈 Force proper scaling
             "--encoder", "x264",
-            "-a", "none",
-            "-s", "none",
+            "-a", "none",  # disable audio
+            "-s", "none",  # disable subtitles
             "--quality", str(cq),
             "--width", str(settings["width"]),
+            "--height", str(settings["height"]),
             "--encoder-preset", "placebo",
             "--encoder-profile", "high",
             "--encoder-level", "4.1",
@@ -736,6 +708,7 @@ def encode_file(input_file, resolutions, status_callback):
         process.wait()
 
         if process.returncode == 0:
+            report_progress(filename, 80)
             log(f"\n✅ Successfully encoded: {output_file}\n")
             completion_bitrate = get_bitrate(output_file)
 
@@ -780,14 +753,14 @@ def encode_file(input_file, resolutions, status_callback):
                 final_filename=final_filename,
                 file_title=file_title
             )
-
+            report_progress(filename, 85)
             #---------------Screenshots---------------
             output_dir = os.path.normpath(os.path.join(parent_dir, res))
             screenshot_output_dir = os.path.join(output_dir, "screenshots")
-            send_webhook_message("📸Extracting Screenshots for ptp upload")
+            send_webhook_message("Extracting Screenshots for ptp upload")
             screenshot_bbcodes = config.extract_screenshots(screenshot_output_dir, final_filename)
-
-            send_webhook_message("🖨Creating Approval Document")
+            report_progress(filename, 90)
+            send_webhook_message("Creating Approval Document")
             log("Extracting MediaInfo...")
             mediainfo_text = config.extract_mediainfo(final_filename)
 
@@ -797,7 +770,7 @@ def encode_file(input_file, resolutions, status_callback):
             print(f"Sending {movie_title}, {official_year}, {final_filename}, {original_filename}")
 
             ptp_url = config.get_ptp_permalink(movie_title, official_year, final_filename, original_filename)
-
+            report_progress(filename, 95)
             # Step 4: Get movie sources
             log("\nGetting torrent sources")
             ptp_sources = config.find_movie_source_cli(ptp_url)
@@ -806,7 +779,7 @@ def encode_file(input_file, resolutions, status_callback):
             log("\nGenerating approval document...")
             approval_output_dir = os.path.join(output_dir, "approval.txt")
             config.generate_approval_form(ptp_url, mediainfo_text, screenshot_bbcodes, ptp_sources, approval_output_dir, movie_title)
-
+            report_progress(filename, 100)
             print(f"\nProcess complete! Approval file saved to {APPROVAL_FILENAME}")
             send_completion_webhook(completion_bitrate, res, input_file)
 
@@ -816,127 +789,61 @@ def encode_file(input_file, resolutions, status_callback):
             send_webhook_message(f"Encoding failed for {filename}@{res}")
             status_callback(filename, res, "Failed")
 
+def determine_encodes(file_path):
+    """
+    Determines the encoding resolutions based on the filename.
+    - BluRay sources get ["720p", "576p", "480p"].
+    - Everything else gets only ["720p"].
+    """
+    global encoding_source_format
+    source_keywords = [
+        ("bluray", "BluRay"), ("blu-ray", "BluRay"), ("brrip", "BluRay"),
+        ("bdrip", "BluRay"), ("bd25", "BluRay"), ("bd50", "BluRay"),
+        ("remux", "BluRay"), ("web-dl", "WEB-DL"), ("webdl", "WEB-DL"),
+        ("webrip", "WEB-DL"), ("amzn", "WEB-DL"), ("netflix", "WEB-DL"),
+        ("hdrip", "WEB-DL"), ("dvdrip", "WEB-DL"), ("hdtv", "WEB-DL")
+    ]
 
-# ----------------- GUI Components -----------------
+    filename = os.path.basename(file_path).lower()
 
-class TextRedirector(object):
-    def __init__(self, widget):
-        self.widget = widget
-    def write(self, s):
-        self.widget.configure(state="normal")
-        self.widget.insert("end", s)
-        self.widget.see("end")
-        self.widget.configure(state="disabled")
-    def flush(self):
-        pass
+    # Detect source format
+    source_format = "Unknown"
+    for keyword, fmt in source_keywords:
+        if keyword in filename:
+            source_format = fmt
+            encoding_source_format = fmt
+            break  # Stop at first match
 
-def sub_log(message, end="\n"):
-    global subprocess_text
-    subprocess_text.configure(state="normal")
-    subprocess_text.insert("end", message + end)
-    subprocess_text.see("end")
-    subprocess_text.configure(state="disabled")
+    # Assign resolutions based on format
+    if source_format == "BluRay":
+        return ["720p", "576p", "480p"]
+    else:
+        return ["720p"]
+    
 
 def log(message, end="\n"):
-    print(message, end=end)
+    logging.info(message)
 
-class EncoderGUI:
-    def __init__(self, master):
-        self.master = master
-        master.title("Automation Encoding Queue")
+def sub_log(message, end="\n"):
+    logging.info(message)
 
-        self.left_frame = Frame(master)
-        self.left_frame.pack(side=LEFT, fill="both", expand=True)
+def status_callback(filename, res, status):
+    log(f"Status for {filename}@{res}: {status}")
 
-        self.file_listbox = Listbox(self.left_frame, width=50)
-        self.file_listbox.grid(row=0, column=0, sticky="nsew")
+def report_progress(filename, percent):
+    print(f"PROGRESS::{filename}::{percent}")  # Goes to Node stdout
+    sys.stdout.flush()
+    time.sleep(0.5)
 
-        self.add_button = Button(self.left_frame, text="Select Files", command=self.select_files)
-        self.add_button.grid(row=1, column=0, sticky="ew")
-
-        self.start_button = Button(self.left_frame, text="Start Encoding", command=self.start_encoding)
-        self.start_button.grid(row=2, column=0, sticky="ew")
-
-        self.status_label = Label(self.left_frame, text="Encoding Status")
-        self.status_label.grid(row=3, column=0, sticky="ew")
-
-        self.status_listbox = Listbox(self.left_frame)
-        self.status_listbox.grid(row=4, column=0, sticky="nsew")
-
-        self.right_frame = Frame(master)
-        self.right_frame.pack(side=RIGHT, fill="both", expand=True)
-
-        self.console_frame = Frame(self.right_frame)
-        self.console_frame.pack(fill="both", expand=True)
-        self.log_text = Text(self.console_frame, wrap="word", state="disabled", height=15)
-        self.log_text.pack(side=LEFT, fill="both", expand=True)
-        self.log_scroll = Scrollbar(self.console_frame, command=self.log_text.yview, orient="vertical")
-        self.log_scroll.pack(side=RIGHT, fill="y")
-        self.log_text.config(yscrollcommand=self.log_scroll.set)
-
-        self.subprocess_frame = Frame(self.right_frame)
-        self.subprocess_frame.pack(fill="both", expand=True)
-        global subprocess_text
-        subprocess_text = Text(self.subprocess_frame, wrap="word", state="disabled", height=10)
-        subprocess_text.pack(side=LEFT, fill="both", expand=True)
-        self.subproc_scroll = Scrollbar(self.subprocess_frame, command=subprocess_text.yview, orient="vertical")
-        self.subproc_scroll.pack(side=RIGHT, fill="y")
-        subprocess_text.config(yscrollcommand=self.subproc_scroll.set)
-
-        sys.stdout = TextRedirector(self.log_text)
-        sys.stderr = TextRedirector(self.log_text)
-
-        self.file_queue = []
-        self.status_entries = {}
-
-        self.left_frame.grid_rowconfigure(0, weight=1)
-        self.left_frame.grid_rowconfigure(4, weight=1)
-        self.left_frame.grid_columnconfigure(0, weight=1)
-
-    def update_status_entry(self, filename, res, status):
-        key = (filename, res)
-        entry_text = f"{filename} - {res} - {status}"
-        if key in self.status_entries:
-            index = self.status_entries[key]
-            self.status_listbox.delete(index)
-            self.status_listbox.insert(index, entry_text)
-            self.status_entries[key] = index  # Update index in case of shifts
-        else:
-            index = self.status_listbox.size()
-            self.status_listbox.insert(END, entry_text)
-            self.status_entries[key] = index
-        self.status_listbox.see(END)
-
-    def select_files(self):
-        file_paths = filedialog.askopenfilenames(title="Select video files to encode",
-                                                 filetypes=[("Video Files", "*.mp4 *.mkv *.avi")])
-        for path in file_paths:
-            if path not in self.file_queue:
-                self.file_queue.append(path)
-                self.file_listbox.insert(END, path)
-
-    def start_encoding(self):
-        self.add_button.config(state="disabled")
-        self.start_button.config(state="disabled")
-        threading.Thread(target=self.process_queue, daemon=True).start()
-
-    def process_queue(self):
-        while self.file_queue:
-            current_file = self.file_queue.pop(0)
-            self.file_listbox.delete(0)
-            log(f"\n==================\nProcessing file: {current_file}")
-            encodes = determine_encodes(current_file)
-            if encodes:
-                def status_callback(filename, res, status):
-                    self.master.after(0, self.update_status_entry, filename, res, status)
-                encode_file(current_file, encodes, status_callback)
-            else:
-                log(f"⚠️ No valid encode type detected for {current_file} (not WebDL or BluRay).")
-        log("✅ All files processed.")
-        self.add_button.config(state="normal")
-        self.start_button.config(state="normal")
+def start_encoding(file):
+    resolutions = determine_encodes(file)
+    encode_file(file, resolutions)
+    log(f"Encoding completed for {file}")
 
 if __name__ == "__main__":
-    root = Tk()
-    gui = EncoderGUI(root)
-    root.mainloop()
+    # Get the file path from the command-line argument
+    if len(sys.argv) > 1:
+        file_path = sys.argv[1]
+        start_encoding(file_path)
+    else:
+        print("No file path provided.")
