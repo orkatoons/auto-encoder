@@ -690,6 +690,8 @@ def encode_file(input_file, resolutions):
             os.path.join(output_dir, f"{os.path.splitext(filename)[0]}@{res}.mkv")
         )
 
+        final_encode_log = os.path.join(output_dir, "handbrake_encode_log.txt")
+
         print("Output file path:", output_file)  # Debugging
         log(f"Output file path: {output_file}")  # Debugging
 
@@ -717,11 +719,14 @@ def encode_file(input_file, resolutions):
         ]
         status_callback(filename, res, "Encoding...")
         log(f"\n🚀 Starting final encode for {res}... at CQ {cq}\n")
-        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                   text=True, encoding="utf-8", errors="ignore")
-        for line in process.stdout:
-            sub_log(line, end="")
-        process.wait()
+        with open(final_encode_log, "w", encoding="utf-8", errors="ignore") as log_file:
+            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                       text=True, encoding="utf-8", errors="ignore")
+            for line in process.stdout:
+                sub_log(line, end="")
+                log_file.write(line)
+                log_file.flush()
+            process.wait()
 
         if process.returncode == 0:
             report_progress(filename, 80)
@@ -794,7 +799,9 @@ def encode_file(input_file, resolutions):
             # Step 5: Generate approval file
             log("\nGenerating approval document...")
             approval_output_dir = os.path.join(output_dir, "approval.txt")
+            upload_output_dir = os.path.join(output_dir, "upload.txt")
             config.generate_approval_form(ptp_url, mediainfo_text, screenshot_bbcodes, ptp_sources, approval_output_dir, movie_title)
+            config.generate_upload_form(ptp_url, mediainfo_text, screenshot_bbcodes, upload_output_dir, final_encode_log)
             report_progress(filename, 100)
             print(f"\nProcess complete! Approval file saved to {APPROVAL_FILENAME}")
             send_completion_webhook(completion_bitrate, res, input_file)
@@ -860,6 +867,7 @@ if __name__ == "__main__":
     # Get the file path from the command-line argument
     if len(sys.argv) > 1:
         file_path = sys.argv[1]
-        start_encoding(file_path)
+        for file in file_path:
+            start_encoding(file)
     else:
         print("No file path provided.")

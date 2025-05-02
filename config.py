@@ -257,7 +257,7 @@ def find_movie_source_cli(torrent_link):
 
 
 
-def generate_approval_form(ptp_url, mediainfo_text, screenshot_bbcodes, ptp_sources, approval_file, movie_title):
+def generate_upload_form(ptp_url, mediainfo_text, screenshot_bbcodes, ptp_sources, approval_file, movie_title):
     """Generate approval.txt in final BBCode format for forum use"""
 
     bbcode_screenshots = "\n".join(screenshot_bbcodes)
@@ -285,6 +285,26 @@ def generate_approval_form(ptp_url, mediainfo_text, screenshot_bbcodes, ptp_sour
 
     with open(approval_file, 'w', encoding='utf-8') as f:
         f.write(content)
+
+
+def generate_approval_form(ptp_url, mediainfo_text, screenshot_bbcodes, approval_file, handbrake_log):
+    """Generate approval.txt in final BBCode format for forum use"""
+
+    bbcode_screenshots = "\n".join(screenshot_bbcodes)
+
+    content = f"""Requesting approval for encode of [{ptp_url}]
+
+    [mediainfo]{mediainfo_text}[/mediainfo]
+    
+    [hide=Encode Screenshots]
+    {bbcode_screenshots}
+    [/hide]
+    
+    [hide=HandBrake log][code]{handbrake_log}[/code][/hide]"""
+
+    with open(approval_file, 'w', encoding='utf-8') as f:
+        f.write(content)
+
 
 
 def main():
