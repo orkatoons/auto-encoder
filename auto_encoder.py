@@ -8,7 +8,7 @@ import re
 import requests
 from pymkv import MKVFile
 import numpy as np
-from imdb import IMDb
+from imdb import IMDb, IMDbError
 import json
 import config
 import cv2
@@ -316,6 +316,8 @@ def extract_audio(input_file, res):
     output_dir = os.path.normpath(os.path.join(parent_dir, res))
     os.makedirs(output_dir, exist_ok=True)
 
+    lossless_codecs = ["DTS-HD MA", "TrueHD", "LPCM", "FLAC"]
+
     print("Input file:", input_file)
     print("Input dir:", input_dir)
     print("Base name:", base_name)
@@ -342,60 +344,75 @@ def extract_audio(input_file, res):
         track_number = track_number.strip()
         channels = channels.strip()
 
-        if channels in ["5.1", "7.1"]:
-            # Decide bitrate
-            bitrate = "448" if ("480p" in input_file or "576p" in input_file) else "640"
-            output_file = os.path.normpath(
-                os.path.join(output_dir, f"{os.path.splitext(base_name)[0]}@{res}-{bitrate}.ac3")
-            )
-            extract_cmd = [
-                "eac3to",
-                f'"{input_file}"',
-                f'{track_number}:"{output_file}"',
-                f"-{bitrate}"
-            ]
-            print("Running command:", " ".join(extract_cmd))
-            process = subprocess.run(" ".join(extract_cmd), shell=True, capture_output=True, text=True)
+        track_quality = rf"{track_number}: (.+)"
+        match = re.search(track_quality, result.stdout)
+        codec_info = match.group(1).strip() if match else ""
+        print(f"Track {track_number} codec: {codec_info}")
 
-            print("STDOUT:\n", process.stdout)
-            if process.stderr:
-                print("STDERR:\n", process.stderr)
-                send_webhook_message("❌ Audio extraction failed!")
+        is_lossless = any(codec in codec_info for codec in lossless_codecs)
 
-            audio_paths.append(output_file)
-            send_webhook_message(f"✅ Audio extraction complete for {base_name}@{res}")
+        if is_lossless:
+            if channels in ["5.1", "7.1"]:
+                # Decide bitrate
+                bitrate = "448" if ("480p" in input_file or "576p" in input_file) else "640"
+                output_file = os.path.normpath(
+                    os.path.join(output_dir, f"{os.path.splitext(base_name)[0]}@{res}-{bitrate}.ac3")
+                )
+                extract_cmd = [
+                    "eac3to",
+                    f'"{input_file}"',
+                    f'{track_number}:"{output_file}"',
+                    f"-{bitrate}"
+                ]
+                print("Running command:", " ".join(extract_cmd))
+                process = subprocess.run(" ".join(extract_cmd), shell=True, capture_output=True, text=True)
+
+                print("STDOUT:\n", process.stdout)
+                if process.stderr:
+                    print("STDERR:\n", process.stderr)
+                    send_webhook_message("❌ Audio extraction failed!")
+
+                audio_paths.append(output_file)
+                send_webhook_message(f"✅ Audio extraction complete for {base_name}@{res}")
+            else:
+                # Stereo or mono
+                temp_audio = os.path.normpath(os.path.join(output_dir, "temp.aac"))
+                final_audio = os.path.normpath(os.path.join(output_dir, f"{base_name}.m4a"))
+                output_file = os.path.normpath(
+                    os.path.join(output_dir, f"{os.path.splitext(base_name)[0]}@{res}.m4a")
+                )
+
+                extract_cmd = f'eac3to "{input_file}" {track_number}:"{temp_audio}"'
+                qaac_cmd = f'qaac64 -V 127 -i "{temp_audio}" --no-delay -o "{output_file}"'
+
+                print(f"🎤 Extracting stereo/mono audio track {track_number}...")
+                process = subprocess.run(extract_cmd, shell=True, capture_output=True, text=True)
+                print("STDOUT:\n", process.stdout)
+
+                if process.stderr:
+                    print("STDERR:\n", process.stderr)
+                    send_webhook_message("❌ Audio extraction failed!")
+
+                print("🔄 Converting extracted audio with qaac...")
+                process = subprocess.run(qaac_cmd, shell=True, capture_output=True, text=True)
+                print("STDOUT:\n", process.stdout)
+
+                if process.stderr:
+                    print("STDERR:\n", process.stderr)
+
+                # Cleanup temp file if extraction succeeded
+                if os.path.exists(temp_audio):
+                    os.remove(temp_audio)
+
+                audio_paths.append(output_file)
         else:
-            # Stereo or mono
-            temp_audio = os.path.normpath(os.path.join(output_dir, "temp.aac"))
-            final_audio = os.path.normpath(os.path.join(output_dir, f"{base_name}.m4a"))
-            output_file = os.path.normpath(
-                os.path.join(output_dir, f"{os.path.splitext(base_name)[0]}@{res}.m4a")
-            )
-
-            extract_cmd = f'eac3to "{input_file}" {track_number}:"{temp_audio}"'
-            qaac_cmd = f'qaac64 -V 127 -i "{temp_audio}" --no-delay -o "{output_file}"'
-
-            print(f"🎤 Extracting stereo/mono audio track {track_number}...")
-            process = subprocess.run(extract_cmd, shell=True, capture_output=True, text=True)
-            print("STDOUT:\n", process.stdout)
-
-            if process.stderr:
-                print("STDERR:\n", process.stderr)
-                send_webhook_message("❌ Audio extraction failed!")
-
-            print("🔄 Converting extracted audio with qaac...")
-            process = subprocess.run(qaac_cmd, shell=True, capture_output=True, text=True)
-            print("STDOUT:\n", process.stdout)
-
-            if process.stderr:
-                print("STDERR:\n", process.stderr)
-
-            # Cleanup temp file if extraction succeeded
-            if os.path.exists(temp_audio):
-                os.remove(temp_audio)
-
+            print(f"Lossy Detected, extracting as is {codec_info}")
+            output_file = os.path.normpath(os.path.join(output_dir, f"{base_name}@{res}"))
+            extract_cmd = f'eac3to "{input_file}" {track_number}:"{output_file}"'
+            subprocess.run(extract_cmd, shell=True, capture_output=True, text=True)
             audio_paths.append(output_file)
-            send_webhook_message(f"✅ Audio extraction complete for {base_name}@{res}")
+
+    send_webhook_message(f"✅ Audio extraction complete for {base_name}@{res}")
 
     return audio_paths
 
