@@ -373,7 +373,7 @@ def extract_audio(input_file, res):
                     send_webhook_message("❌ Audio extraction failed!")
 
                 audio_paths.append(output_file)
-                send_webhook_message(f"✅ Audio extraction complete for {base_name}@{res}")
+                send_webhook_message(f"✅ Audio extraction complete for lossless surround {base_name}@{res}")
             else:
                 # Stereo or mono
                 temp_audio = os.path.normpath(os.path.join(output_dir, "temp.aac"))
@@ -403,16 +403,15 @@ def extract_audio(input_file, res):
                 # Cleanup temp file if extraction succeeded
                 if os.path.exists(temp_audio):
                     os.remove(temp_audio)
-
                 audio_paths.append(output_file)
+                send_webhook_message(f"✅ Audio extraction complete for lossless{base_name}@{res}")
         else:
             print(f"Lossy Detected, extracting as is {codec_info}")
             output_file = os.path.normpath(os.path.join(output_dir, f"{base_name}@{res}"))
             extract_cmd = f'eac3to "{input_file}" {track_number}:"{output_file}"'
             subprocess.run(extract_cmd, shell=True, capture_output=True, text=True)
             audio_paths.append(output_file)
-
-    send_webhook_message(f"✅ Audio extraction complete for {base_name}@{res}")
+            send_webhook_message(f"✅ Audio extraction complete for lossy {base_name}@{res}")
 
     return audio_paths
 
