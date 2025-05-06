@@ -300,120 +300,139 @@ def adjust_cq_for_bitrate(input_file, res, approved_crop):
             return 17
 
 
+def run_final_encode(input_file, output_file, approved_crop, cq, settings, final_encode_log, res, attempts=1, max_attempts=5):
+    min_bitrate, max_bitrate = BITRATE_RANGES[res]
+    send_webhook_message(f"Beginning encode {attempts} with cq {cq}")
+    command = [
+        HANDBRAKE_CLI,
+        "-i", input_file,
+        "-o", output_file,
+        "--crop", approved_crop,
+        "--non-anamorphic",
+        "--encoder", "x264",
+        "-a", "none",  # disable audio
+        "-s", "none",  # disable subtitles
+        "--quality", str(cq),
+        "--width", str(settings["width"]),
+        "--encoder-preset", "placebo",
+        "--encoder-profile", "high",
+        "--encoder-level", "4.1",
+        "--encopts",
+        (
+            "subme=10:deblock=-3,-3:me=umh:merange=32:mbtree=0:"
+            "dct-decimate=0:fast-pskip=0:aq-mode=2:aq-strength=1.0:"
+            "qcomp=0.60:psy-rd=1.1,0.00"
+        )
+    ]
+    log(f"\n🚀 Starting final encode for {res}... at CQ {cq}\n")
+    with open(final_encode_log, "w", encoding="utf-8", errors="ignore") as log_file:
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                   text=True, encoding="utf-8", errors="ignore")
+        for line in process.stdout:
+            sub_log(line, end="")
+            log_file.write(line)
+            log_file.flush()
+        process.wait()
+
+    bitrate = get_bitrate(output_file)
+    send_webhook_message(f"Encoding attempt #{attempts} completed at {bitrate} with cq {cq} ")
+    print("Final ranges are: ",min_bitrate, bitrate, max_bitrate)
+    if min_bitrate <= bitrate <= max_bitrate:
+        return True
+    elif attempts > max_attempts:
+        send_webhook_message("Failed to get desried final bitrate in 5 attempts aborting")
+        return False
+    elif bitrate > max_bitrate:
+        return run_final_encode(input_file, output_file, approved_crop, cq + 1, settings, final_encode_log, res, attempts= attempts+1)
+    elif bitrate < min_bitrate:
+        return run_final_encode(input_file, output_file, approved_crop, cq -1, settings, final_encode_log, res)
 
 # --------------------Phase 2 (Audio)--------------------
 def extract_audio(input_file, res):
     """
-    Extracts audio tracks using eac3to and returns a list of paths to the extracted audio files.
+    Extracts the best available audio track using eac3to:
+    - Prioritizes lossless (DTS-HD MA > TrueHD > LPCM > FLAC)
+    - Falls back to best lossy (highest channel count)
+    Returns path to the extracted audio file (single best track).
     """
+    global temp_audio, qaac_cmd
     input_dir = os.path.dirname(input_file)
     base_name = os.path.splitext(os.path.basename(input_file))[0]
-
-    # Determine the parent directory (one level up from the input file's directory)
-    parent_dir = os.path.normpath(os.path.join(os.path.dirname(input_file), ".."))
-
-    # Build the output directory by joining the parent_dir with the resolution folder
+    parent_dir = os.path.normpath(os.path.join(input_dir, ".."))
     output_dir = os.path.normpath(os.path.join(parent_dir, res))
     os.makedirs(output_dir, exist_ok=True)
 
     lossless_codecs = ["DTS-HD MA", "TrueHD", "LPCM", "FLAC"]
 
-    print("Input file:", input_file)
-    print("Input dir:", input_dir)
-    print("Base name:", base_name)
-    print("Output folder:", output_dir)
-    print(f"🎵 Detecting audio tracks for {base_name}...")
+    print(f"🎵 Scanning audio tracks for {base_name}...")
 
-    # Run eac3to to list tracks
+    # Get track list
     list_cmd = ["eac3to", input_file]
     result = subprocess.run(list_cmd, capture_output=True, text=True)
-    print(result.stdout)  # Show command output
+    stdout = result.stdout
     if result.stderr:
         print(result.stderr)
 
-    # Find audio tracks
-    tracks = re.findall(r"(\d+): .*?, (\d+\.\d) channels", result.stdout)
-    if not tracks:
+    # Match tracks
+    track_lines = re.findall(r"(\d+): (.+?)\s*\n", stdout)
+    if not track_lines:
         print("⚠️ No audio tracks found!")
-        return []  # Return empty list if no audio
+        return []
 
-    print("Continuing encoding")
-    audio_paths = []
+    # Sort by priority: lossless preferred, fallback to best lossy by channel count
+    def track_priority(line):
+        track_num, desc = line
+        for i, codec in enumerate(lossless_codecs):
+            if codec in desc:
+                return 0, i  # Lossless found, lower index = higher priority
+        match = re.search(r"(\d+\.\d) channels", desc)
+        channels = float(match.group(1)) if match else 0
+        return 1, -channels  # Lossy, prefer more channels
 
-    for track_number, channels in tracks:
-        track_number = track_number.strip()
-        channels = channels.strip()
+    sorted_tracks = sorted(track_lines, key=track_priority)
+    best_track_num, best_desc = sorted_tracks[0]
+    print(f"🎯 Best track: {best_track_num} - {best_desc}")
 
-        track_quality = rf"{track_number}: (.+)"
-        match = re.search(track_quality, result.stdout)
-        codec_info = match.group(1).strip() if match else ""
-        print(f"Track {track_number} codec: {codec_info}")
+    # Extract best track
+    is_lossless = any(codec in best_desc for codec in lossless_codecs)
+    is_surround = any(x in best_desc for x in ["5.1", "7.1"])
 
-        is_lossless = any(codec in codec_info for codec in lossless_codecs)
-
-        if is_lossless:
-            if channels in ["5.1", "7.1"]:
-                # Decide bitrate
-                bitrate = "448" if ("480p" in input_file or "576p" in input_file) else "640"
-                output_file = os.path.normpath(
-                    os.path.join(output_dir, f"{os.path.splitext(base_name)[0]}@{res}-{bitrate}.ac3")
-                )
-                extract_cmd = [
-                    "eac3to",
-                    f'"{input_file}"',
-                    f'{track_number}:"{output_file}"',
-                    f"-{bitrate}"
-                ]
-                print("Running command:", " ".join(extract_cmd))
-                process = subprocess.run(" ".join(extract_cmd), shell=True, capture_output=True, text=True)
-
-                print("STDOUT:\n", process.stdout)
-                if process.stderr:
-                    print("STDERR:\n", process.stderr)
-                    send_webhook_message("❌ Audio extraction failed!")
-
-                audio_paths.append(output_file)
-                send_webhook_message(f"✅ Audio extraction complete for lossless surround {base_name}@{res}")
-            else:
-                # Stereo or mono
-                temp_audio = os.path.normpath(os.path.join(output_dir, "temp.aac"))
-                final_audio = os.path.normpath(os.path.join(output_dir, f"{base_name}.m4a"))
-                output_file = os.path.normpath(
-                    os.path.join(output_dir, f"{os.path.splitext(base_name)[0]}@{res}.m4a")
-                )
-
-                extract_cmd = f'eac3to "{input_file}" {track_number}:"{temp_audio}"'
-                qaac_cmd = f'qaac64 -V 127 -i "{temp_audio}" --no-delay -o "{output_file}"'
-
-                print(f"🎤 Extracting stereo/mono audio track {track_number}...")
-                process = subprocess.run(extract_cmd, shell=True, capture_output=True, text=True)
-                print("STDOUT:\n", process.stdout)
-
-                if process.stderr:
-                    print("STDERR:\n", process.stderr)
-                    send_webhook_message("❌ Audio extraction failed!")
-
-                print("🔄 Converting extracted audio with qaac...")
-                process = subprocess.run(qaac_cmd, shell=True, capture_output=True, text=True)
-                print("STDOUT:\n", process.stdout)
-
-                if process.stderr:
-                    print("STDERR:\n", process.stderr)
-
-                # Cleanup temp file if extraction succeeded
-                if os.path.exists(temp_audio):
-                    os.remove(temp_audio)
-                audio_paths.append(output_file)
-                send_webhook_message(f"✅ Audio extraction complete for lossless{base_name}@{res}")
+    if is_lossless:
+        if is_surround:
+            bitrate = "448" if ("480p" in input_file or "576p" in input_file) else "640"
+            output_file = os.path.normpath(
+                os.path.join(output_dir, f"{base_name}@{res}-{bitrate}.ac3")
+            )
+            extract_cmd = f'eac3to "{input_file}" {best_track_num}:"{output_file}" -{bitrate}'
         else:
-            print(f"Lossy Detected, extracting as is {codec_info}")
-            output_file = os.path.normpath(os.path.join(output_dir, f"{base_name}@{res}"))
-            extract_cmd = f'eac3to "{input_file}" {track_number}:"{output_file}"'
-            subprocess.run(extract_cmd, shell=True, capture_output=True, text=True)
-            audio_paths.append(output_file)
-            send_webhook_message(f"✅ Audio extraction complete for lossy {base_name}@{res}")
+            temp_audio = os.path.join(output_dir, "temp.aac")
+            output_file = os.path.normpath(os.path.join(output_dir, f"{base_name}@{res}.m4a"))
+            extract_cmd = f'eac3to "{input_file}" {best_track_num}:"{temp_audio}"'
+            qaac_cmd = f'qaac64 -V 127 -i "{temp_audio}" --no-delay -o "{output_file}"'
+    else:
+        ext = "ac3" if is_surround else "m4a"
+        output_file = os.path.normpath(os.path.join(output_dir, f"{base_name}@{res}.{ext}"))
+        extract_cmd = f'eac3to "{input_file}" {best_track_num}:"{output_file}"'
 
-    return audio_paths
+    print("🔧 Extracting audio...")
+    result = subprocess.run(extract_cmd, shell=True, capture_output=True, text=True)
+    print(result.stdout)
+    if result.stderr:
+        print("STDERR:", result.stderr)
+        send_webhook_message("❌ Audio extraction failed!")
+        return []
+
+    if is_lossless and not is_surround:
+        print("🎛 Converting with qaac...")
+        result = subprocess.run(qaac_cmd, shell=True, capture_output=True, text=True)
+        print(result.stdout)
+        if result.stderr:
+            print("STDERR:", result.stderr)
+        if os.path.exists(temp_audio):
+            os.remove(temp_audio)
+
+    send_webhook_message(f"✅ Audio extraction complete: {output_file}")
+    return [output_file]
 
 # --------------------Phase 3 (Subtitles)--------------------
 def extract_subtitles(mkv_path):
@@ -576,11 +595,16 @@ def multiplex_file(
 
     # Add subtitle tracks
     for subtitle_file in subtitle_files:
-        default_subtitle = "yes" if language != "eng" else "no"
+        # Extract language code from filename (e.g., "_eng.srt")
+        match = re.search(r'_([a-z]{2,3})\.[a-z]+$', subtitle_file)
+        subtitle_lang = match.group(1) if match else "und"
+
+        # Only set as default if movie is in English and subtitle is also English
+        default_subtitle = "yes" if language == "eng" and subtitle_lang == "eng" else "no"
 
         cmd.extend([
-            "--language", "0:eng",  # Assuming all subs are English
-            "--forced-track", "0:no",  # FIX: changed from --forced-display
+            "--language", f"0:{subtitle_lang}",
+            "--forced-track", "0:no",
             "--default-track", f"0:{default_subtitle}",
             subtitle_file
         ])
@@ -588,6 +612,11 @@ def multiplex_file(
     # Run the command
     print("Running command:", " ".join(cmd))
     subprocess.run(cmd)
+    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                               text=True, encoding="utf-8", errors="ignore")
+    for line in process.stdout:
+        print(line, end="")
+
     send_webhook_message("✅ Mutliplexing Completed")
 
 
@@ -648,6 +677,7 @@ def encode_file(input_file, resolutions):
 
     # Extract subtitles & store paths
     subtitle_files = extract_subtitles(input_file)
+    asubtitle_files = extract_subtitles(input_file)
     report_progress(filename, 5)
     for res in resolutions:
         status_callback(filename, res, "Starting...")
@@ -696,39 +726,10 @@ def encode_file(input_file, resolutions):
         log(f"Output file path: {output_file}")  # Debugging
 
         # Run HandBrake CLI for final encoding
-        command = [
-            HANDBRAKE_CLI,
-            "-i", input_file,
-            "-o", output_file,
-            "--crop", approved_crop,
-            "--encoder", "x264",
-            "-a", "none",  # disable audio
-            "-s", "none",  # disable subtitles
-            "--quality", str(cq),
-            "--width", str(settings["width"]),
-            "--height", str(settings["height"]),
-            "--encoder-preset", "placebo",
-            "--encoder-profile", "high",
-            "--encoder-level", "4.1",
-            "--encopts",
-            (
-                "subme=10:deblock=-3,-3:me=umh:merange=32:mbtree=0:"
-                "dct-decimate=0:fast-pskip=0:aq-mode=2:aq-strength=1.0:"
-                "qcomp=0.60:psy-rd=1.1,0.00"
-            )
-        ]
-        status_callback(filename, res, "Encoding...")
-        log(f"\n🚀 Starting final encode for {res}... at CQ {cq}\n")
-        with open(final_encode_log, "w", encoding="utf-8", errors="ignore") as log_file:
-            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                       text=True, encoding="utf-8", errors="ignore")
-            for line in process.stdout:
-                sub_log(line, end="")
-                log_file.write(line)
-                log_file.flush()
-            process.wait()
 
-        if process.returncode == 0:
+        output = run_final_encode(input_file, output_file, approved_crop, cq, settings, final_encode_log, res)
+
+        if output:
             report_progress(filename, 80)
             log(f"\n✅ Successfully encoded: {output_file}\n")
             completion_bitrate = get_bitrate(output_file)
@@ -800,8 +801,8 @@ def encode_file(input_file, resolutions):
             log("\nGenerating approval document...")
             approval_output_dir = os.path.join(output_dir, "approval.txt")
             upload_output_dir = os.path.join(output_dir, "upload.txt")
-            config.generate_approval_form(ptp_url, mediainfo_text, screenshot_bbcodes, ptp_sources, approval_output_dir, movie_title)
-            config.generate_upload_form(ptp_url, mediainfo_text, screenshot_bbcodes, upload_output_dir, final_encode_log)
+            config.generate_approval_form(ptp_url, mediainfo_text, screenshot_bbcodes, approval_output_dir, final_encode_log)
+            config.generate_upload_form(ptp_url, mediainfo_text, screenshot_bbcodes, ptp_sources, upload_output_dir, movie_title)
             report_progress(filename, 100)
             print(f"\nProcess complete! Approval file saved to {APPROVAL_FILENAME}")
             send_completion_webhook(completion_bitrate, res, input_file)
@@ -865,9 +866,4 @@ def start_encoding(file):
 
 if __name__ == "__main__":
     # Get the file path from the command-line argument
-    if len(sys.argv) > 1:
-        file_path = sys.argv[1]
-        for file in file_path:
-            start_encoding(file)
-    else:
-        print("No file path provided.")
+    start_encoding(r"W:\Encodes\Bajirao Mastani\source\Bajirao Mastani 2015 1080p Blu-ray Remux AVC TrueHD 7.1 - KRaLiMaRKo.mkv")
