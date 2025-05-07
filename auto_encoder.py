@@ -14,6 +14,7 @@ import config
 import cv2
 from dotenv import load_dotenv
 import logging
+from datetime import datetime
 logging.basicConfig(level=logging.INFO)
 
 import sys
@@ -54,10 +55,38 @@ encoding_source_format = None
 
 APPROVAL_FILENAME = "approval.txt"
 
+STATUS_FILE = 'status.json'
+
 
 # ----------------- Utility Functions -----------------
 
+def update_resolution_status(job_id, filename, resolution, status, progress):
+    """
+    Update the status of the encoding job in the status file.
+    """
+    if os.path.exists(STATUS_FILE):
+        with open(STATUS_FILE, 'r', encoding='utf-8') as f:
+            status_data = json.load(f)
+    else:
+        status_data = {}
 
+    if job_id not in status_data:
+        status_data[job_id] = {
+            "filename": filename,
+            "resolutions": {}
+        }
+    
+    if resolution not in status_data[job_id]["resolutions"]:
+        status_data[job_id]["resolutions"][resolution] = {}
+    
+    status_data[job_id]["resolutions"][resolution].update({
+        "status": status,
+        "progress": progress
+    })
+    status_data[job_id]["updated_at"] = datetime.utcnow().isoformat()
+
+    with open(STATUS_FILE, 'w', encoding='utf-8') as f:
+        json.dump(status_data, f, indent=2, ensure_ascii=False)
 
 
 def send_completion_webhook(completion_bitrate, resolution, input_file):
@@ -670,7 +699,7 @@ def extract_mediainfo(source_file):
 
 
 # --------------------Main Encoding Function--------------------
-def encode_file(input_file, resolutions):
+def encode_file(input_file, resolutions, job_id):
     filename = os.path.basename(input_file)
     original_filename = os.path.splitext(os.path.basename(input_file))[0]
     send_webhook_message(f"Beginning encoding for {filename} @ {resolutions}")
@@ -680,6 +709,7 @@ def encode_file(input_file, resolutions):
     asubtitle_files = extract_subtitles(input_file)
     report_progress(filename, 5)
     for res in resolutions:
+        update_resolution_status(job_id, filename, res, f"Extracted Subtitles", "3")
         status_callback(filename, res, "Starting...")
         settings = PRESET_SETTINGS.get(res)
         metadata = config.parse_video_metadata(input_file, settings)
@@ -692,24 +722,27 @@ def encode_file(input_file, resolutions):
             continue
 
         # Extract audio & store paths
+        update_resolution_status(job_id, filename, res, f"Extracting Audio", "5")
         audio_files = extract_audio(input_file, res)
         print("Audio extracted")
-        report_progress(filename, 10)
+        update_resolution_status(job_id, filename, res, f"Extracted Audio", "8")
+        update_resolution_status(job_id, filename, res, f"Getting Cropping values", "9")
         approved_crop = get_cropping(settings, input_file, f"preview_snapshot_{res}.png", res)
         if not approved_crop:
             log("⏩ Skipping final encoding due to lack of crop approval.")
             status_callback(filename, res, "Skipped (no crop)")
             continue
 
-        report_progress(filename, 20)
+        update_resolution_status(job_id, filename, res, f"Cropping values extracted", "15")
+        update_resolution_status(job_id, filename, res, f"Checking for Optimal CQ", "17")
         cq = adjust_cq_for_bitrate(input_file, res, approved_crop)
         if cq is None:
             log(f"⏩ Final encoding for {res} was cancelled.")
             status_callback(filename, res, "Cancelled")
             continue
-        report_progress(filename, 30)
+        update_resolution_status(job_id, filename, res, f"Found Optimal CQ", "20")
         send_webhook_message(f"Proceeding to Final Encode for {filename}@{res}")
-
+        update_resolution_status(job_id, filename, res, f"Proceeding to final encode", "25")
 
         parent_dir = os.path.normpath(os.path.join(os.path.dirname(input_file), ".."))
 
@@ -730,12 +763,12 @@ def encode_file(input_file, resolutions):
         output = run_final_encode(input_file, output_file, approved_crop, cq, settings, final_encode_log, res)
 
         if output:
-            report_progress(filename, 80)
+            update_resolution_status(job_id, filename, res, f"Final video encoding completed", "75")
             log(f"\n✅ Successfully encoded: {output_file}\n")
             completion_bitrate = get_bitrate(output_file)
 
             status_callback(filename, res, "Completed")
-
+            update_resolution_status(job_id, filename, res, f"Starting Multiplexing", "76")
             # ---------------------------
             # >>> ADD MULTIPLEXING CALL <<<
             # ---------------------------
@@ -775,14 +808,15 @@ def encode_file(input_file, resolutions):
                 final_filename=final_filename,
                 file_title=file_title
             )
-            report_progress(filename, 85)
+            update_resolution_status(job_id, filename, res, f"Completed Multiplexing", "85")
             #---------------Screenshots---------------
             output_dir = os.path.normpath(os.path.join(parent_dir, res))
             screenshot_output_dir = os.path.join(output_dir, "screenshots")
             send_webhook_message("Extracting Screenshots for ptp upload")
             screenshot_bbcodes = config.extract_screenshots(screenshot_output_dir, final_filename)
-            report_progress(filename, 90)
+            update_resolution_status(job_id, filename, res, f"Extracted Screenshots", "90")
             send_webhook_message("Creating Approval Document")
+            update_resolution_status(job_id, filename, res, f"Creating Upload Doc", "91")
             log("Extracting MediaInfo...")
             mediainfo_text = config.extract_mediainfo(final_filename)
 
@@ -792,7 +826,7 @@ def encode_file(input_file, resolutions):
             print(f"Sending {movie_title}, {official_year}, {final_filename}, {original_filename}")
 
             ptp_url = config.get_ptp_permalink(movie_title, official_year, final_filename, original_filename)
-            report_progress(filename, 95)
+            update_resolution_status(job_id, filename, res, f"Fetching Torrent Details", "95")
             # Step 4: Get movie sources
             log("\nGetting torrent sources")
             ptp_sources = config.find_movie_source_cli(ptp_url)
@@ -803,7 +837,7 @@ def encode_file(input_file, resolutions):
             upload_output_dir = os.path.join(output_dir, "upload.txt")
             config.generate_approval_form(ptp_url, mediainfo_text, screenshot_bbcodes, approval_output_dir, final_encode_log)
             config.generate_upload_form(ptp_url, mediainfo_text, screenshot_bbcodes, ptp_sources, upload_output_dir, movie_title)
-            report_progress(filename, 100)
+            update_resolution_status(job_id, filename, res, f"Completed", "100")
             print(f"\nProcess complete! Approval file saved to {APPROVAL_FILENAME}")
             send_completion_webhook(completion_bitrate, res, input_file)
 
@@ -859,10 +893,18 @@ def report_progress(filename, percent):
     sys.stdout.flush()
     time.sleep(0.5)
 
-def start_encoding(file):
+def start_encoding(file, job_id=None):
     resolutions = determine_encodes(file)
-    encode_file(file, resolutions)
+    encode_file(file, resolutions, job_id)
     log(f"Encoding completed for {file}")
+    try:
+        requests.post("http://localhost:3030/api/encode/complete", json={
+            "jobid": job_id,
+            "filename": file,
+            "status": "completed"
+        })
+    except Exception as e:
+        print(f"Failed to notify completion: {e}")
 
 if __name__ == "__main__":
     # Get the file path from the command-line argument
