@@ -4,6 +4,9 @@ from multiprocessing import Process
 import os
 import json
 import glob
+import io
+import sys
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -11,6 +14,7 @@ job_id = None
 filename = None
 job_store = {}
 STATUS_FILE = 'status.json'
+LOG_DIR = 'encode_logs'
 
 def initialize_status_file():
     """Initialize the status.json file if it doesn't exist or is empty"""
@@ -88,7 +92,7 @@ def get_directory_structure(path):
 def list_directories():
     try:
         # Base directory for encodes
-        base_dir = "C:/Users/thevi/Videos"
+        base_dir = "W:/Encodes"
         
         # Get the directory structure
         structure = get_directory_structure(base_dir)
@@ -102,6 +106,22 @@ def list_directories():
             'status': 'error',
             'message': str(e)
         }), 500
+
+def ensure_log_directory():
+    """Ensure the log directory exists"""
+    if not os.path.exists(LOG_DIR):
+        os.makedirs(LOG_DIR)
+
+def get_log_file_path(job_id):
+    """Get the path for a job's log file"""
+    return os.path.join(LOG_DIR, f'encode_{job_id}.log')
+
+def redirect_output_to_file(job_id):
+    """Redirect stdout and stderr to a log file"""
+    log_file = get_log_file_path(job_id)
+    # Use UTF-8 encoding with error handling for the log file
+    sys.stdout = open(log_file, 'a', encoding='utf-8', errors='replace', buffering=1)
+    sys.stderr = sys.stdout
 
 @app.route('/encode/start', methods=['POST'])
 def start_encode():
@@ -134,11 +154,27 @@ def start_encode():
     }
     update_status(job_id, initial_status)
     
-    p = Process(target=start_encoding, args=(filename, job_id))
+    # Ensure log directory exists
+    ensure_log_directory()
+    
+    # Create a new process with output redirection
+    p = Process(target=run_encoding_with_logging, args=(filename, job_id))
     p.start()
     job_store[job_id] = p
 
     return jsonify({'status': 'started', 'job_id': job_id, 'filename': filename}), 200
+
+def run_encoding_with_logging(filename, job_id):
+    """Run the encoding process with logging"""
+    try:
+        # Redirect output to log file
+        redirect_output_to_file(job_id)
+        # Run the encoding
+        start_encoding(filename, job_id)
+    finally:
+        # Restore stdout/stderr
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
 
 @app.route('/encode/status/<job_id>', methods=['GET'])
 def get_encoding_status(job_id):
@@ -151,25 +187,36 @@ def get_encoding_status(job_id):
             try:
                 status_data = json.load(f)
                 if job_id in status_data:
+                    # Get the last 20 lines of logs if they exist
+                    log_file = get_log_file_path(job_id)
+                    log_lines = []
+                    if os.path.exists(log_file):
+                        with open(log_file, 'r', encoding='utf-8', errors='replace') as log_f:
+                            log_lines = log_f.readlines()[-20:]  # Get last 20 lines
+                    
+                    status_data[job_id]['log_output'] = ''.join(log_lines)
                     return jsonify(status_data[job_id]), 200
                 else:
                     return jsonify({
                         'filename': None,
                         'resolutions': {},
-                        'updated_at': None
+                        'updated_at': None,
+                        'log_output': ''
                     }), 200
             except json.JSONDecodeError:
                 return jsonify({
                     'filename': None,
                     'resolutions': {},
-                    'updated_at': None
+                    'updated_at': None,
+                    'log_output': ''
                 }), 200
     except Exception as e:
         print(f"Error reading status file: {str(e)}")
         return jsonify({
             'filename': None,
             'resolutions': {},
-            'updated_at': None
+            'updated_at': None,
+            'log_output': ''
         }), 200
 
 @app.route('/encode/stop', methods=['POST'])
@@ -202,6 +249,27 @@ def stop_encoding():
         return jsonify({'status': 'stopped', 'job_id': job_id}), 200
     else:
         return jsonify({'error': 'Job not found'}), 404
+
+@app.route('/encode/logs/<job_id>', methods=['GET'])
+def get_encoding_logs(job_id):
+    """Get the logs for a specific encoding job"""
+    try:
+        log_file = get_log_file_path(job_id)
+        if not os.path.exists(log_file):
+            return jsonify({'error': 'Log file not found'}), 404
+            
+        with open(log_file, 'r') as f:
+            logs = f.read()
+            
+        return jsonify({
+            'status': 'success',
+            'logs': logs
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
 
 if __name__ == '__main__':
     # Initialize status file on startup
