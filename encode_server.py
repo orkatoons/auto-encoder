@@ -16,53 +16,6 @@ job_store = {}
 STATUS_FILE = 'status.json'
 LOG_DIR = 'encode_logs'
 
-# Fix the config file path to be relative to the workspace root
-CONFIG_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'The-Hub', 'The Hub', 'backend', 'server', 'config.json')
-
-def load_config():
-    """Load the configuration file"""
-    try:
-        print(f"Attempting to load config from: {CONFIG_FILE}")
-        if not os.path.exists(CONFIG_FILE):
-            print(f"Config file not found at: {CONFIG_FILE}")
-            return {"baseDirectories": []}
-            
-        with open(CONFIG_FILE, 'r') as f:
-            config = json.load(f)
-            print(f"Successfully loaded config: {config}")
-            return config
-    except Exception as e:
-        print(f"Error loading config file: {str(e)}")
-        return {"baseDirectories": []}
-
-def initialize_status_file():
-    """Initialize the status.json file if it doesn't exist or is empty"""
-    if not os.path.exists(STATUS_FILE) or os.path.getsize(STATUS_FILE) == 0:
-        with open(STATUS_FILE, 'w') as f:
-            json.dump({}, f)
-
-def update_status(job_id, status_data):
-    """Update the status.json file with new status data"""
-    try:
-        # Initialize file if needed
-        initialize_status_file()
-        
-        # Read current status
-        with open(STATUS_FILE, 'r') as f:
-            try:
-                current_status = json.load(f)
-            except json.JSONDecodeError:
-                current_status = {}
-        
-        # Update status for this job
-        current_status[job_id] = status_data
-        
-        # Write back to file
-        with open(STATUS_FILE, 'w') as f:
-            json.dump(current_status, f, indent=2)
-    except Exception as e:
-        print(f"Error updating status file: {str(e)}")
-
 def get_directory_structure(path):
     """
     Returns a dictionary containing the directory structure.
@@ -131,23 +84,22 @@ def get_directory_structure(path):
 @app.route('/encode/directories', methods=['GET'])
 def list_directories():
     try:
-        config = load_config()
-        base_dirs = config.get('baseDirectories', [])
-        
-        all_structures = []
-        for dir_info in base_dirs:
-            dir_path = dir_info['path']
-            structure = get_directory_structure(dir_path)
-            all_structures.append({
-                'name': dir_info['name'],
-                'path': dir_path,
-                'type': 'directory',
-                'files': structure
-            })
-        
+        path = request.args.get('path')
+        if not path:
+            return jsonify({
+                'status': 'error',
+                'message': 'Path parameter is required'
+            }), 400
+
+        structure = get_directory_structure(path)
         return jsonify({
             'status': 'success',
-            'data': all_structures
+            'data': [{
+                'name': os.path.basename(path),
+                'path': path,
+                'type': 'directory',
+                'files': structure
+            }]
         })
     except Exception as e:
         return jsonify({
