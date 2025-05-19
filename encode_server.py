@@ -16,6 +16,25 @@ job_store = {}
 STATUS_FILE = 'status.json'
 LOG_DIR = 'encode_logs'
 
+# Fix the config file path to be relative to the workspace root
+CONFIG_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'The-Hub', 'The Hub', 'backend', 'server', 'config.json')
+
+def load_config():
+    """Load the configuration file"""
+    try:
+        print(f"Attempting to load config from: {CONFIG_FILE}")
+        if not os.path.exists(CONFIG_FILE):
+            print(f"Config file not found at: {CONFIG_FILE}")
+            return {"baseDirectories": []}
+            
+        with open(CONFIG_FILE, 'r') as f:
+            config = json.load(f)
+            print(f"Successfully loaded config: {config}")
+            return config
+    except Exception as e:
+        print(f"Error loading config file: {str(e)}")
+        return {"baseDirectories": []}
+
 def initialize_status_file():
     """Initialize the status.json file if it doesn't exist or is empty"""
     if not os.path.exists(STATUS_FILE) or os.path.getsize(STATUS_FILE) == 0:
@@ -58,6 +77,11 @@ def get_directory_structure(path):
         # List all items in the directory
         items = os.listdir(path)
         
+        # Check if current directory has approval files
+        has_approval = any(item.lower() in ['approval.txt', 'upload.txt'] for item in items)
+        if has_approval:
+            print(f"Found approval file in directory: {path}")
+        
         for item in items:
             full_path = os.path.join(path, item)
             
@@ -68,15 +92,31 @@ def get_directory_structure(path):
             if os.path.isdir(full_path):
                 # Recursively get subdirectory structure
                 sub_structure = get_directory_structure(full_path)
-                structure.append({
+                
+                # Check if any subdirectory has approval
+                sub_has_approval = any(
+                    sub_item.get('has_approval', False) 
+                    for sub_item in sub_structure
+                )
+                
+                if sub_has_approval:
+                    print(f"Subdirectory has approval: {full_path}")
+                
+                dir_info = {
                     'name': item,
                     'type': 'directory',
                     'path': full_path,
-                    'files': sub_structure
-                })
+                    'files': sub_structure,
+                    'has_approval': has_approval or sub_has_approval
+                }
+                
+                if dir_info['has_approval']:
+                    print(f"Directory marked as approved: {full_path}")
+                
+                structure.append(dir_info)
             else:
                 # Only include video files
-                if item.lower().endswith(('.mkv', '.mp4', '.avi', '.mov')):
+                if item.lower().endswith(('.mkv', '.mp4', '.avi', '.mov', '.txt')):
                     structure.append({
                         'name': item,
                         'type': 'file',
@@ -91,15 +131,23 @@ def get_directory_structure(path):
 @app.route('/encode/directories', methods=['GET'])
 def list_directories():
     try:
-        # Base directory for encodes
-        base_dir = "W:/Encodes"
+        config = load_config()
+        base_dirs = config.get('baseDirectories', [])
         
-        # Get the directory structure
-        structure = get_directory_structure(base_dir)
+        all_structures = []
+        for dir_info in base_dirs:
+            dir_path = dir_info['path']
+            structure = get_directory_structure(dir_path)
+            all_structures.append({
+                'name': dir_info['name'],
+                'path': dir_path,
+                'type': 'directory',
+                'files': structure
+            })
         
         return jsonify({
             'status': 'success',
-            'data': structure
+            'data': all_structures
         })
     except Exception as e:
         return jsonify({
