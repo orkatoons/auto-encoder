@@ -16,6 +16,34 @@ job_store = {}
 STATUS_FILE = 'status.json'
 LOG_DIR = 'encode_logs'
 
+def initialize_status_file():
+    """Initialize the status.json file if it doesn't exist or is empty"""
+    if not os.path.exists(STATUS_FILE) or os.path.getsize(STATUS_FILE) == 0:
+        with open(STATUS_FILE, 'w') as f:
+            json.dump({}, f)
+
+def update_status(job_id, status_data):
+    """Update the status.json file with new status data"""
+    try:
+        # Initialize file if needed
+        initialize_status_file()
+        
+        # Read current status
+        with open(STATUS_FILE, 'r') as f:
+            try:
+                current_status = json.load(f)
+            except json.JSONDecodeError:
+                current_status = {}
+        
+        # Update status for this job
+        current_status[job_id] = status_data
+        
+        # Write back to file
+        with open(STATUS_FILE, 'w') as f:
+            json.dump(current_status, f, indent=2)
+    except Exception as e:
+        print(f"Error updating status file: {str(e)}")
+
 def get_directory_structure(path):
     """
     Returns a dictionary containing the directory structure.
