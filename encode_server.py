@@ -6,6 +6,7 @@ import json
 import glob
 import io
 import sys
+import requests
 from datetime import datetime
 
 app = Flask(__name__)
@@ -16,23 +17,27 @@ job_store = {}
 STATUS_FILE = 'status.json'
 LOG_DIR = 'encode_logs'
 
-# Fix the config file path to be relative to the workspace root
-CONFIG_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'The-Hub', 'The Hub', 'backend', 'server', 'config.json')
+# Node.js server URL
+NODE_SERVER_URL = 'http://192.168.254.97:3000'  # Adjust this to match your Node.js server URL
 
 def load_config():
-    """Load the configuration file"""
+    """Load the configuration file from the Node.js server"""
     try:
-        print(f"Attempting to load config from: {CONFIG_FILE}")
-        if not os.path.exists(CONFIG_FILE):
-            print(f"Config file not found at: {CONFIG_FILE}")
+        print("Attempting to load config from Node.js server")
+        response = requests.get(f'{NODE_SERVER_URL}/api/config')
+        if response.status_code == 200:
+            config_data = response.json()
+            if config_data.get('status') == 'success':
+                print(f"Successfully loaded config: {config_data['data']}")
+                return config_data['data']
+            else:
+                print("Failed to load config: Invalid response format")
+                return {"baseDirectories": []}
+        else:
+            print(f"Failed to load config: HTTP {response.status_code}")
             return {"baseDirectories": []}
-            
-        with open(CONFIG_FILE, 'r') as f:
-            config = json.load(f)
-            print(f"Successfully loaded config: {config}")
-            return config
     except Exception as e:
-        print(f"Error loading config file: {str(e)}")
+        print(f"Error loading config from Node.js server: {str(e)}")
         return {"baseDirectories": []}
 
 def initialize_status_file():
