@@ -109,6 +109,50 @@ def get_directory_structure(path):
         
     return structure
 
+@app.route('/encode/directories/validate', methods=['POST'])
+def validate_directory():
+    try:
+        data = request.get_json()
+        if not data or 'path' not in data:
+            return jsonify({
+                'status': 'error',
+                'message': 'Path parameter is required'
+            }), 400
+
+        path = data['path']
+        path = os.path.normpath(path)
+        
+        # Check if path exists and is accessible
+        if not os.path.exists(path):
+            return jsonify({
+                'status': 'error',
+                'message': f'Directory "{path}" does not exist'
+            }), 400
+            
+        # Try to list directory contents to verify access
+        try:
+            os.listdir(path)
+        except PermissionError:
+            return jsonify({
+                'status': 'error',
+                'message': f'Permission denied accessing directory "{path}"'
+            }), 400
+        except Exception as e:
+            return jsonify({
+                'status': 'error',
+                'message': f'Error accessing directory "{path}": {str(e)}'
+            }), 400
+
+        return jsonify({
+            'status': 'success',
+            'message': 'Directory is valid and accessible'
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
 @app.route('/encode/directories', methods=['GET'])
 def list_directories():
     try:
@@ -117,6 +161,29 @@ def list_directories():
             return jsonify({
                 'status': 'error',
                 'message': 'Path parameter is required'
+            }), 400
+
+        # Normalize the path
+        path = os.path.normpath(path)
+        
+        # Validate path exists and is accessible
+        if not os.path.exists(path):
+            return jsonify({
+                'status': 'error',
+                'message': f'Directory "{path}" does not exist'
+            }), 400
+            
+        try:
+            os.listdir(path)
+        except PermissionError:
+            return jsonify({
+                'status': 'error',
+                'message': f'Permission denied accessing directory "{path}"'
+            }), 400
+        except Exception as e:
+            return jsonify({
+                'status': 'error',
+                'message': f'Error accessing directory "{path}": {str(e)}'
             }), 400
 
         structure = get_directory_structure(path)
