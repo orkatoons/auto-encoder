@@ -15,6 +15,7 @@ filename = None
 job_store = {}
 STATUS_FILE = 'status.json'
 LOG_DIR = 'encode_logs'
+CONFIG_FILE = 'config.json'
 
 def initialize_status_file():
     """Initialize the status.json file if it doesn't exist or is empty"""
@@ -109,50 +110,6 @@ def get_directory_structure(path):
         
     return structure
 
-@app.route('/encode/directories/validate', methods=['POST'])
-def validate_directory():
-    try:
-        data = request.get_json()
-        if not data or 'path' not in data:
-            return jsonify({
-                'status': 'error',
-                'message': 'Path parameter is required'
-            }), 400
-
-        path = data['path']
-        path = os.path.normpath(path)
-        
-        # Check if path exists and is accessible
-        if not os.path.exists(path):
-            return jsonify({
-                'status': 'error',
-                'message': f'Directory "{path}" does not exist'
-            }), 400
-            
-        # Try to list directory contents to verify access
-        try:
-            os.listdir(path)
-        except PermissionError:
-            return jsonify({
-                'status': 'error',
-                'message': f'Permission denied accessing directory "{path}"'
-            }), 400
-        except Exception as e:
-            return jsonify({
-                'status': 'error',
-                'message': f'Error accessing directory "{path}": {str(e)}'
-            }), 400
-
-        return jsonify({
-            'status': 'success',
-            'message': 'Directory is valid and accessible'
-        }), 200
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': str(e)
-        }), 500
-
 @app.route('/encode/directories', methods=['GET'])
 def list_directories():
     try:
@@ -161,29 +118,6 @@ def list_directories():
             return jsonify({
                 'status': 'error',
                 'message': 'Path parameter is required'
-            }), 400
-
-        # Normalize the path
-        path = os.path.normpath(path)
-        
-        # Validate path exists and is accessible
-        if not os.path.exists(path):
-            return jsonify({
-                'status': 'error',
-                'message': f'Directory "{path}" does not exist'
-            }), 400
-            
-        try:
-            os.listdir(path)
-        except PermissionError:
-            return jsonify({
-                'status': 'error',
-                'message': f'Permission denied accessing directory "{path}"'
-            }), 400
-        except Exception as e:
-            return jsonify({
-                'status': 'error',
-                'message': f'Error accessing directory "{path}": {str(e)}'
             }), 400
 
         structure = get_directory_structure(path)
@@ -360,6 +294,197 @@ def get_encoding_logs(job_id):
             'status': 'success',
             'logs': logs
         }), 200
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+def load_config():
+    """Load the config file if it exists, create with defaults if it doesn't"""
+    if os.path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE, 'r') as f:
+            return json.load(f)
+    else:
+        default_config = {
+            "baseDirectories": []
+        }
+        with open(CONFIG_FILE, 'w') as f:
+            json.dump(default_config, f, indent=4)
+        return default_config
+
+def save_config(config):
+    """Save the config to file"""
+    with open(CONFIG_FILE, 'w') as f:
+        json.dump(config, f, indent=4)
+
+@app.route('/encode/directories/config', methods=['GET'])
+def get_config():
+    """Get the current config"""
+    try:
+        config = load_config()
+        return jsonify({
+            'status': 'success',
+            'data': config['baseDirectories']
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@app.route('/encode/directories/config/add', methods=['POST'])
+def add_directory():
+    """Add a new directory to config"""
+    try:
+        data = request.get_json()
+        if not data or 'name' not in data or 'path' not in data:
+            return jsonify({
+                'status': 'error',
+                'message': 'Name and path are required'
+            }), 400
+
+        config = load_config()
+        
+        # Check if directory already exists
+        if any(dir['path'] == data['path'] for dir in config['baseDirectories']):
+            return jsonify({
+                'status': 'error',
+                'message': 'Directory already exists in config'
+            }), 400
+
+        # Validate path exists and is accessible
+        path = os.path.normpath(data['path'])
+        if not os.path.exists(path):
+            return jsonify({
+                'status': 'error',
+                'message': f'Directory "{path}" does not exist'
+            }), 400
+
+        try:
+            os.listdir(path)
+        except PermissionError:
+            return jsonify({
+                'status': 'error',
+                'message': f'Permission denied accessing directory "{path}"'
+            }), 400
+        except Exception as e:
+            return jsonify({
+                'status': 'error',
+                'message': f'Error accessing directory "{path}": {str(e)}'
+            }), 400
+
+        # Add new directory
+        config['baseDirectories'].append({
+            'name': data['name'],
+            'path': path
+        })
+        save_config(config)
+
+        return jsonify({
+            'status': 'success',
+            'data': config['baseDirectories']
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@app.route('/encode/directories/config/update', methods=['PUT'])
+def update_directory():
+    """Update an existing directory in config"""
+    try:
+        data = request.get_json()
+        if not data or 'oldPath' not in data or (not data.get('newName') and not data.get('newPath')):
+            return jsonify({
+                'status': 'error',
+                'message': 'Old path and at least one new value are required'
+            }), 400
+
+        config = load_config()
+        
+        # Find directory to update
+        dir_index = next((i for i, dir in enumerate(config['baseDirectories']) 
+                         if dir['path'] == data['oldPath']), None)
+        
+        if dir_index is None:
+            return jsonify({
+                'status': 'error',
+                'message': 'Directory not found in config'
+            }), 404
+
+        # If new path is provided, validate it
+        if data.get('newPath'):
+            path = os.path.normpath(data['newPath'])
+            if not os.path.exists(path):
+                return jsonify({
+                    'status': 'error',
+                    'message': f'Directory "{path}" does not exist'
+                }), 400
+
+            try:
+                os.listdir(path)
+            except PermissionError:
+                return jsonify({
+                    'status': 'error',
+                    'message': f'Permission denied accessing directory "{path}"'
+                }), 400
+            except Exception as e:
+                return jsonify({
+                    'status': 'error',
+                    'message': f'Error accessing directory "{path}": {str(e)}'
+                }), 400
+
+            config['baseDirectories'][dir_index]['path'] = path
+
+        # Update name if provided
+        if data.get('newName'):
+            config['baseDirectories'][dir_index]['name'] = data['newName']
+
+        save_config(config)
+
+        return jsonify({
+            'status': 'success',
+            'data': config['baseDirectories']
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@app.route('/encode/directories/config/delete', methods=['DELETE'])
+def delete_directory():
+    """Delete a directory from config"""
+    try:
+        data = request.get_json()
+        if not data or 'path' not in data:
+            return jsonify({
+                'status': 'error',
+                'message': 'Path is required'
+            }), 400
+
+        config = load_config()
+        
+        # Find directory to delete
+        dir_index = next((i for i, dir in enumerate(config['baseDirectories']) 
+                         if dir['path'] == data['path']), None)
+        
+        if dir_index is None:
+            return jsonify({
+                'status': 'error',
+                'message': 'Directory not found in config'
+            }), 404
+
+        # Remove directory
+        config['baseDirectories'].pop(dir_index)
+        save_config(config)
+
+        return jsonify({
+            'status': 'success',
+            'data': config['baseDirectories']
+        })
     except Exception as e:
         return jsonify({
             'status': 'error',
