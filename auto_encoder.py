@@ -898,7 +898,7 @@ def start_encoding(file, job_id=None):
     encode_file(file, resolutions, job_id)
     log(f"Encoding completed for {file}")
     try:
-        requests.post("http://localhost:3030/api/encode/complete", json={
+        requests.post("http://geekyandbrain.ddns.net:3030/api/encode/complete", json={
             "jobid": job_id,
             "filename": file,
             "status": "completed"

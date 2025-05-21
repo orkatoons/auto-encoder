@@ -165,11 +165,13 @@ def find_torrent_id_cli(movie_title, source_filename, original_filename):
     Returns the torrent ID as a string, or None if not found.
     """
     source_filename = os.path.splitext(os.path.basename(source_filename))[0].strip()
+    # Normalize source filename: remove spaces and convert to lowercase
+    normalized_source = source_filename.replace(" ", "").lower()
     print(f"[DEBUG] Source filename: {source_filename}")
+    print(f"[DEBUG] Normalized source: {normalized_source}")
 
     cmd = f'ptp search "{movie_title}" --torrent-format="{{{{Id}}}} - {{{{ReleaseName}}}}"'
     args = shlex.split(cmd)
-
 
     try:
         process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -191,7 +193,13 @@ def find_torrent_id_cli(movie_title, source_filename, original_filename):
         if not match:
             continue
         torrent_id, release_name = match.group(1), match.group(2).strip()
-        if release_name == original_filename or str(original_filename) in release_name:
+        # Normalize release name: remove spaces and convert to lowercase
+        normalized_release = release_name.replace(" ", "").lower()
+        print(f"[DEBUG] Normalized release: {normalized_release}")
+        
+        if (normalized_release == normalized_source or 
+            normalized_source in normalized_release or 
+            normalized_release in normalized_source):
             print(f"[INFO] Match found: {torrent_id} -> {release_name}")
             return torrent_id
 
