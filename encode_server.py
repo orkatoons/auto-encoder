@@ -491,6 +491,127 @@ def delete_directory():
             'message': str(e)
         }), 500
 
+def get_directory_contents(path, max_depth=3, current_depth=0):
+    """
+    Returns directory contents up to 3 levels deep.
+    Excludes hidden folders and only includes specified file types.
+    """
+    if current_depth > max_depth:
+        return []
+        
+    try:
+        items = os.listdir(path)
+        contents = []
+        
+        for item in items:
+            # Skip hidden items
+            if item.startswith('.'):
+                continue
+                
+            full_path = os.path.join(path, item)
+            
+            if os.path.isdir(full_path):
+                # For directories, get their contents if we haven't reached max depth
+                sub_contents = get_directory_contents(full_path, max_depth, current_depth + 1) if current_depth < max_depth else []
+                contents.append({
+                    'name': item,
+                    'path': full_path,
+                    'type': 'directory',
+                    'contents': sub_contents,
+                    'items': len(sub_contents),
+                    'depth': current_depth,
+                    'has_more': current_depth == max_depth - 1  # Set has_more if we're at the second level
+                })
+            elif item.lower().endswith(('.txt', '.mkv', '.mp4')):
+                contents.append({
+                    'name': item,
+                    'path': full_path,
+                    'type': 'file'
+                })
+                
+        return contents
+    except Exception as e:
+        print(f"Error reading directory {path}: {str(e)}")
+        return []
+
+@app.route('/encode/directories/browse', methods=['GET'])
+def browse_directory():
+    try:
+        print("[FLASK] Received browse request")
+        path = request.args.get('path', '')
+        print(f"[FLASK] Path requested: {path}")
+        
+        # If no path provided, return all drives
+        if not path:
+            import win32api
+            import win32file
+            drives = []
+            for drive in win32api.GetLogicalDriveStrings().split('\000')[:-1]:
+                try:
+                    drive_type = win32file.GetDriveType(drive)
+                    drives.append({
+                        'name': drive,
+                        'path': drive,
+                        'type': 'directory',
+                        'isDrive': True,
+                        'driveType': drive_type,
+                        'contents': get_directory_contents(drive, max_depth=3)  # Load 3 levels for drives
+                    })
+                except Exception as e:
+                    print(f"[FLASK] Error accessing drive {drive}: {str(e)}")
+                    drives.append({
+                        'name': drive,
+                        'path': drive,
+                        'type': 'directory',
+                        'isDrive': True,
+                        'driveType': drive_type,
+                        'inaccessible': True
+                    })
+            print(f"[FLASK] Returning {len(drives)} drives")
+            return jsonify({
+                'status': 'success',
+                'data': drives
+            })
+            
+        # For specific paths, return contents up to 3 levels deep
+        contents = get_directory_contents(path, max_depth=3)
+        print(f"[FLASK] Returning {len(contents)} items for path {path}")
+        return jsonify({
+            'status': 'success',
+            'data': contents
+        })
+    except Exception as e:
+        print(f"[FLASK] Error in browse_directory: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@app.route('/encode/directories/load_more', methods=['GET'])
+def load_more_contents():
+    try:
+        path = request.args.get('path', '')
+        if not path:
+            return jsonify({
+                'status': 'error',
+                'message': 'Path is required'
+            }), 400
+
+        print(f"[FLASK] Loading more contents for path: {path}")
+        # When loading more, always load 3 levels deep from the requested path
+        contents = get_directory_contents(path, max_depth=3)
+        print(f"[FLASK] Returning {len(contents)} additional items for path {path}")
+        return jsonify({
+            'status': 'success',
+            'data': contents
+        })
+    except Exception as e:
+        print(f"[FLASK] Error in load_more_contents: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
 if __name__ == '__main__':
     # Initialize status file on startup
     initialize_status_file()
