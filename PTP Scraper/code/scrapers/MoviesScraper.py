@@ -197,15 +197,17 @@ def save_to_json(movies, json_file):
                 existing_data = []
 
         # Add new movies, avoiding duplicates
+        new_movies = 0
         for movie in movies:
             if not any(existing.get("Name") == movie["Name"] for existing in existing_data):
                 existing_data.append(movie)
+                new_movies += 1
 
         # Save updated data
         with open(json_file, 'w', encoding='utf-8') as f:
             json.dump(existing_data, f, indent=2, ensure_ascii=False)
 
-        print(f"Successfully saved {len(movies)} movies to {json_file}")
+        print(f"Successfully saved {new_movies} new movies to {json_file}")
     except Exception as e:
         print(f"Error saving to JSON file: {e}")
 

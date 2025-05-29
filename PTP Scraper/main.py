@@ -47,16 +47,6 @@ def find_firefox_window():
         if hwnd:
             return hwnd
 
-        # Debug: List all visible windows
-        print("\nDebug: Listing all visible windows:")
-        def list_windows(hwnd, _):
-            if win32gui.IsWindowVisible(hwnd):
-                title = win32gui.GetWindowText(hwnd)
-                if title:  # Only print windows with titles
-                    print(f"Window: {title}")
-            return True
-        win32gui.EnumWindows(list_windows, None)
-
         print("\nFirefox not found. Please ensure Firefox is running.")
         return None
     except Exception as e:
