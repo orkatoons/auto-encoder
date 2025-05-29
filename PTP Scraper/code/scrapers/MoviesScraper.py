@@ -1,16 +1,64 @@
 import pandas as pd
 from bs4 import BeautifulSoup
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
 import os
 import time
 import shutil
+import json
+import win32gui
+import win32con
+import win32process
+import psutil
+import pyautogui
 
 INPUT_PATH = "C:/Encode Tools/PTP Scraper/offline PTP pages/Browse Torrents __ PassThePopcorn.htm"
-GOOGLE_SHEET_NAME = "to encode"
-SHEET_TITLE = "Movies Tab"
-CREDENTIALS_FILE = "C:/Encode Tools/PTP Scraper/code/creds/gen-lang-client-0724418887-959d16f690f0.json"
+OUTPUT_JSON = "C:/Encode Tools/PTP Scraper/movies_data.json"
 COMPATIBLE_SOURCES = ["BD25", "BD50", "Remux", "DVD5", "DVD9"]
+
+def find_firefox_window():
+    """Find the Firefox window using process name"""
+    try:
+        for proc in psutil.process_iter(['pid', 'name']):
+            if proc.info['name'] and 'firefox' in proc.info['name'].lower():
+                # Get the window handle for this process
+                def callback(hwnd, pid):
+                    if win32gui.IsWindowVisible(hwnd):
+                        _, window_pid = win32process.GetWindowThreadProcessId(hwnd)
+                        if window_pid == pid:
+                            return hwnd
+                    return None
+                
+                hwnd = win32gui.EnumWindows(callback, proc.info['pid'])
+                if hwnd:
+                    return hwnd
+        return None
+    except Exception as e:
+        print(f"Error finding Firefox window: {str(e)}")
+        return None
+
+def activate_firefox():
+    """Activate the Firefox window and ensure it's fullscreen"""
+    try:
+        hwnd = find_firefox_window()
+        if not hwnd:
+            raise Exception("Could not find Firefox window")
+        
+        # Verify the window is still valid
+        if not win32gui.IsWindow(hwnd):
+            raise Exception("Window handle invalid")
+        
+        # Show and activate the window
+        win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
+        win32gui.SetForegroundWindow(hwnd)
+        time.sleep(1)
+        
+        # Maximize the window
+        win32gui.ShowWindow(hwnd, win32con.SW_MAXIMIZE)
+        time.sleep(1)
+        
+        return True
+    except Exception as e:
+        print(f"Error activating Firefox window: {str(e)}")
+        return False
 
 def fetch_content(input_path):
     try:
@@ -135,35 +183,31 @@ def parse_movies(html):
 
     return movies
 
-def save_to_google_sheets(movies, spreadsheet_name, sheet_title, credentials_file):
+def save_to_json(movies, json_file):
+    """Save movies data to a JSON file"""
     try:
-        scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-        creds = ServiceAccountCredentials.from_json_keyfile_name(credentials_file, scope)
-        client = gspread.authorize(creds)
-        spreadsheet = client.open(spreadsheet_name)
+        # Load existing data if file exists
+        existing_data = []
+        if os.path.exists(json_file):
+            try:
+                with open(json_file, 'r', encoding='utf-8') as f:
+                    existing_data = json.load(f)
+            except json.JSONDecodeError:
+                print("Error reading existing JSON file, starting fresh")
+                existing_data = []
 
-        try:
-            sheet = spreadsheet.worksheet(sheet_title)
-        except gspread.exceptions.WorksheetNotFound:
-            sheet = spreadsheet.add_worksheet(title=sheet_title, rows="100", cols="20")
-            sheet.append_row(["Name", "Source", "Standard Definition", "High Definition", "Link"])
-
-        existing_records = sheet.get_all_records()
-        if not existing_records:
-            sheet.append_row(["Name", "Source", "Standard Definition", "High Definition", "Link"])
-
+        # Add new movies, avoiding duplicates
         for movie in movies:
-            sheet.append_row([
-                movie["Name"],
-                movie["Source"],
-                movie["Standard Definition"],
-                movie["High Definition"],
-                movie["Link"],
-            ])
+            if not any(existing.get("Name") == movie["Name"] for existing in existing_data):
+                existing_data.append(movie)
 
-        print(f"Successfully appended {len(movies)} movies to sheet '{sheet_title}' in Google Sheet '{spreadsheet_name}'")
+        # Save updated data
+        with open(json_file, 'w', encoding='utf-8') as f:
+            json.dump(existing_data, f, indent=2, ensure_ascii=False)
+
+        print(f"Successfully saved {len(movies)} movies to {json_file}")
     except Exception as e:
-        print(f"Error saving to Google Sheets: {e}")
+        print(f"Error saving to JSON file: {e}")
 
 def delete_downloaded_files(save_path):
     print("Deleting saved HTML files and associated folders...")
@@ -176,14 +220,17 @@ def delete_downloaded_files(save_path):
             elif os.path.isdir(file_path):
                 shutil.rmtree(file_path)
                 print(f"Deleted folder: {file_path}")
-    print("30 second delay for Google Sheet cooldown")
-    time.sleep(30)
 
 def main():
+    # First ensure Firefox is active and fullscreen
+    if not activate_firefox():
+        print("Failed to activate Firefox window. Exiting...")
+        return
+
     html = fetch_content(INPUT_PATH)
     if html:
         movies = parse_movies(html)
-        save_to_google_sheets(movies, spreadsheet_name="to encode", sheet_title="Movies Tab", credentials_file=CREDENTIALS_FILE)
+        save_to_json(movies, OUTPUT_JSON)
         delete_downloaded_files(os.path.dirname(INPUT_PATH))
 
 if __name__ == "__main__":
