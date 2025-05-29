@@ -223,6 +223,32 @@ def delete_downloaded_files(save_path):
                 shutil.rmtree(file_path)
                 print(f"Deleted folder: {file_path}")
 
+def save_page(delay=3, first_tab=False):
+    """Save the current page"""
+    if not activate_firefox():
+        raise Exception("Could not find Firefox window")
+        
+    time.sleep(delay)  
+    print("Simulating Ctrl + S...")
+    pyautogui.hotkey("ctrl", "s")
+    time.sleep(delay)
+
+    if first_tab:
+        print("Performing first-tab-specific actions...")
+        for _ in range(6):
+            pyautogui.press("tab")
+        pyautogui.press("enter")
+        pyautogui.typewrite("C:\\Encode Tools\\auto-encoder\\PTP Scraper\\offline PTP pages") 
+        pyautogui.press("enter")
+        for _ in range(9):
+            pyautogui.press("tab")
+        pyautogui.press("enter")
+    else:
+        print("Simulating Enter...")
+        pyautogui.press("enter")  
+
+    time.sleep(delay)
+
 def main():
     # First ensure Firefox is active and fullscreen
     if not activate_firefox():

@@ -109,7 +109,7 @@ def save_page(delay=3, first_tab=False):
         for _ in range(6):
             pyautogui.press("tab")
         pyautogui.press("enter")
-        pyautogui.typewrite("C:\\Encode Tools\\PTP Scraper\\offline PTP pages") 
+        pyautogui.typewrite("C:\\Encode Tools\\auto-encoder\\PTP Scraper\\offline PTP pages") 
         pyautogui.press("enter")
         for _ in range(9):
             pyautogui.press("tab")
