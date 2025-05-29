@@ -10,8 +10,8 @@ import win32process
 import psutil
 import pyautogui
 
-INPUT_PATH = "C:/Encode Tools/PTP Scraper/offline PTP pages/Browse Torrents __ PassThePopcorn.htm"
-OUTPUT_JSON = "C:/Encode Tools/PTP Scraper/movies_data.json"
+INPUT_PATH = "C:/Encode Tools/auto-encoder/PTP Scraper/offline PTP pages/Browse Torrents __ PassThePopcorn.htm"
+OUTPUT_JSON = "C:/Encode Tools/auto-encoder/PTP Scraper/movies_data.json"
 COMPATIBLE_SOURCES = ["BD25", "BD50", "Remux", "DVD5", "DVD9"]
 
 def find_firefox_window():

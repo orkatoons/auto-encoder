@@ -142,7 +142,7 @@ def navigate_to_next_tab(tab_number, mode, page_offset):
 
 def run_test_script(mode):
     if mode == "Movies":
-        script_path = "C:/Encode Tools/PTP Scraper/code/scrapers/MoviesScraper.py"
+        script_path = "C:/Encode Tools/auto-encoder/PTP Scraper/code/scrapers/MoviesScraper.py"
 
     print(f"Running {script_path}...")
     subprocess.run(["python", script_path], check=True)
@@ -245,6 +245,6 @@ if __name__ == "__main__":
         exit(1)
         
     mode, total_pages, page_offset = get_mode()
-    save_path = "C:/Encode Tools/PTP Scraper/offline PTP pages"
+    save_path = "C:/Encode Tools/auto-encoder/PTP Scraper/offline PTP pages"
     delay = 2
     auto_save_pages(total_pages, save_path, delay, mode, page_offset)
