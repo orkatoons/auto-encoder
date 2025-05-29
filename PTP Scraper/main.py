@@ -3,11 +3,14 @@ import time
 import os
 import json
 from datetime import datetime
+import win32gui
+import win32con
 
 class PTPScraper:
     def __init__(self):
         self.data_file = "ptp_data.json"
         self.initialize_data_file()
+        self.browser_window = None
 
     def initialize_data_file(self):
         """Initialize the JSON data file if it doesn't exist"""
@@ -36,7 +39,42 @@ class PTPScraper:
                 return True
         return False
 
+    def find_browser_window(self):
+        """Find any browser window (Chrome, Firefox, Edge)"""
+        def callback(hwnd, extra):
+            if win32gui.IsWindowVisible(hwnd):
+                title = win32gui.GetWindowText(hwnd)
+                if any(browser in title for browser in ["Chrome", "Firefox", "Edge", "Mozilla"]):
+                    self.browser_window = hwnd
+                    return False
+            return True
+
+        win32gui.EnumWindows(callback, None)
+        return self.browser_window
+
+    def activate_browser_window(self):
+        """Activate the browser window and navigate to PTP"""
+        if not self.browser_window:
+            self.find_browser_window()
+        
+        if self.browser_window:
+            win32gui.ShowWindow(self.browser_window, win32con.SW_RESTORE)
+            win32gui.SetForegroundWindow(self.browser_window)
+            time.sleep(1)
+            
+            # Navigate to PTP
+            pyautogui.hotkey("ctrl", "l")
+            time.sleep(0.5)
+            pyautogui.typewrite("https://passthepopcorn.me/torrents.php")
+            pyautogui.press("enter")
+            time.sleep(2)  # Wait for page to load
+            return True
+        return False
+
     def save_page(self, delay=3, first_tab=False):
+        if not self.activate_browser_window():
+            raise Exception("Could not find PTP browser window")
+            
         time.sleep(delay)  
         print("Simulating Ctrl + S...")
         pyautogui.hotkey("ctrl", "s")
@@ -59,6 +97,9 @@ class PTPScraper:
         time.sleep(delay)  
 
     def navigate_to_next_tab(self, tab_number, mode, page_offset):
+        if not self.activate_browser_window():
+            raise Exception("Could not find PTP browser window")
+            
         print("Navigating to the desired page...")
         pyautogui.hotkey("ctrl", "l")
         time.sleep(1) 
@@ -148,6 +189,9 @@ class PTPScraper:
 
     def scrape_pages(self, start_page, num_pages):
         """Scrape multiple pages and store unique movies"""
+        if not self.activate_browser_window():
+            raise Exception("Could not find PTP browser window. Please ensure PTP is open in your browser.")
+            
         return self.auto_save_pages(num_pages, "C:/Encode Tools/PTP Scraper/offline PTP pages", 2, "Movies", start_page)
 
 # For testing purposes
