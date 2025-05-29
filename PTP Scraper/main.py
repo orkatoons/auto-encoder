@@ -5,6 +5,8 @@ from datetime import datetime
 import pyautogui
 import win32gui
 import win32con
+import win32process
+import psutil
 
 class PTPScraper:
     def __init__(self):
@@ -40,36 +42,56 @@ class PTPScraper:
         return False
 
     def find_firefox_window(self):
-        """Find the Firefox window"""
-        def callback(hwnd, extra):
-            if win32gui.IsWindowVisible(hwnd):
-                title = win32gui.GetWindowText(hwnd)
-                if "Firefox" in title:
-                    self.browser_window = hwnd
-                    return False
-            return True
-
-        win32gui.EnumWindows(callback, None)
-        return self.browser_window
+        """Find the Firefox window using process name"""
+        try:
+            for proc in psutil.process_iter(['pid', 'name']):
+                if proc.info['name'] and 'firefox' in proc.info['name'].lower():
+                    # Get the window handle for this process
+                    def callback(hwnd, pid):
+                        if win32gui.IsWindowVisible(hwnd):
+                            _, window_pid = win32process.GetWindowThreadProcessId(hwnd)
+                            if window_pid == pid:
+                                self.browser_window = hwnd
+                                return False
+                        return True
+                    
+                    win32gui.EnumWindows(callback, proc.info['pid'])
+                    if self.browser_window:
+                        return self.browser_window
+            return None
+        except Exception as e:
+            print(f"Error finding Firefox window: {str(e)}")
+            return None
 
     def activate_firefox(self):
         """Activate the Firefox window and navigate to PTP"""
-        if not self.browser_window:
-            self.find_firefox_window()
-        
-        if self.browser_window:
-            win32gui.ShowWindow(self.browser_window, win32con.SW_RESTORE)
-            win32gui.SetForegroundWindow(self.browser_window)
-            time.sleep(1)
+        try:
+            if not self.browser_window:
+                self.find_firefox_window()
             
-            # Navigate to PTP
-            pyautogui.hotkey("ctrl", "l")
-            time.sleep(0.5)
-            pyautogui.typewrite("https://passthepopcorn.me/torrents.php")
-            pyautogui.press("enter")
-            time.sleep(2)  # Wait for page to load
-            return True
-        return False
+            if self.browser_window:
+                # Verify the window is still valid
+                if not win32gui.IsWindow(self.browser_window):
+                    print("Window handle invalid, searching for new window...")
+                    self.find_firefox_window()
+                    if not self.browser_window:
+                        raise Exception("Could not find a valid Firefox window")
+
+                win32gui.ShowWindow(self.browser_window, win32con.SW_RESTORE)
+                win32gui.SetForegroundWindow(self.browser_window)
+                time.sleep(1)
+                
+                # Navigate to PTP
+                pyautogui.hotkey("ctrl", "l")
+                time.sleep(0.5)
+                pyautogui.typewrite("https://passthepopcorn.me/torrents.php")
+                pyautogui.press("enter")
+                time.sleep(2)  # Wait for page to load
+                return True
+            return False
+        except Exception as e:
+            print(f"Error activating Firefox window: {str(e)}")
+            return False
 
     def save_page(self, delay=3, first_tab=False):
         """Save the current page"""
