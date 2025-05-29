@@ -1,9 +1,64 @@
-import pyautogui
 import time
 import os
+import json
+import pyautogui
+import win32gui
+import win32con
+import win32process
+import psutil
 import subprocess
 
+def find_firefox_window():
+    """Find the Firefox window using process name"""
+    try:
+        for proc in psutil.process_iter(['pid', 'name']):
+            if proc.info['name'] and 'firefox' in proc.info['name'].lower():
+                # Get the window handle for this process
+                def callback(hwnd, pid):
+                    if win32gui.IsWindowVisible(hwnd):
+                        _, window_pid = win32process.GetWindowThreadProcessId(hwnd)
+                        if window_pid == pid:
+                            return hwnd
+                    return None
+                
+                hwnd = win32gui.EnumWindows(callback, proc.info['pid'])
+                if hwnd:
+                    return hwnd
+        return None
+    except Exception as e:
+        print(f"Error finding Firefox window: {str(e)}")
+        return None
+
+def activate_firefox():
+    """Activate the Firefox window and ensure it's fullscreen"""
+    try:
+        hwnd = find_firefox_window()
+        if not hwnd:
+            raise Exception("Could not find Firefox window")
+        
+        # Verify the window is still valid
+        if not win32gui.IsWindow(hwnd):
+            raise Exception("Window handle invalid")
+        
+        # Show and activate the window
+        win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
+        win32gui.SetForegroundWindow(hwnd)
+        time.sleep(1)
+        
+        # Maximize the window
+        win32gui.ShowWindow(hwnd, win32con.SW_MAXIMIZE)
+        time.sleep(1)
+        
+        return True
+    except Exception as e:
+        print(f"Error activating Firefox window: {str(e)}")
+        return False
+
 def save_page(delay=3, first_tab=False):
+    """Save the current page"""
+    if not activate_firefox():
+        raise Exception("Could not find Firefox window")
+        
     time.sleep(delay)  
     print("Simulating Ctrl + S...")
     pyautogui.hotkey("ctrl", "s")
@@ -23,9 +78,13 @@ def save_page(delay=3, first_tab=False):
         print("Simulating Enter...")
         pyautogui.press("enter")  
 
-    time.sleep(delay)  
+    time.sleep(delay)
 
 def navigate_to_next_tab(tab_number, mode, page_offset):
+    """Navigate to the next page"""
+    if not activate_firefox():
+        raise Exception("Could not find Firefox window")
+        
     print("Navigating to the desired page...")
     pyautogui.hotkey("ctrl", "l")
     time.sleep(1) 
@@ -51,7 +110,8 @@ def run_test_script(mode):
 
 def auto_save_pages(total_pages, save_path, delay, mode, page_offset):
     print("Switching to the browser...")
-    pyautogui.hotkey("alt", "tab")
+    if not activate_firefox():
+        raise Exception("Could not find Firefox window")
     time.sleep(delay)
 
     for page_number in range(1, total_pages + 1):
@@ -65,20 +125,14 @@ def auto_save_pages(total_pages, save_path, delay, mode, page_offset):
         run_test_script(mode) 
     print("All pages saved successfully!")
 
-def open_google_sheet():
-    print("Opening Google Sheet...")
-    pyautogui.hotkey("ctrl", "t")  # Open a new tab
-    time.sleep(1)
-    pyautogui.typewrite("https://docs.google.com/spreadsheets/d/1YrbR0725cmF6AGcvYFBYh11nES3ZEpGgumbuZ5nZRHw/edit?usp=sharing")
-    pyautogui.press("enter")
-
 def get_last_page_number():
     print("Fetching the last available page number...")
-    pyautogui.hotkey("alt", "tab")
-    time.sleep(1)
+    if not activate_firefox():
+        raise Exception("Could not find Firefox window")
+        
     pyautogui.hotkey("ctrl", "l")
     time.sleep(1)
-    pyautogui.typewrite(f"https://passthepopcorn.me/torrents.php")
+    pyautogui.typewrite("https://passthepopcorn.me/torrents.php")
     pyautogui.press("enter")
     time.sleep(3)   
     for _ in range(28):
@@ -90,7 +144,6 @@ def get_last_page_number():
     pyautogui.press("right")
 
     pyautogui.hotkey("ctrl","shiftright","shiftleft", "left")
-
     pyautogui.hotkey("ctrl", "c")
     time.sleep(1)
     pyautogui.hotkey("alt", "tab")
@@ -150,4 +203,3 @@ if __name__ == "__main__":
     save_path = "C:/Encode Tools/PTP Scraper/offline PTP pages"
     delay = 2
     auto_save_pages(total_pages, save_path, delay, mode, page_offset)
-    open_google_sheet()
