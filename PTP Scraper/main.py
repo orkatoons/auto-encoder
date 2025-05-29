@@ -1,104 +1,14 @@
+import pyautogui
 import time
 import os
-import json
-import pyautogui
-import win32gui
-import win32con
-import win32process
-import psutil
 import subprocess
 
-def find_firefox_window():
-    """Find the Firefox window using multiple methods"""
-    try:
-        # Method 1: Try to find by class name
-        hwnd = win32gui.FindWindow("MozillaWindowClass", None)
-        if hwnd and win32gui.IsWindowVisible(hwnd):
-            print("Found Firefox by class name")
-            return hwnd
+# Get the base directory (where this script is located)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+OFFLINE_PAGES_DIR = os.path.join(BASE_DIR, "offline PTP pages")
+CODE_DIR = os.path.join(BASE_DIR, "code")
 
-        # Method 2: Try to find by process
-        for proc in psutil.process_iter(['pid', 'name']):
-            if proc.info['name'] and 'firefox' in proc.info['name'].lower():
-                print(f"Found Firefox process: {proc.info['name']}")
-                # Get the window handle for this process
-                def callback(hwnd, pid):
-                    if win32gui.IsWindowVisible(hwnd):
-                        _, window_pid = win32process.GetWindowThreadProcessId(hwnd)
-                        if window_pid == pid:
-                            return hwnd
-                    return None
-                
-                hwnd = win32gui.EnumWindows(callback, proc.info['pid'])
-                if hwnd:
-                    print("Found Firefox window by process")
-                    return hwnd
-
-        # Method 3: Try to find by window title
-        def find_by_title(hwnd, _):
-            if win32gui.IsWindowVisible(hwnd):
-                title = win32gui.GetWindowText(hwnd).lower()
-                if "firefox" in title or "mozilla" in title:
-                    print(f"Found Firefox by title: {title}")
-                    return hwnd
-            return None
-
-        hwnd = win32gui.EnumWindows(find_by_title, None)
-        if hwnd:
-            return hwnd
-
-        print("\nFirefox not found. Please ensure Firefox is running.")
-        return None
-    except Exception as e:
-        print(f"Error finding Firefox window: {str(e)}")
-        return None
-
-def activate_firefox():
-    """Activate the Firefox window and ensure it's fullscreen"""
-    try:
-        hwnd = find_firefox_window()
-        if not hwnd:
-            print("Firefox window not found. Please ensure Firefox is running and visible.")
-            return False
-        
-        # Verify the window is still valid
-        if not win32gui.IsWindow(hwnd):
-            print("Window handle invalid. Trying to find Firefox again...")
-            hwnd = find_firefox_window()
-            if not hwnd:
-                return False
-        
-        # Get window title for debugging
-        title = win32gui.GetWindowText(hwnd)
-        print(f"Activating Firefox window: {title}")
-        
-        # Show and activate the window
-        win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
-        win32gui.SetForegroundWindow(hwnd)
-        time.sleep(1)
-        
-        # Maximize the window
-        win32gui.ShowWindow(hwnd, win32con.SW_MAXIMIZE)
-        time.sleep(1)
-        
-        return True
-    except Exception as e:
-        print(f"Error activating Firefox window: {str(e)}")
-        return False
-
-def ensure_firefox_running():
-    """Ensure Firefox is running before proceeding"""
-    print("Checking if Firefox is running...")
-    if not find_firefox_window():
-        print("Firefox not found. Please start Firefox and try again.")
-        return False
-    return True
-
-def save_page(delay=3, first_tab=False, page_number=1):
-    """Save the current page"""
-    if not activate_firefox():
-        raise Exception("Could not find Firefox window")
-        
+def save_page(delay=3, first_tab=False):
     time.sleep(delay)  
     print("Simulating Ctrl + S...")
     pyautogui.hotkey("ctrl", "s")
@@ -109,26 +19,18 @@ def save_page(delay=3, first_tab=False, page_number=1):
         for _ in range(6):
             pyautogui.press("tab")
         pyautogui.press("enter")
-        pyautogui.typewrite("C:\\Encode Tools\\auto-encoder\\PTP Scraper\\offline PTP pages") 
+        pyautogui.typewrite(OFFLINE_PAGES_DIR) 
         pyautogui.press("enter")
         for _ in range(9):
             pyautogui.press("tab")
         pyautogui.press("enter")
     else:
-        # For subsequent pages, we need to change the filename
-        print("Changing filename for page", page_number)
-        pyautogui.hotkey("ctrl", "a")  # Select all text
-        pyautogui.press("backspace")    # Clear the current filename
-        pyautogui.typewrite(f"Browse Torrents __ PassThePopcorn_page_{page_number}.htm")
-        pyautogui.press("enter")
+        print("Simulating Enter...")
+        pyautogui.press("enter")  
 
-    time.sleep(delay)
+    time.sleep(delay)  
 
 def navigate_to_next_tab(tab_number, mode, page_offset):
-    """Navigate to the next page"""
-    if not activate_firefox():
-        raise Exception("Could not find Firefox window")
-        
     print("Navigating to the desired page...")
     pyautogui.hotkey("ctrl", "l")
     time.sleep(1) 
@@ -146,7 +48,7 @@ def navigate_to_next_tab(tab_number, mode, page_offset):
 
 def run_test_script(mode):
     if mode == "Movies":
-        script_path = "C:/Encode Tools/auto-encoder/PTP Scraper/code/scrapers/MoviesScraper.py"
+        script_path = os.path.join(CODE_DIR, "scrapers", "MoviesScraper.py")
 
     print(f"Running {script_path}...")
     subprocess.run(["python", script_path], check=True)
@@ -154,8 +56,7 @@ def run_test_script(mode):
 
 def auto_save_pages(total_pages, save_path, delay, mode, page_offset):
     print("Switching to the browser...")
-    if not activate_firefox():
-        raise Exception("Could not find Firefox window")
+    pyautogui.hotkey("alt", "tab")
     time.sleep(delay)
 
     for page_number in range(1, total_pages + 1):
@@ -163,20 +64,26 @@ def auto_save_pages(total_pages, save_path, delay, mode, page_offset):
         navigate_to_next_tab(page_number, mode, page_offset) 
         
         print(f"Processing page {page_number}...")
-        save_page(delay, first_tab=(page_number == 1), page_number=page_number)  
+        save_page(delay, first_tab=(page_number == 1))  
         print(f"Page {page_number} saved.")
         
         run_test_script(mode) 
     print("All pages saved successfully!")
 
+def open_google_sheet():
+    print("Opening Google Sheet...")
+    pyautogui.hotkey("ctrl", "t")  # Open a new tab
+    time.sleep(1)
+    pyautogui.typewrite("https://docs.google.com/spreadsheets/d/1YrbR0725cmF6AGcvYFBYh11nES3ZEpGgumbuZ5nZRHw/edit?usp=sharing")
+    pyautogui.press("enter")
+
 def get_last_page_number():
     print("Fetching the last available page number...")
-    if not activate_firefox():
-        raise Exception("Could not find Firefox window")
-        
+    pyautogui.hotkey("alt", "tab")
+    time.sleep(1)
     pyautogui.hotkey("ctrl", "l")
     time.sleep(1)
-    pyautogui.typewrite("https://passthepopcorn.me/torrents.php")
+    pyautogui.typewrite(f"https://passthepopcorn.me/torrents.php")
     pyautogui.press("enter")
     time.sleep(3)   
     for _ in range(28):
@@ -188,6 +95,7 @@ def get_last_page_number():
     pyautogui.press("right")
 
     pyautogui.hotkey("ctrl","shiftright","shiftleft", "left")
+
     pyautogui.hotkey("ctrl", "c")
     time.sleep(1)
     pyautogui.hotkey("alt", "tab")
@@ -240,15 +148,11 @@ def get_mode():
 
 if __name__ == "__main__":
     print("Welcome to the PTP Scraper!\n")
-    print("-> Kindly make sure that Firefox is running and visible.")
-    print("-> Also ensure that PTP is logged onto in Firefox.")
+    print("-> Kindly make sure that this terminal and a browser are the only applications open on this desktop. ")
+    print("-> Also ensure that PTP is logged onto on your browser.")
     print("-> Kindly do not navigate away from the browser window or do any other activity while this program is running.\n")
-    
-    if not ensure_firefox_running():
-        print("Exiting...")
-        exit(1)
-        
     mode, total_pages, page_offset = get_mode()
-    save_path = "C:/Encode Tools/auto-encoder/PTP Scraper/offline PTP pages"
+    save_path = OFFLINE_PAGES_DIR
     delay = 2
     auto_save_pages(total_pages, save_path, delay, mode, page_offset)
+    open_google_sheet()
