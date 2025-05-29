@@ -9,10 +9,18 @@ import psutil
 import subprocess
 
 def find_firefox_window():
-    """Find the Firefox window using process name"""
+    """Find the Firefox window using multiple methods"""
     try:
+        # Method 1: Try to find by class name
+        hwnd = win32gui.FindWindow("MozillaWindowClass", None)
+        if hwnd and win32gui.IsWindowVisible(hwnd):
+            print("Found Firefox by class name")
+            return hwnd
+
+        # Method 2: Try to find by process
         for proc in psutil.process_iter(['pid', 'name']):
             if proc.info['name'] and 'firefox' in proc.info['name'].lower():
+                print(f"Found Firefox process: {proc.info['name']}")
                 # Get the window handle for this process
                 def callback(hwnd, pid):
                     if win32gui.IsWindowVisible(hwnd):
@@ -23,7 +31,33 @@ def find_firefox_window():
                 
                 hwnd = win32gui.EnumWindows(callback, proc.info['pid'])
                 if hwnd:
+                    print("Found Firefox window by process")
                     return hwnd
+
+        # Method 3: Try to find by window title
+        def find_by_title(hwnd, _):
+            if win32gui.IsWindowVisible(hwnd):
+                title = win32gui.GetWindowText(hwnd).lower()
+                if "firefox" in title or "mozilla" in title:
+                    print(f"Found Firefox by title: {title}")
+                    return hwnd
+            return None
+
+        hwnd = win32gui.EnumWindows(find_by_title, None)
+        if hwnd:
+            return hwnd
+
+        # Debug: List all visible windows
+        print("\nDebug: Listing all visible windows:")
+        def list_windows(hwnd, _):
+            if win32gui.IsWindowVisible(hwnd):
+                title = win32gui.GetWindowText(hwnd)
+                if title:  # Only print windows with titles
+                    print(f"Window: {title}")
+            return True
+        win32gui.EnumWindows(list_windows, None)
+
+        print("\nFirefox not found. Please ensure Firefox is running.")
         return None
     except Exception as e:
         print(f"Error finding Firefox window: {str(e)}")
@@ -34,11 +68,19 @@ def activate_firefox():
     try:
         hwnd = find_firefox_window()
         if not hwnd:
-            raise Exception("Could not find Firefox window")
+            print("Firefox window not found. Please ensure Firefox is running and visible.")
+            return False
         
         # Verify the window is still valid
         if not win32gui.IsWindow(hwnd):
-            raise Exception("Window handle invalid")
+            print("Window handle invalid. Trying to find Firefox again...")
+            hwnd = find_firefox_window()
+            if not hwnd:
+                return False
+        
+        # Get window title for debugging
+        title = win32gui.GetWindowText(hwnd)
+        print(f"Activating Firefox window: {title}")
         
         # Show and activate the window
         win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
@@ -53,6 +95,14 @@ def activate_firefox():
     except Exception as e:
         print(f"Error activating Firefox window: {str(e)}")
         return False
+
+def ensure_firefox_running():
+    """Ensure Firefox is running before proceeding"""
+    print("Checking if Firefox is running...")
+    if not find_firefox_window():
+        print("Firefox not found. Please start Firefox and try again.")
+        return False
+    return True
 
 def save_page(delay=3, first_tab=False):
     """Save the current page"""
@@ -196,9 +246,14 @@ def get_mode():
 
 if __name__ == "__main__":
     print("Welcome to the PTP Scraper!\n")
-    print("-> Kindly make sure that this terminal and a browser are the only applications open on this desktop. ")
-    print("-> Also ensure that PTP is logged onto on your browser.")
+    print("-> Kindly make sure that Firefox is running and visible.")
+    print("-> Also ensure that PTP is logged onto in Firefox.")
     print("-> Kindly do not navigate away from the browser window or do any other activity while this program is running.\n")
+    
+    if not ensure_firefox_running():
+        print("Exiting...")
+        exit(1)
+        
     mode, total_pages, page_offset = get_mode()
     save_path = "C:/Encode Tools/PTP Scraper/offline PTP pages"
     delay = 2
