@@ -7,6 +7,7 @@ import glob
 import io
 import sys
 from datetime import datetime
+from PTP_Scraper.main import PTPScraper
 
 app = Flask(__name__)
 
@@ -16,6 +17,9 @@ job_store = {}
 STATUS_FILE = 'status.json'
 LOG_DIR = 'encode_logs'
 CONFIG_FILE = 'config.json'
+
+# Initialize the PTP scraper
+ptp_scraper = PTPScraper()
 
 def initialize_status_file():
     """Initialize the status.json file if it doesn't exist or is empty"""
@@ -611,6 +615,72 @@ def load_more_contents():
             'status': 'error',
             'message': str(e)
         }), 500
+
+@app.route('/ptp/scrape', methods=['POST'])
+def start_ptp_scrape():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+
+        start_page = data.get('start_page')
+        num_pages = data.get('num_pages')
+
+        if not start_page or not num_pages:
+            return jsonify({'error': 'Missing start_page or num_pages'}), 400
+
+        # Start scraping in a new process
+        p = Process(target=run_ptp_scraping, args=(start_page, num_pages))
+        p.start()
+        job_store[f'ptp_{start_page}_{num_pages}'] = p
+
+        return jsonify({
+            'status': 'started',
+            'message': f'Started scraping from page {start_page} for {num_pages} pages'
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+def run_ptp_scraping(start_page, num_pages):
+    """Run the PTP scraping process"""
+    try:
+        new_movies = ptp_scraper.scrape_pages(start_page, num_pages)
+        print(f"Scraping complete! Added {new_movies} new movies.")
+    except Exception as e:
+        print(f"Error during scraping: {str(e)}")
+
+@app.route('/ptp/data', methods=['GET'])
+def get_ptp_data():
+    try:
+        data = ptp_scraper.load_existing_data()
+        return jsonify({
+            'status': 'success',
+            'data': data
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/ptp/search', methods=['GET'])
+def search_ptp_data():
+    try:
+        query = request.args.get('query', '').lower()
+        if not query:
+            return jsonify({'error': 'Search query is required'}), 400
+
+        data = ptp_scraper.load_existing_data()
+        results = []
+        
+        for movie in data.get("movies", []):
+            if (query in movie.get("title", "").lower() or 
+                query in str(movie.get("year", "")).lower()):
+                results.append(movie)
+
+        return jsonify({
+            'status': 'success',
+            'data': results
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     # Initialize status file on startup
