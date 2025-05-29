@@ -94,7 +94,7 @@ def ensure_firefox_running():
         return False
     return True
 
-def save_page(delay=3, first_tab=False):
+def save_page(delay=3, first_tab=False, page_number=1):
     """Save the current page"""
     if not activate_firefox():
         raise Exception("Could not find Firefox window")
@@ -115,8 +115,12 @@ def save_page(delay=3, first_tab=False):
             pyautogui.press("tab")
         pyautogui.press("enter")
     else:
-        print("Simulating Enter...")
-        pyautogui.press("enter")  
+        # For subsequent pages, we need to change the filename
+        print("Changing filename for page", page_number)
+        pyautogui.hotkey("ctrl", "a")  # Select all text
+        pyautogui.press("backspace")    # Clear the current filename
+        pyautogui.typewrite(f"Browse Torrents __ PassThePopcorn_page_{page_number}.htm")
+        pyautogui.press("enter")
 
     time.sleep(delay)
 
@@ -159,7 +163,7 @@ def auto_save_pages(total_pages, save_path, delay, mode, page_offset):
         navigate_to_next_tab(page_number, mode, page_offset) 
         
         print(f"Processing page {page_number}...")
-        save_page(delay, first_tab=(page_number == 1))  
+        save_page(delay, first_tab=(page_number == 1), page_number=page_number)  
         print(f"Page {page_number} saved.")
         
         run_test_script(mode) 

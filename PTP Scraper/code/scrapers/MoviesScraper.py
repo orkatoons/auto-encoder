@@ -9,8 +9,9 @@ import win32con
 import win32process
 import psutil
 import pyautogui
+import glob
 
-INPUT_PATH = "C:/Encode Tools/auto-encoder/PTP Scraper/offline PTP pages/Browse Torrents __ PassThePopcorn.htm"
+BASE_PATH = "C:/Encode Tools/auto-encoder/PTP Scraper/offline PTP pages"
 OUTPUT_JSON = "C:/Encode Tools/auto-encoder/PTP Scraper/movies_data.json"
 COMPATIBLE_SOURCES = ["BD25", "BD50", "Remux", "DVD5", "DVD9"]
 
@@ -249,17 +250,34 @@ def save_page(delay=3, first_tab=False):
 
     time.sleep(delay)
 
+def process_all_pages():
+    """Process all saved HTML pages"""
+    all_movies = []
+    
+    # Get all HTML files in the directory
+    html_files = glob.glob(os.path.join(BASE_PATH, "*.htm"))
+    html_files.sort()  # Sort to process in order
+    
+    for html_file in html_files:
+        print(f"Processing {os.path.basename(html_file)}...")
+        html = fetch_content(html_file)
+        if html:
+            movies = parse_movies(html)
+            all_movies.extend(movies)
+    
+    return all_movies
+
 def main():
     # First ensure Firefox is active and fullscreen
     if not activate_firefox():
         print("Failed to activate Firefox window. Exiting...")
         return
 
-    html = fetch_content(INPUT_PATH)
-    if html:
-        movies = parse_movies(html)
+    # Process all pages
+    movies = process_all_pages()
+    if movies:
         save_to_json(movies, OUTPUT_JSON)
-        delete_downloaded_files(os.path.dirname(INPUT_PATH))
+        delete_downloaded_files(BASE_PATH)
 
 if __name__ == "__main__":
     main()
