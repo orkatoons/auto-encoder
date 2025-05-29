@@ -7,7 +7,12 @@ import glob
 import io
 import sys
 from datetime import datetime
-from PTP_Scraper.main import PTPScraper
+
+# Add the PTP Scraper directory to the Python path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+ptp_scraper_dir = os.path.join(current_dir, "PTP Scraper")
+sys.path.append(ptp_scraper_dir)
+from main import PTPScraper
 
 app = Flask(__name__)
 

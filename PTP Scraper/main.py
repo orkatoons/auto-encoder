@@ -87,36 +87,8 @@ class PTPScraper:
             "scraped_at": datetime.now().isoformat()
         }
 
-    def scrape_pages(self, start_page, num_pages):
-        """Scrape multiple pages and store unique movies"""
-        print("Switching to the browser...")
-        pyautogui.hotkey("alt", "tab")
-        time.sleep(2)
-
-        existing_data = self.load_existing_data()
-        new_movies = []
-
-        for page_number in range(1, num_pages + 1):
-            print(f"Navigating to page {page_number}...")
-            self.navigate_to_next_tab(page_number, "Movies", start_page)
-            
-            print(f"Processing page {page_number}...")
-            self.save_page(2, first_tab=(page_number == 1))
-            
-            # Process the saved page and get movie data
-            movie_data = self.process_saved_page(page_number)
-            
-            # Check for duplicates and add if new
-            if not self.is_duplicate(movie_data, existing_data):
-                new_movies.append(movie_data)
-                existing_data["movies"].append(movie_data)
-            
-            # Save after each page to prevent data loss
-            self.save_data(existing_data)
-            
-        return len(new_movies)
-
     def get_last_page_number(self):
+        """Get the last available page number from PTP"""
         print("Fetching the last available page number...")
         pyautogui.hotkey("alt", "tab")
         time.sleep(1)
@@ -145,62 +117,65 @@ class PTPScraper:
         # Return the last page number (you'll need to implement this)
         return 100  # Placeholder value
 
-def open_google_sheet():
-    print("Opening Google Sheet...")
-    pyautogui.hotkey("ctrl", "t")  # Open a new tab
-    time.sleep(1)
-    pyautogui.typewrite("https://docs.google.com/spreadsheets/d/1YrbR0725cmF6AGcvYFBYh11nES3ZEpGgumbuZ5nZRHw/edit?usp=sharing")
-    pyautogui.press("enter")
+    def auto_save_pages(self, total_pages, save_path, delay, mode, page_offset):
+        """Automatically save multiple pages"""
+        print("Switching to the browser...")
+        pyautogui.hotkey("alt", "tab")
+        time.sleep(delay)
 
-def get_mode():
-    mode = "Movies"
-    total_pages = 1
-    page_offset = 1
+        existing_data = self.load_existing_data()
+        new_movies = []
 
-    while True:
-        page_offset1 = int(input("Which page would you like to start at: "))
-        if page_offset1 <= 0 or page_offset1 != int(page_offset1):
-            print("Invalid number.")
-        else:
-            page_offset = page_offset1
-            break
+        for page_number in range(1, total_pages + 1):
+            print(f"Navigating to page {page_number}...")
+            self.navigate_to_next_tab(page_number, mode, page_offset)
+            
+            print(f"Processing page {page_number}...")
+            self.save_page(delay, first_tab=(page_number == 1))
+            
+            # Process the saved page and get movie data
+            movie_data = self.process_saved_page(page_number)
+            
+            # Check for duplicates and add if new
+            if not self.is_duplicate(movie_data, existing_data):
+                new_movies.append(movie_data)
+                existing_data["movies"].append(movie_data)
+            
+            # Save after each page to prevent data loss
+            self.save_data(existing_data)
+            
+        return len(new_movies)
 
-    while True:
-        total_pages1 = input("Enter the number of pages you wish to be scraped ('All' to get the last page): ").strip().lower()
-        
-        if total_pages1 == "all":
-            get_last_page_number()
-            while True:
-                try:
-                    total_pages1 = int(input("Scrape how many pages from the last page?: "))
-                    if total_pages1 <= 0:
-                        print("Invalid number. Enter a positive integer.")
-                    else:
-                        total_pages = total_pages1
-                        break
-                except ValueError:
-                    print("Invalid input. Please enter a valid number.")
-            break
+    def scrape_pages(self, start_page, num_pages):
+        """Scrape multiple pages and store unique movies"""
+        return self.auto_save_pages(num_pages, "C:/Encode Tools/PTP Scraper/offline PTP pages", 2, "Movies", start_page)
 
-        try:
-            total_pages1 = int(total_pages1)
-            if total_pages1 <= 0:
-                print("Invalid amount.")
-            else:
-                total_pages = total_pages1
-                break
-        except ValueError:
-            print("Invalid input. Enter a number or 'All'.")
-
-    return mode, total_pages, page_offset
-
+# For testing purposes
 if __name__ == "__main__":
-    print("Welcome to the PTP Scraper!\n")
-    print("-> Kindly make sure that this terminal and a browser are the only applications open on this desktop. ")
-    print("-> Also ensure that PTP is logged onto on your browser.")
-    print("-> Kindly do not navigate away from the browser window or do any other activity while this program is running.\n")
-    mode, total_pages, page_offset = get_mode()
-    save_path = "C:/Encode Tools/PTP Scraper/offline PTP pages"
-    delay = 2
-    auto_save_pages(total_pages, save_path, delay, mode, page_offset)
-    open_google_sheet()
+    scraper = PTPScraper()
+    print("Welcome to the PTP Scraper!")
+    print("This version uses API calls and stores data locally in JSON format.")
+    
+    while True:
+        try:
+            start_page = int(input("Which page would you like to start at? "))
+            if start_page <= 0:
+                print("Please enter a positive number.")
+                continue
+            break
+        except ValueError:
+            print("Please enter a valid number.")
+
+    while True:
+        try:
+            num_pages = int(input("How many pages would you like to scrape? "))
+            if num_pages <= 0:
+                print("Please enter a positive number.")
+                continue
+            break
+        except ValueError:
+            print("Please enter a valid number.")
+
+    print(f"\nStarting scrape from page {start_page} for {num_pages} pages...")
+    new_movies = scraper.scrape_pages(start_page, num_pages)
+    print(f"\nScraping complete! Added {new_movies} new unique movies to the database.")
