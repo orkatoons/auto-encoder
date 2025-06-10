@@ -5,18 +5,58 @@ import subprocess
 import sys
 import pygetwindow as gw
 import argparse
+import win32gui
+import win32con
 
 def activate_firefox():
-    firefox_window = None
-    for w in gw.getAllWindows():
-        if "Mozilla Firefox" in w.title and not w.isMinimized:
-            firefox_window = w
-            break
-    if not firefox_window:
-        print("⚠️ Could not find Firefox window. Please make sure Firefox is open.")
-        sys.exit(1)
-    firefox_window.activate()
-    time.sleep(1)  # Wait for the window to activate
+    """Activate Firefox window with improved error handling"""
+    try:
+        # Try multiple methods to find Firefox window
+        firefox_window = None
+        
+        # Method 1: Using pygetwindow
+        for w in gw.getAllWindows():
+            if "Mozilla Firefox" in w.title and not w.isMinimized:
+                firefox_window = w
+                break
+        
+        # Method 2: Using win32gui if pygetwindow fails
+        if not firefox_window:
+            def callback(hwnd, windows):
+                if win32gui.IsWindowVisible(hwnd):
+                    title = win32gui.GetWindowText(hwnd)
+                    if "Mozilla Firefox" in title:
+                        windows.append(hwnd)
+                return True
+            
+            windows = []
+            win32gui.EnumWindows(callback, windows)
+            
+            if windows:
+                hwnd = windows[0]
+                # Restore if minimized
+                if win32gui.IsIconic(hwnd):
+                    win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
+                # Bring to front
+                win32gui.SetForegroundWindow(hwnd)
+                time.sleep(1)
+                return True
+        
+        if firefox_window:
+            try:
+                firefox_window.activate()
+                time.sleep(1)
+                return True
+            except Exception as e:
+                print(f"Warning: Could not activate window using pygetwindow: {str(e)}")
+                return False
+        
+        print("⚠️ Could not find Firefox window. Please make sure Firefox is open and visible.")
+        return False
+        
+    except Exception as e:
+        print(f"⚠️ Error activating Firefox window: {str(e)}")
+        return False
 
 def save_page(delay=3, first_tab=False):
     time.sleep(delay)  
@@ -66,7 +106,8 @@ def run_test_script(mode):
 
 def auto_save_pages(total_pages, save_path, delay, mode, page_offset):
     print("Activating Firefox browser window...")
-    activate_firefox()
+    if not activate_firefox():
+        raise Exception("Failed to activate Firefox window. Please ensure Firefox is open and visible.")
 
     for page_number in range(1, total_pages + 1):
         print(f"Navigating to page {page_number}...")
