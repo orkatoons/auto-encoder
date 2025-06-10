@@ -8,6 +8,8 @@ import io
 import sys
 from datetime import datetime
 from ptp_routes import ptp_bp
+import subprocess
+import threading
 
 app = Flask(__name__)
 
@@ -616,8 +618,82 @@ def load_more_contents():
             'message': str(e)
         }), 500
 
+@app.route('/ptp/scrape', methods=['POST'])
+def start_ptp_scrape():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'status': 'error',
+                'message': 'No data provided'
+            }), 400
+
+        page_offset = data.get('page_offset')
+        total_pages = data.get('total_pages')
+        mode = data.get('mode', 'Movies')
+
+        if not page_offset or not total_pages:
+            return jsonify({
+                'status': 'error',
+                'message': 'page_offset and total_pages are required'
+            }), 400
+
+        try:
+            page_offset = int(page_offset)
+            total_pages = int(total_pages)
+        except ValueError:
+            return jsonify({
+                'status': 'error',
+                'message': 'page_offset and total_pages must be integers'
+            }), 400
+
+        if page_offset <= 0 or total_pages <= 0:
+            return jsonify({
+                'status': 'error',
+                'message': 'page_offset and total_pages must be greater than 0'
+            }), 400
+
+        # Get the absolute path to main.py
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        main_script = os.path.join(current_dir, 'PTP Scraper', 'main.py')
+        
+        # Verify the script exists
+        if not os.path.exists(main_script):
+            return jsonify({
+                'status': 'error',
+                'message': f'Scraper script not found at {main_script}'
+            }), 500
+
+        # Run the scraper in a separate thread to avoid blocking
+        def run_scraper():
+            try:
+                subprocess.run([
+                    sys.executable,
+                    main_script,
+                    str(page_offset),
+                    str(total_pages),
+                    mode
+                ], check=True)
+            except subprocess.CalledProcessError as e:
+                print(f"Error running scraper: {str(e)}")
+
+        thread = threading.Thread(target=run_scraper)
+        thread.start()
+
+        return jsonify({
+            'status': 'fetching',
+            'message': 'Scraper started successfully'
+        })
+
+    except Exception as e:
+        print(f"Error in start_ptp_scrape: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
 if __name__ == '__main__':
     # Initialize status file on startup
     initialize_status_file()
-    app.run(host='localhost', port=5001, debug=True)
+    app.run(host='0.0.0.0', port=5001, debug=True)
 
