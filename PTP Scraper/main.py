@@ -4,6 +4,7 @@ import os
 import subprocess
 import sys
 import pygetwindow as gw
+import argparse
 
 def activate_firefox():
     firefox_window = None
@@ -105,65 +106,42 @@ def get_last_page_number():
     time.sleep(1)
     pyautogui.press("enter")
 
-def get_mode():
-    mode = "Movies"
-    total_pages = 1
-    page_offset = 1
-
-    while True:
-        page_offset1 = int(input("Which page would you like to start at: "))
-        if page_offset1 <= 0 or page_offset1 != int(page_offset1):
-            print("Invalid number.")
-        else:
-            page_offset = page_offset1
-            break
-
-    while True:
-        total_pages1 = input("Enter the number of pages you wish to be scraped ('All' to get the last page): ").strip().lower()
-        
-        if total_pages1 == "all":
-            get_last_page_number()
-            while True:
-                try:
-                    total_pages1 = int(input("Scrape how many pages from the last page?: "))
-                    if total_pages1 <= 0:
-                        print("Invalid number. Enter a positive integer.")
-                    else:
-                        total_pages = total_pages1
-                        break
-                except ValueError:
-                    print("Invalid input. Please enter a valid number.")
-            break
-
-        try:
-            total_pages1 = int(total_pages1)
-            if total_pages1 <= 0:
-                print("Invalid amount.")
-            else:
-                total_pages = total_pages1
-                break
-        except ValueError:
-            print("Invalid input. Enter a number or 'All'.")
-
-    return mode, total_pages, page_offset
-
-mode, total_pages, page_offset = get_mode()
-save_path = "C:/Encode Tools/auto-encoder/PTP Scraper/offline PTP pages"
-delay = 2
-auto_save_pages(total_pages, save_path, delay, mode, page_offset)
-
-'''
-if __name__ == "__main__":
-    print("Welcome to the PTP Scraper!\n")
-    print("-> Kindly make sure that this terminal and a browser are the only applications open on this desktop. ")
-    print("-> Also ensure that PTP is logged onto on your browser.")
-    print("-> Kindly do not navigate away from the browser window or do any other activity while this program is running.\n")
+def run_scraper(page_offset, total_pages, mode="Movies"):
+    """
+    Run the PTP scraper with specified parameters
     
-    mode, total_pages, page_offset = get_mode()
+    Args:
+        page_offset (int): The page number to start scraping from
+        total_pages (int): Number of pages to scrape
+        mode (str): Scraping mode (default: "Movies")
+    """
+    if page_offset <= 0:
+        raise ValueError("Page offset must be greater than 0")
+    
+    if total_pages <= 0:
+        raise ValueError("Total pages must be greater than 0")
+
     save_path = "C:/Encode Tools/auto-encoder/PTP Scraper/offline PTP pages"
     delay = 2
-    auto_save_pages(total_pages, save_path, delay, mode, page_offset)
-
-    print("Scraping complete. Exiting program.")
     
-    '''
+    print(f"Starting scraper with parameters:")
+    print(f"- Mode: {mode}")
+    print(f"- Page offset: {page_offset}")
+    print(f"- Total pages: {total_pages}")
+    
+    auto_save_pages(total_pages, save_path, delay, mode, page_offset)
+    return {"status": "success", "message": "Scraping completed successfully"}
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='PTP Scraper')
+    parser.add_argument('--page-offset', type=int, required=True, help='Page number to start scraping from')
+    parser.add_argument('--total-pages', type=int, required=True, help='Number of pages to scrape')
+    parser.add_argument('--mode', type=str, default='Movies', help='Scraping mode (default: Movies)')
+    
+    args = parser.parse_args()
+    
+    try:
+        run_scraper(args.page_offset, args.total_pages, args.mode)
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        sys.exit(1)
