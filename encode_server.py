@@ -7,8 +7,12 @@ import glob
 import io
 import sys
 from datetime import datetime
+from ptp_routes import ptp_bp
 
 app = Flask(__name__)
+
+# Register the PTP blueprint with a URL prefix
+app.register_blueprint(ptp_bp, url_prefix='/ptp')
 
 job_id = None
 filename = None
@@ -615,5 +619,5 @@ def load_more_contents():
 if __name__ == '__main__':
     # Initialize status file on startup
     initialize_status_file()
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    app.run(host='localhost', port=5001, debug=True)
 
