@@ -2,11 +2,20 @@ import pyautogui
 import time
 import os
 import subprocess
+import sys
+import pygetwindow as gw
 
-# Get the base directory (where this script is located)
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-OFFLINE_PAGES_DIR = os.path.join(BASE_DIR, "offline PTP pages")
-CODE_DIR = os.path.join(BASE_DIR, "code")
+def activate_firefox():
+    firefox_window = None
+    for w in gw.getAllWindows():
+        if "Mozilla Firefox" in w.title and not w.isMinimized:
+            firefox_window = w
+            break
+    if not firefox_window:
+        print("⚠️ Could not find Firefox window. Please make sure Firefox is open.")
+        sys.exit(1)
+    firefox_window.activate()
+    time.sleep(1)  # Wait for the window to activate
 
 def save_page(delay=3, first_tab=False):
     time.sleep(delay)  
@@ -19,7 +28,7 @@ def save_page(delay=3, first_tab=False):
         for _ in range(6):
             pyautogui.press("tab")
         pyautogui.press("enter")
-        pyautogui.typewrite(OFFLINE_PAGES_DIR) 
+        pyautogui.typewrite("C:\\Encode Tools\\auto-encoder\\PTP Scraper\\offline PTP pages") 
         pyautogui.press("enter")
         for _ in range(9):
             pyautogui.press("tab")
@@ -48,16 +57,15 @@ def navigate_to_next_tab(tab_number, mode, page_offset):
 
 def run_test_script(mode):
     if mode == "Movies":
-        script_path = os.path.join(CODE_DIR, "scrapers", "MoviesScraper.py")
+        script_path = "C:/Encode Tools/auto-encoder/PTP Scraper/code/scrapers/MoviesScraper.py"
 
     print(f"Running {script_path}...")
     subprocess.run(["python", script_path], check=True)
     print(f"{mode} scraper finished.")
 
 def auto_save_pages(total_pages, save_path, delay, mode, page_offset):
-    print("Switching to the browser...")
-    pyautogui.hotkey("alt", "tab")
-    time.sleep(delay)
+    print("Activating Firefox browser window...")
+    activate_firefox()
 
     for page_number in range(1, total_pages + 1):
         print(f"Navigating to page {page_number}...")
@@ -70,17 +78,9 @@ def auto_save_pages(total_pages, save_path, delay, mode, page_offset):
         run_test_script(mode) 
     print("All pages saved successfully!")
 
-def open_google_sheet():
-    print("Opening Google Sheet...")
-    pyautogui.hotkey("ctrl", "t")  # Open a new tab
-    time.sleep(1)
-    pyautogui.typewrite("https://docs.google.com/spreadsheets/d/1YrbR0725cmF6AGcvYFBYh11nES3ZEpGgumbuZ5nZRHw/edit?usp=sharing")
-    pyautogui.press("enter")
-
 def get_last_page_number():
     print("Fetching the last available page number...")
-    pyautogui.hotkey("alt", "tab")
-    time.sleep(1)
+    activate_firefox()
     pyautogui.hotkey("ctrl", "l")
     time.sleep(1)
     pyautogui.typewrite(f"https://passthepopcorn.me/torrents.php")
@@ -94,12 +94,13 @@ def get_last_page_number():
     time.sleep(1)
     pyautogui.press("right")
 
+    # These hotkeys seem unusual but retained from original code
     pyautogui.hotkey("ctrl","shiftright","shiftleft", "left")
 
     pyautogui.hotkey("ctrl", "c")
     time.sleep(1)
-    pyautogui.hotkey("alt", "tab")
-    time.sleep(1)
+
+    activate_firefox()
     pyautogui.hotkey("ctrl", "v")
     time.sleep(1)
     pyautogui.press("enter")
@@ -146,13 +147,23 @@ def get_mode():
 
     return mode, total_pages, page_offset
 
+mode, total_pages, page_offset = get_mode()
+save_path = "C:/Encode Tools/auto-encoder/PTP Scraper/offline PTP pages"
+delay = 2
+auto_save_pages(total_pages, save_path, delay, mode, page_offset)
+
+'''
 if __name__ == "__main__":
     print("Welcome to the PTP Scraper!\n")
     print("-> Kindly make sure that this terminal and a browser are the only applications open on this desktop. ")
     print("-> Also ensure that PTP is logged onto on your browser.")
     print("-> Kindly do not navigate away from the browser window or do any other activity while this program is running.\n")
+    
     mode, total_pages, page_offset = get_mode()
-    save_path = OFFLINE_PAGES_DIR
+    save_path = "C:/Encode Tools/auto-encoder/PTP Scraper/offline PTP pages"
     delay = 2
     auto_save_pages(total_pages, save_path, delay, mode, page_offset)
-    open_google_sheet()
+
+    print("Scraping complete. Exiting program.")
+    
+    '''

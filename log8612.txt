@@ -1,0 +1,9 @@
+eac3to v3.52
+command line: eac3to W:\Encodes\Farrey\source\Farrey.2024.2160p.ZEE5.WEB-DL.Hindi.DDP5.1.H.265-Archie.mkv
+------------------------------------------------------------------------------
+Running in fast mode
+Keeping dialnorm
+MKV, 1 video track, 1 audio track, 1 subtitle track, 1:49:23, 25p
+1: h265/HEVC, 2160p25 (16:9), 10 bits
+2: E-AC3, Hindi, 5.1 channels, 192kbps, 48kHz, dialnorm: -24dB
+3: Subtitle (SRT), English, "English"

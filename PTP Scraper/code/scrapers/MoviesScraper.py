@@ -1,21 +1,12 @@
 import pandas as pd
 from bs4 import BeautifulSoup
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
 import os
 import time
 import shutil
+import json
 
-# Get the base directories
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_ROOT = os.path.dirname(os.path.dirname(SCRIPT_DIR))
-OFFLINE_PAGES_DIR = os.path.join(PROJECT_ROOT, "offline PTP pages")
-CREDS_DIR = os.path.join(PROJECT_ROOT, "code", "creds")
-
-INPUT_PATH = os.path.join(OFFLINE_PAGES_DIR, "Browse Torrents __ PassThePopcorn.htm")
-GOOGLE_SHEET_NAME = "to encode"
-SHEET_TITLE = "Movies Tab"
-CREDENTIALS_FILE = os.path.join(CREDS_DIR, "gen-lang-client-0724418887-959d16f690f0.json")
+INPUT_PATH = "C:/Encode Tools/auto-encoder/PTP Scraper/offline PTP pages/Browse Torrents __ PassThePopcorn.htm"
+OUTPUT_JSON = "C:/Encode Tools/auto-encoder/PTP Scraper/output.json"
 COMPATIBLE_SOURCES = ["BD25", "BD50", "Remux", "DVD5", "DVD9"]
 
 def fetch_content(input_path):
@@ -29,7 +20,6 @@ def fetch_content(input_path):
 def parse_movies(html):
     soup = BeautifulSoup(html, "html.parser")
     rows = soup.find_all("tr", class_="basic-movie-list__details-row")
-
     movies = []
 
     for row in rows:
@@ -61,10 +51,9 @@ def parse_movies(html):
                 if torrent_info:
                     source_text = torrent_info.text.strip()
 
-                    # Check for UHD content (2160p)
                     if "2160p" in source_text:
                         contains_uhd = True
-                        break  # Skip this movie entirely
+                        break
 
                     if "DVD9" in source_text and "VOB IFO" in source_text:
                         format_name = "DVD9 - VOB IFO"
@@ -103,12 +92,10 @@ def parse_movies(html):
                         standard_def_resolutions.append("576p")
 
             if contains_uhd:
-                continue  # Skip movies with UHD (2160p) content
+                continue
 
-            if any(source in valid_formats for source in ["Remux", "BD25", "BD50", "DVD5 - VOB IFO", "DVD9 - VOB IFO"]):
+            if any(source in valid_formats for source in COMPATIBLE_SOURCES):
                 high_def = []
-
-                # Only include 720p or 1080p if they are missing
                 if hd_counts["720p"] == 0:
                     high_def.append("720p")
                 if hd_counts["1080p"] == 0:
@@ -116,12 +103,10 @@ def parse_movies(html):
 
                 high_def_value = ", ".join(high_def) if high_def else "NULL"
 
-                standard_def_value = "NULL"
                 missing_sd_resolutions = [
                     resolution for resolution in ["480p", "576p"] if resolution not in standard_def_resolutions
                 ]
-                if missing_sd_resolutions:
-                    standard_def_value = ", ".join(missing_sd_resolutions)
+                standard_def_value = ", ".join(missing_sd_resolutions) if missing_sd_resolutions else "NULL"
 
                 movie_link = title_element["href"]
                 if not movie_link.startswith("http"):
@@ -141,35 +126,29 @@ def parse_movies(html):
 
     return movies
 
-def save_to_google_sheets(movies, spreadsheet_name, sheet_title, credentials_file):
-    try:
-        scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-        creds = ServiceAccountCredentials.from_json_keyfile_name(credentials_file, scope)
-        client = gspread.authorize(creds)
-        spreadsheet = client.open(spreadsheet_name)
+def save_to_json(movies, output_file):
+    existing_movies = []
 
+    if os.path.exists(output_file):
         try:
-            sheet = spreadsheet.worksheet(sheet_title)
-        except gspread.exceptions.WorksheetNotFound:
-            sheet = spreadsheet.add_worksheet(title=sheet_title, rows="100", cols="20")
-            sheet.append_row(["Name", "Source", "Standard Definition", "High Definition", "Link"])
+            with open(output_file, "r", encoding="utf-8") as f:
+                existing_movies = json.load(f)
+        except Exception as e:
+            print(f"Error reading existing JSON file: {e}")
+            existing_movies = []
 
-        existing_records = sheet.get_all_records()
-        if not existing_records:
-            sheet.append_row(["Name", "Source", "Standard Definition", "High Definition", "Link"])
+    existing_links = {movie["Link"] for movie in existing_movies}
+    new_movies = [movie for movie in movies if movie["Link"] not in existing_links]
 
-        for movie in movies:
-            sheet.append_row([
-                movie["Name"],
-                movie["Source"],
-                movie["Standard Definition"],
-                movie["High Definition"],
-                movie["Link"],
-            ])
+    all_movies = existing_movies + new_movies
 
-        print(f"Successfully appended {len(movies)} movies to sheet '{sheet_title}' in Google Sheet '{spreadsheet_name}'")
+    try:
+        with open(output_file, "w", encoding="utf-8") as f:
+            json.dump(all_movies, f, indent=4, ensure_ascii=False)
+        print(f"Saved {len(new_movies)} new entries (total: {len(all_movies)}) to '{output_file}'")
     except Exception as e:
-        print(f"Error saving to Google Sheets: {e}")
+        print(f"Error saving to JSON file: {e}")
+
 
 def delete_downloaded_files(save_path):
     print("Deleting saved HTML files and associated folders...")
@@ -182,14 +161,12 @@ def delete_downloaded_files(save_path):
             elif os.path.isdir(file_path):
                 shutil.rmtree(file_path)
                 print(f"Deleted folder: {file_path}")
-    print("30 second delay for Google Sheet cooldown")
-    time.sleep(30)
 
 def main():
     html = fetch_content(INPUT_PATH)
     if html:
         movies = parse_movies(html)
-        save_to_google_sheets(movies, spreadsheet_name="to encode", sheet_title="Movies Tab", credentials_file=CREDENTIALS_FILE)
+        save_to_json(movies, OUTPUT_JSON)
         delete_downloaded_files(os.path.dirname(INPUT_PATH))
 
 if __name__ == "__main__":
