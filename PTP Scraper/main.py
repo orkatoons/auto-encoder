@@ -33,10 +33,11 @@ def save_page(delay=3, first_tab=False):
         for _ in range(9):
             time.sleep(0.2)
             pyautogui.press("tab")
+        time.sleep(1)
         pyautogui.press("enter")
     else:
         print("Simulating Enter...")
-        time.sleep(0.2)
+        time.sleep(1)
         pyautogui.press("enter")  
 
     time.sleep(delay)  
