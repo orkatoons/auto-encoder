@@ -35,8 +35,9 @@ def save_page(delay=3, first_tab=False):
     if first_tab:
         print("Performing first-tab-specific actions...")
         # First tab to get to the save button
-        pyautogui.press("tab")
-        time.sleep(0.5)
+        for i in range(6):
+            pyautogui.press("tab")
+            time.sleep(0.5)
         
         # Press enter to confirm save location
         pyautogui.press("enter")
