@@ -4,6 +4,15 @@ import os
 import subprocess
 import sys
 import pygetwindow as gw
+import requests
+
+def notify_completion():
+    try:
+        response = requests.post('http://localhost:3000/api/ptp/scrape/complete')
+        if response.status_code != 200:
+            print(f"Warning: Failed to notify completion: {response.status_code}")
+    except Exception as e:
+        print(f"Warning: Error notifying completion: {str(e)}")
 
 def activate_firefox():
     firefox_window = None
@@ -85,16 +94,21 @@ def auto_save_pages(total_pages, save_path, delay, mode, page_offset):
     print("Activating Firefox browser window...")
     activate_firefox()
 
-    for page_number in range(1, total_pages + 1):
-        print(f"Navigating to page {page_number}...")
-        navigate_to_next_tab(page_number, mode, page_offset) 
-        
-        print(f"Processing page {page_number}...")
-        save_page(delay, first_tab=(page_number == 1))  
-        print(f"Page {page_number} saved.")
-        
-        run_test_script(mode) 
-    print("All pages saved successfully!")
+    try:
+        for page_number in range(1, total_pages + 1):
+            print(f"Navigating to page {page_number}...")
+            navigate_to_next_tab(page_number, mode, page_offset) 
+            
+            print(f"Processing page {page_number}...")
+            save_page(delay, first_tab=(page_number == 1))  
+            print(f"Page {page_number} saved.")
+            
+            run_test_script(mode) 
+        print("All pages saved successfully!")
+        notify_completion()  # Notify completion after successful scraping
+    except Exception as e:
+        print(f"Error during scraping: {str(e)}")
+        sys.exit(1)
 
 def get_last_page_number():
     print("Fetching the last available page number...")
