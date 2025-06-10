@@ -653,22 +653,46 @@ def start_ptp_scrape():
                 'message': 'page_offset and total_pages must be greater than 0'
             }), 400
 
-        # Get the path to main.py
+        # Get the absolute path to main.py
         current_dir = os.path.dirname(os.path.abspath(__file__))
         main_script = os.path.join(current_dir, 'PTP Scraper', 'main.py')
+        
+        # Verify the script exists
+        if not os.path.exists(main_script):
+            return jsonify({
+                'status': 'error',
+                'message': f'Scraper script not found at {main_script}'
+            }), 500
+
+        print(f"Running scraper script at: {main_script}")
 
         # Run the scraper in a separate thread to avoid blocking
         def run_scraper():
             try:
-                subprocess.run([
-                    sys.executable,
+                # Use the current Python interpreter
+                python_exe = sys.executable
+                print(f"Using Python interpreter: {python_exe}")
+                
+                # Run the script with proper error handling
+                result = subprocess.run([
+                    python_exe,
                     main_script,
                     '--page-offset', str(page_offset),
                     '--total-pages', str(total_pages),
                     '--mode', mode
-                ], check=True)
+                ], 
+                check=True,
+                capture_output=True,
+                text=True)
+                
+                print(f"Scraper output: {result.stdout}")
+                if result.stderr:
+                    print(f"Scraper errors: {result.stderr}")
+                    
             except subprocess.CalledProcessError as e:
                 print(f"Error running scraper: {str(e)}")
+                print(f"Command output: {e.output if hasattr(e, 'output') else 'No output'}")
+                print(f"Command stderr: {e.stderr if hasattr(e, 'stderr') else 'No stderr'}")
 
         thread = threading.Thread(target=run_scraper)
         thread.start()
@@ -679,7 +703,8 @@ def start_ptp_scrape():
             'data': {
                 'page_offset': page_offset,
                 'total_pages': total_pages,
-                'mode': mode
+                'mode': mode,
+                'script_path': main_script
             }
         })
 
