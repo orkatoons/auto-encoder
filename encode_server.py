@@ -718,5 +718,5 @@ def start_ptp_scrape():
 if __name__ == '__main__':
     # Initialize status file on startup
     initialize_status_file()
-    app.run(host='localhost', port=5001, debug=True)
+    app.run(host='0.0.0.0', port=5001, debug=True)
 
