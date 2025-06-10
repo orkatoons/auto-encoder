@@ -8,7 +8,7 @@ import requests
 
 def notify_completion():
     try:
-        response = requests.post('http://localhost:3000/api/ptp/scrape/complete')
+        response = requests.post('http://geekyandbrain.ddns.net:3030/api/ptp/scrape/complete')
         if response.status_code != 200:
             print(f"Warning: Failed to notify completion: {response.status_code}")
     except Exception as e:
