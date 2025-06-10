@@ -5,6 +5,8 @@ import subprocess
 import sys
 import pygetwindow as gw
 import requests
+from datetime import datetime
+import json
 
 def notify_completion():
     try:
@@ -50,7 +52,7 @@ def save_page(delay=3, first_tab=False):
         time.sleep(1)
         
         # Tab to the save button
-        for _ in range(8):  # Reduced from 9 to 8 tabs
+        for _ in range(8):
             pyautogui.press("tab")
             time.sleep(0.2)
         
@@ -95,6 +97,9 @@ def auto_save_pages(total_pages, save_path, delay, mode, page_offset):
     activate_firefox()
 
     try:
+        # Create a timestamp for this scraping session
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
         for page_number in range(1, total_pages + 1):
             print(f"Navigating to page {page_number}...")
             navigate_to_next_tab(page_number, mode, page_offset) 
@@ -103,9 +108,28 @@ def auto_save_pages(total_pages, save_path, delay, mode, page_offset):
             save_page(delay, first_tab=(page_number == 1))  
             print(f"Page {page_number} saved.")
             
+            # Add timestamp to the saved data
             run_test_script(mode) 
+            
+            # Update the JSON file with timestamp
+            json_path = os.path.join(save_path, "movies.json")
+            if os.path.exists(json_path):
+                with open(json_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                
+                # Add timestamp to each movie entry
+                for movie in data:
+                    if 'date_added' not in movie:
+                        movie['date_added'] = timestamp
+                
+                # Sort by date_added in descending order
+                data.sort(key=lambda x: x.get('date_added', ''), reverse=True)
+                
+                with open(json_path, 'w', encoding='utf-8') as f:
+                    json.dump(data, f, indent=4)
+        
         print("All pages saved successfully!")
-        notify_completion()  # Notify completion after successful scraping
+        notify_completion()
     except Exception as e:
         print(f"Error during scraping: {str(e)}")
         sys.exit(1)
