@@ -31,10 +31,12 @@ def save_page(delay=3, first_tab=False):
         pyautogui.typewrite("C:\\Encode Tools\\auto-encoder\\PTP Scraper\\offline PTP pages") 
         pyautogui.press("enter")
         for _ in range(9):
+            time.sleep(0.2)
             pyautogui.press("tab")
         pyautogui.press("enter")
     else:
         print("Simulating Enter...")
+        time.sleep(0.2)
         pyautogui.press("enter")  
 
     time.sleep(delay)  
