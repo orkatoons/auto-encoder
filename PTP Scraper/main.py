@@ -21,26 +21,40 @@ def save_page(delay=3, first_tab=False):
     time.sleep(delay)  
     print("Simulating Ctrl + S...")
     pyautogui.hotkey("ctrl", "s")
-    time.sleep(delay)
+    time.sleep(2)  # Wait for save dialog to fully appear
 
     if first_tab:
         print("Performing first-tab-specific actions...")
-        for _ in range(6):
-            pyautogui.press("tab")
+        # First tab to get to the save button
+        pyautogui.press("tab")
+        time.sleep(0.5)
+        
+        # Press enter to confirm save location
         pyautogui.press("enter")
-        pyautogui.typewrite("C:\\Encode Tools\\auto-encoder\\PTP Scraper\\offline PTP pages") 
-        pyautogui.press("enter")
-        for _ in range(9):
-            time.sleep(0.2)
-            pyautogui.press("tab")
         time.sleep(1)
+        
+        # Type the save path
+        pyautogui.typewrite("C:\\Encode Tools\\auto-encoder\\PTP Scraper\\offline PTP pages")
+        time.sleep(0.5)
         pyautogui.press("enter")
+        time.sleep(1)
+        
+        # Tab to the save button
+        for _ in range(8):  # Reduced from 9 to 8 tabs
+            pyautogui.press("tab")
+            time.sleep(0.2)
+        
+        # Press enter to save
+        time.sleep(0.5)
+        pyautogui.press("enter")
+        time.sleep(2)  # Wait for save to complete
     else:
         print("Simulating Enter...")
         time.sleep(1)
-        pyautogui.press("enter")  
+        pyautogui.press("enter")
+        time.sleep(2)  # Wait for save to complete
 
-    time.sleep(delay)  
+    time.sleep(delay)  # Additional delay after save
 
 def navigate_to_next_tab(tab_number, mode, page_offset):
     print("Navigating to the desired page...")
