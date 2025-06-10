@@ -10,13 +10,16 @@ def get_ptp_movies():
         page = request.args.get('page', '1')
         items_per_page = 20
         
-        # Read the output.json file
-        json_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'PTP Scraper', 'output.json')
+        # Read the output.json file - using absolute path
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        json_path = os.path.join(current_dir, 'PTP Scraper', 'output.json')
+        
+        print(f"[FLASK] Looking for movies file at: {json_path}")
         
         if not os.path.exists(json_path):
             return jsonify({
                 'status': 'error',
-                'message': 'Movies data file not found'
+                'message': f'Movies data file not found at {json_path}'
             }), 404
             
         with open(json_path, 'r', encoding='utf-8') as f:
