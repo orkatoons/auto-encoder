@@ -146,6 +146,7 @@ def save_to_json(movies, output_file):
     existing_links = {movie["Link"] for movie in existing_movies}
     new_movies = [movie for movie in movies if movie["Link"] not in existing_links]
 
+    # Combine existing and new movies
     all_movies = existing_movies + new_movies
 
     # Sort by date_added in descending order (newest first)
@@ -155,6 +156,7 @@ def save_to_json(movies, output_file):
         with open(output_file, "w", encoding="utf-8") as f:
             json.dump(all_movies, f, indent=4, ensure_ascii=False)
         print(f"Saved {len(new_movies)} new entries (total: {len(all_movies)}) to '{output_file}'")
+        print(f"Movies are sorted by date_added in descending order (newest first)")
     except Exception as e:
         print(f"Error saving to JSON file: {e}")
 
