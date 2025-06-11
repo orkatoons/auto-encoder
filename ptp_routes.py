@@ -3,9 +3,12 @@ import os
 import json
 import subprocess
 import re
+import requests
 
 # Create a Blueprint for PTP routes
 ptp_bp = Blueprint('ptp', __name__)
+
+NODE_API_URL = 'http://geekyandbrain.ddns.net:3030/api'
 
 def get_best_torrent_from_cli(movie_url):
     cmd = [
@@ -101,13 +104,21 @@ def get_ptp_movies():
             'message': str(e)
         }), 500
 
+def notify_download_complete(data):
+    try:
+        response = requests.post(f"{NODE_API_URL}/ptp/download/complete", json=data)
+        if response.status_code != 200:
+            print(f"[FLASK] Failed to notify download completion: {response.text}")
+    except Exception as e:
+        print(f"[FLASK] Error notifying download completion: {str(e)}")
+
 def handle_ptp_download(data):
     try:
         if not data:
             return {
                 'status': 'error',
                 'message': 'No data provided'
-            }, 400
+            }
 
         link = data.get('link')
         name = data.get('name')
@@ -117,7 +128,7 @@ def handle_ptp_download(data):
             return {
                 'status': 'error',
                 'message': 'Missing required fields: link, name, or year'
-            }, 400
+            }
 
         print(f"[FLASK] Download request received:")
         print(f"Link: {link}")
@@ -131,7 +142,7 @@ def handle_ptp_download(data):
                 return {
                     'status': 'error',
                     'message': 'No suitable torrent found'
-                }, 404
+                }
 
             # Extract the movie ID from the original link
             movie_id = link.split('id=')[-1].split('&')[0]
@@ -145,7 +156,7 @@ def handle_ptp_download(data):
             print(f"[FLASK] Seeders: {best_torrent['Seeders']}")
             print(f"[FLASK] Final link: {final_link}")
 
-            return {
+            response_data = {
                 'status': 'success',
                 'message': 'Download request received',
                 'data': {
@@ -156,19 +167,24 @@ def handle_ptp_download(data):
                 }
             }
 
+            # Notify Node.js backend of completion
+            notify_download_complete(response_data)
+
+            return response_data
+
         except Exception as e:
             print(f"[FLASK] Error getting torrent: {str(e)}")
             return {
                 'status': 'error',
                 'message': f'Error getting torrent: {str(e)}'
-            }, 500
+            }
 
     except Exception as e:
         print(f"[FLASK] Error in handle_ptp_download: {str(e)}")
         return {
             'status': 'error',
             'message': str(e)
-        }, 500
+        }
 
 # Register routes with the blueprint
 @ptp_bp.route('/movies', methods=['GET'])

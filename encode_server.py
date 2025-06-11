@@ -716,7 +716,8 @@ def handle_download():
                 'message': 'No data provided'
             }), 400
             
-        result, status_code = handle_ptp_download(data)
+        result = handle_ptp_download(data)
+        status_code = 200 if result['status'] == 'success' else 400
         return jsonify(result), status_code
     except Exception as e:
         print(f"[FLASK] Error in handle_download route: {str(e)}")
