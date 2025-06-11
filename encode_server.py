@@ -7,7 +7,7 @@ import glob
 import io
 import sys
 from datetime import datetime
-from ptp_routes import ptp_bp
+from ptp_routes import ptp_bp, handle_ptp_download, get_ptp_movies
 import subprocess
 import threading
 
@@ -687,6 +687,39 @@ def start_ptp_scrape():
 
     except Exception as e:
         print(f"Error in start_ptp_scrape: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@app.route('/ptp/movies', methods=['GET'])
+def handle_movies():
+    try:
+        return get_ptp_movies()
+    except Exception as e:
+        print(f"[FLASK] Error in handle_movies route: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@app.route('/ptp/download', methods=['POST'])
+def handle_download():
+    try:
+        print("[FLASK] Received download request")
+        data = request.get_json()
+        print(f"[FLASK] Request data: {data}")
+        
+        if not data:
+            return jsonify({
+                'status': 'error',
+                'message': 'No data provided'
+            }), 400
+            
+        result, status_code = handle_ptp_download(data)
+        return jsonify(result), status_code
+    except Exception as e:
+        print(f"[FLASK] Error in handle_download route: {str(e)}")
         return jsonify({
             'status': 'error',
             'message': str(e)
