@@ -4,6 +4,7 @@ import os
 import time
 import shutil
 import json
+from datetime import datetime
 
 INPUT_PATH = "C:/Encode Tools/auto-encoder/PTP Scraper/offline PTP pages/Browse Torrents __ PassThePopcorn.htm"
 OUTPUT_JSON = "C:/Encode Tools/auto-encoder/PTP Scraper/output.json"
@@ -128,6 +129,7 @@ def parse_movies(html):
 
 def save_to_json(movies, output_file):
     existing_movies = []
+    current_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     if os.path.exists(output_file):
         try:
@@ -137,10 +139,17 @@ def save_to_json(movies, output_file):
             print(f"Error reading existing JSON file: {e}")
             existing_movies = []
 
+    # Add timestamp to new movies
+    for movie in movies:
+        movie["date_added"] = current_timestamp
+
     existing_links = {movie["Link"] for movie in existing_movies}
     new_movies = [movie for movie in movies if movie["Link"] not in existing_links]
 
     all_movies = existing_movies + new_movies
+
+    # Sort by date_added in descending order (newest first)
+    all_movies.sort(key=lambda x: x.get("date_added", ""), reverse=True)
 
     try:
         with open(output_file, "w", encoding="utf-8") as f:

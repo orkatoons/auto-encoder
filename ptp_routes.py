@@ -4,6 +4,9 @@ import json
 import subprocess
 import re
 import requests
+import qbittorrentapi
+import time
+from pathlib import Path
 
 # Create a Blueprint for PTP routes
 ptp_bp = Blueprint('ptp', __name__)
@@ -112,6 +115,66 @@ def notify_download_complete(data):
     except Exception as e:
         print(f"[FLASK] Error notifying download completion: {str(e)}")
 
+def initialize_torrent(torrent_path, movie_name):
+    """Initialize torrent download using qBittorrent"""
+    try:
+        # Connect to qBittorrent
+        qbt = qbittorrentapi.Client(host='localhost', port=13337)
+        
+        # Attempt login
+        try:
+            qbt.auth_log_in()
+        except qbittorrentapi.LoginFailed:
+            print(f"[FLASK] Failed to login to qBittorrent")
+            return False
+
+        # Add the torrent file and start it immediately
+        try:
+            result = qbt.torrents_add(torrent_files=[torrent_path], paused=False)
+            print(f"[FLASK] ✅ Torrent added and started for {movie_name}")
+            return True
+        except Exception as ex:
+            print(f"[FLASK] ❌ Failed to add torrent: {ex}")
+            return False
+
+    except Exception as e:
+        print(f"[FLASK] Error initializing torrent: {str(e)}")
+        return False
+
+def download_torrent(final_link, movie_name):
+    """Download torrent file using PTP CLI"""
+    try:
+        # Create base directory
+        base_dir = Path("W:/Encodes")
+        movie_dir = base_dir / movie_name
+        source_dir = movie_dir / "source"
+        
+        # Create directories if they don't exist
+        source_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Change to source directory
+        os.chdir(str(source_dir))
+        
+        # Download torrent using PTP CLI
+        cmd = ["ptp", "search", final_link, "-d"]
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        
+        if result.returncode != 0:
+            print(f"[FLASK] Failed to download torrent: {result.stderr}")
+            return None
+            
+        # Find the downloaded torrent file
+        torrent_files = list(source_dir.glob("*.torrent"))
+        if not torrent_files:
+            print("[FLASK] No torrent file found after download")
+            return None
+            
+        return str(torrent_files[0])
+        
+    except Exception as e:
+        print(f"[FLASK] Error downloading torrent: {str(e)}")
+        return None
+
 def handle_ptp_download(data):
     try:
         if not data:
@@ -156,6 +219,21 @@ def handle_ptp_download(data):
             print(f"[FLASK] Seeders: {best_torrent['Seeders']}")
             print(f"[FLASK] Final link: {final_link}")
 
+            # Download torrent file
+            torrent_path = download_torrent(final_link, name)
+            if not torrent_path:
+                return {
+                    'status': 'error',
+                    'message': 'Failed to download torrent file'
+                }
+
+            # Initialize torrent download
+            if not initialize_torrent(torrent_path, name):
+                return {
+                    'status': 'error',
+                    'message': 'Failed to initialize torrent download'
+                }
+
             response_data = {
                 'status': 'success',
                 'message': 'Download request received',
@@ -194,6 +272,3 @@ def ptp_movies_route():
 # Export the functions
 __all__ = ['get_ptp_movies', 'handle_ptp_download']
 
-'''W:\Freeleech\autostart>ptp search "https://passthepopcorn.me/torrents.php?id=382245" --movie-format ""
-- x264/MKV/WEB/720p - MokshapatamHindi.2025.720p.Ultra.OTT.WEB-DL.AAC.2.0.H264-Telly - 1/3/0
-- x264/MKV/WEB/1080p - MokshapatamHindi.2025.1080p.Ultra.OTT.WEB-DL.AAC.2.0.H264-Telly - 2/4/0'''
