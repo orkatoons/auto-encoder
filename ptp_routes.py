@@ -128,10 +128,18 @@ def initialize_torrent(torrent_path, movie_name):
             print(f"[FLASK] Failed to login to qBittorrent")
             return False
 
+        # Get the source directory path
+        source_dir = str(Path("W:/Encodes") / movie_name / "source")
+        
         # Add the torrent file and start it immediately
         try:
-            result = qbt.torrents_add(torrent_files=[torrent_path], paused=False)
+            result = qbt.torrents_add(
+                torrent_files=[torrent_path],
+                save_path=source_dir,  # Set download location to source folder
+                paused=False
+            )
             print(f"[FLASK] ✅ Torrent added and started for {movie_name}")
+            print(f"[FLASK] Download location set to: {source_dir}")
             return True
         except Exception as ex:
             print(f"[FLASK] ❌ Failed to add torrent: {ex}")
