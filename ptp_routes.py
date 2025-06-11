@@ -11,7 +11,7 @@ def get_best_torrent_from_cli(movie_url):
     cmd = [
         "ptp", "search", movie_url,
         "--movie-format", "",  # disable movie header
-        "--torrent-format", "{{Id}}||{{ReleaseName}}||{{Seeders}}||{{Magnet}}"
+        "--torrent-format", "{{Id}}||{{ReleaseName}}||{{Seeders}}||{{Source}}"
     ]
     res = subprocess.run(cmd, capture_output=True, text=True)
     if res.returncode != 0:
@@ -22,11 +22,11 @@ def get_best_torrent_from_cli(movie_url):
         parts = line.split("||")
         if len(parts) != 4:
             continue
-        tid, name, seeders, magnet = parts
+        tid, name, seeders, source = parts
         seeders = int(seeders)
         if seeders < 1 or re.search(r'2160p|uhd', name, re.IGNORECASE):
             continue
-        torrents.append({"Id": tid, "Name": name, "Seeders": seeders, "Magnet": magnet})
+        torrents.append({"Id": tid, "Name": name, "Seeders": seeders, "Source": source})
     # Filter for remux first, else Blu-ray
     for t in torrents:
         if "remux" in t["Name"].lower():
@@ -152,7 +152,7 @@ def handle_ptp_download(data):
                     'torrent_name': best_torrent['Name'],
                     'seeders': best_torrent['Seeders'],
                     'final_link': final_link,
-                    'magnet': best_torrent['Magnet']
+                    'source': best_torrent['Source']
                 }
             }
 
