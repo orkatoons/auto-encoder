@@ -656,11 +656,13 @@ def start_ptp_scrape():
 
         def run_scraper():
             try:
+                print(f"Starting PTP scraper for pages {page_offset} to {page_offset + total_pages - 1}")
                 # Initialize empty list to store all movies
                 all_movies = []
                 
                 # Run the ptp command for each page
                 for page in range(page_offset, page_offset + total_pages):
+                    print(f"\nProcessing page {page}...")
                     cmd = [
                         'ptp', 'search', '""',
                         '-p', str(page),
@@ -668,15 +670,18 @@ def start_ptp_scrape():
                         '--torrent-format', '"~~||{{Source}}||{{Resolution}}||{{ReleaseName}}||{{Seeders}}||{{Link}}"'
                     ]
                     
+                    print(f"Running command: {' '.join(cmd)}")
                     # Run the command and capture output
                     result = subprocess.run(cmd, capture_output=True, text=True)
                     if result.returncode != 0:
                         print(f"Error running ptp command: {result.stderr}")
                         continue
-                        
+                    
+                    print("Parsing output...")
                     # Parse the output
                     current_movie = None
                     contains_uhd = False
+                    movies_on_page = 0
                     for line in result.stdout.splitlines():
                         if line.startswith('~'):
                             # New movie entry
@@ -688,67 +693,68 @@ def start_ptp_scrape():
                                 )
                                 if has_missing_resolutions and current_movie['Source']:
                                     all_movies.append(current_movie)
-                            
-                            # Reset for new movie
-                            contains_uhd = False
-                            
-                            # Parse movie info
-                            movie_info = line[1:].split(' [')
-                            title = movie_info[0]
-                            year = movie_info[1].split(']')[0]
-                            directors = movie_info[1].split('by ')[1].strip()
-                            
-                            current_movie = {
-                                'Name': f"{title} [{year}] by {directors}",
-                                'Source': [],
-                                'Standard Definition': "NULL",
-                                'High Definition': "NULL",
-                                'Link': None,
-                                'date_added': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                            }
-                        elif line.startswith('~~||'):
-                            # Parse torrent info
-                            parts = line[4:].split('||')
-                            if len(parts) >= 6:
-                                source, resolution, release_name, seeders, link = parts
+                                    movies_on_page += 1
                                 
-                                # Skip if no seeders
-                                if int(seeders) == 0:
-                                    continue
+                                # Reset for new movie
+                                contains_uhd = False
+                                
+                                # Parse movie info
+                                movie_info = line[1:].split(' [')
+                                title = movie_info[0]
+                                year = movie_info[1].split(']')[0]
+                                directors = movie_info[1].split('by ')[1].strip()
+                                
+                                current_movie = {
+                                    'Name': f"{title} [{year}] by {directors}",
+                                    'Source': [],
+                                    'Standard Definition': "NULL",
+                                    'High Definition': "NULL",
+                                    'Link': None,
+                                    'date_added': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                }
+                            elif line.startswith('~~||'):
+                                # Parse torrent info
+                                parts = line[4:].split('||')
+                                if len(parts) >= 6:
+                                    source, resolution, release_name, seeders, link = parts
                                     
-                                # Skip UHD content
-                                if '2160p' in resolution:
-                                    contains_uhd = True
-                                    continue
-
-                                # Check for valid source format
-                                valid_source = False
-                                if source in ['Blu-ray', 'DVD']:
-                                    valid_source = True
-                                elif 'Remux' in release_name:
-                                    valid_source = True
-                                    source = 'Remux'
-
-                                if valid_source:
-                                    # Track resolutions
-                                    if resolution in ['480p', '576p']:
-                                        if current_movie['Standard Definition'] == "NULL":
-                                            current_movie['Standard Definition'] = resolution
-                                        elif resolution == '576p' and current_movie['Standard Definition'] == '480p':
-                                            current_movie['Standard Definition'] = '480p, 576p'
-                                    elif resolution in ['720p', '1080p']:
-                                        if current_movie['High Definition'] == "NULL":
-                                            current_movie['High Definition'] = resolution
-                                        elif resolution == '1080p' and current_movie['High Definition'] == '720p':
-                                            current_movie['High Definition'] = '720p, 1080p'
-                                    
-                                    # Add source if not already present
-                                    if source not in current_movie['Source']:
-                                        current_movie['Source'].append(source)
+                                    # Skip if no seeders
+                                    if int(seeders) == 0:
+                                        continue
                                         
-                                    # Store the link of the first valid torrent
-                                    if not current_movie['Link']:
-                                        current_movie['Link'] = link
+                                    # Skip UHD content
+                                    if '2160p' in resolution:
+                                        contains_uhd = True
+                                        continue
+
+                                    # Check for valid source format
+                                    valid_source = False
+                                    if source in ['Blu-ray', 'DVD']:
+                                        valid_source = True
+                                    elif 'Remux' in release_name:
+                                        valid_source = True
+                                        source = 'Remux'
+
+                                    if valid_source:
+                                        # Track resolutions
+                                        if resolution in ['480p', '576p']:
+                                            if current_movie['Standard Definition'] == "NULL":
+                                                current_movie['Standard Definition'] = resolution
+                                            elif resolution == '576p' and current_movie['Standard Definition'] == '480p':
+                                                current_movie['Standard Definition'] = '480p, 576p'
+                                        elif resolution in ['720p', '1080p']:
+                                            if current_movie['High Definition'] == "NULL":
+                                                current_movie['High Definition'] = resolution
+                                            elif resolution == '1080p' and current_movie['High Definition'] == '720p':
+                                                current_movie['High Definition'] = '720p, 1080p'
+                                        
+                                        # Add source if not already present
+                                        if source not in current_movie['Source']:
+                                            current_movie['Source'].append(source)
+                                            
+                                        # Store the link of the first valid torrent
+                                        if not current_movie['Link']:
+                                            current_movie['Link'] = link
                     
                     # Add the last movie if it meets criteria
                     if current_movie and not contains_uhd:
@@ -758,6 +764,11 @@ def start_ptp_scrape():
                         )
                         if has_missing_resolutions and current_movie['Source']:
                             all_movies.append(current_movie)
+                            movies_on_page += 1
+                    
+                    print(f"Found {movies_on_page} valid movies on page {page}")
+                
+                print(f"\nTotal movies found: {len(all_movies)}")
                 
                 # Save to JSON file
                 output_file = "C:/Encode Tools/auto-encoder/PTP Scraper/output.json"
@@ -765,26 +776,34 @@ def start_ptp_scrape():
                 
                 if os.path.exists(output_file):
                     try:
+                        print(f"Reading existing JSON file: {output_file}")
                         with open(output_file, "r", encoding="utf-8") as f:
                             existing_movies = json.load(f)
+                        print(f"Found {len(existing_movies)} existing movies")
                     except Exception as e:
                         print(f"Error reading existing JSON file: {e}")
                 
                 # Add new movies, avoiding duplicates
                 existing_links = {movie["Link"] for movie in existing_movies}
                 new_movies = [movie for movie in all_movies if movie["Link"] not in existing_links]
+                print(f"Adding {len(new_movies)} new movies")
                 
                 # Combine and sort
                 all_movies = existing_movies + new_movies
                 all_movies.sort(key=lambda x: x.get("date_added", ""), reverse=True)
                 
                 # Save to file
+                print(f"Saving {len(all_movies)} total movies to {output_file}")
                 with open(output_file, "w", encoding="utf-8") as f:
                     json.dump(all_movies, f, indent=4, ensure_ascii=False)
                 
+                print("Scraping completed successfully")
+                
                 # Notify completion
                 try:
+                    print("Notifying Node.js backend of completion...")
                     requests.post('http://geekyandbrain.ddns.net:3030/api/ptp/scrape/complete')
+                    print("Notification sent successfully")
                 except Exception as e:
                     print(f"Error notifying Node.js backend of completion: {str(e)}")
                     
