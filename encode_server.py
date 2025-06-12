@@ -625,129 +625,105 @@ def start_ptp_scrape():
     try:
         data = request.get_json()
         if not data:
-            print("❌ No data provided in request body")
             return jsonify({'status': 'error', 'message': 'No data provided'}), 400
 
         page_offset = data.get('page_offset')
         total_pages = data.get('total_pages')
-        mode = data.get('mode', 'Movies')
-
-        if not page_offset or not total_pages:
-            print("❌ Missing page_offset or total_pages")
-            return jsonify({'status': 'error', 'message': 'page_offset and total_pages are required'}), 400
 
         try:
             page_offset = int(page_offset)
             total_pages = int(total_pages)
-        except ValueError:
-            print("❌ Non-integer values for page_offset or total_pages")
+        except:
             return jsonify({'status': 'error', 'message': 'page_offset and total_pages must be integers'}), 400
 
         if page_offset <= 0 or total_pages <= 0:
-            print("❌ Invalid values: page_offset and total_pages must be > 0")
-            return jsonify({'status': 'error', 'message': 'page_offset and total_pages must be greater than 0'}), 400
+            return jsonify({'status': 'error', 'message': 'page_offset and total_pages must be > 0'}), 400
 
-        def parse_movie_block(movie_block, current_movie_title):
-            try:
-                parts = movie_block.strip().split('||')
-                if len(parts) < 6:
-                    return None
+        priority_order = {'Remux': 1, 'Blu-ray': 2, 'DVD': 3}
 
-                source = parts[1]
-                resolution = parts[2]
-                release_name = parts[3]
-                seeders = parts[4]
-                link = parts[5]
+        def get_best_torrent(torrents):
+            best = None
+            for t in torrents:
+                if t['Source'] not in priority_order:
+                    continue
+                if best is None:
+                    best = t
+                    continue
+                if priority_order[t['Source']] < priority_order[best['Source']]:
+                    best = t
+                elif priority_order[t['Source']] == priority_order[best['Source']]:
+                    if t['Seeders'] > best['Seeders']:
+                        best = t
+            return best
 
-                seeders = int(seeders)
-                if seeders <= 0:
-                    return None
-
-                if '2160p' in resolution:
-                    return None
-
-                valid_sources = {'DVD', 'Blu-ray', 'Remux', 'BD25', 'BD50'}
-                if not any(valid in source for valid in valid_sources):
-                    return None
-
-                if source.strip() in {'DVD5', 'DVD9'} and 'VOB IFO' not in release_name:
-                    return None
-
-                if source.strip() == 'Remux' or 'Remux' in release_name:
-                    source = 'Remux'
-
-                resolutions_hd = {'720p', '1080p'}
-                hd_found = any(hd in resolution for hd in resolutions_hd)
-
-                resolutions_sd = {'480p', '576p'}
-                sd_found = any(sd in resolution for sd in resolutions_sd)
-
-                return {
-                    'Name': current_movie_title,
-                    'Source': source.strip(),
-                    'Standard Definition': None if not sd_found else '480p, 576p',
-                    'High Definition': None if not hd_found else resolution,
-                    'Link': link,
-                    'date_added': datetime.now().isoformat()
-                }
-            except:
-                return None
-
-        all_movies = []
-        existing_links = set()
-        existing_titles = set()
-        try:
-            with open('output.json', 'r', encoding='utf-8') as f:
-                existing_movies = json.load(f)
-                existing_links = {m['Link'] for m in existing_movies}
-                existing_titles = {m['Name'] for m in existing_movies}
-        except:
-            existing_movies = []
-
-        current_movie_title = None
-        found_movie_for_title = set()
+        parsed_movies = {}
 
         for page in range(page_offset, page_offset + total_pages):
             cmd = f'ptp search "" -p {page} --movie-format "~{{{{Title}}}} [{{{{Year}}}}] by {{{{Directors}}}}" --torrent-format "~~||{{{{Source}}}}||{{{{Resolution}}}}||{{{{ReleaseName}}}}||{{{{Seeders}}}}||{{{{Link}}}}"'
             args = shlex.split(cmd)
-            try:
-                result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=60)
-                output = result.stdout.strip()
-                if not output:
-                    continue
-
-                movie_blocks = output.split('~')
-                for block in movie_blocks:
-                    if not block.strip():
-                        continue
-                    if 'by' in block:
-                        current_movie_title = block.strip()
-                        continue
-
-                    if not current_movie_title or current_movie_title in found_movie_for_title:
-                        continue
-
-                    parsed = parse_movie_block('~' + block.strip(), current_movie_title)
-                    if parsed and parsed['Link'] not in existing_links and parsed['Name'] not in existing_titles:
-                        all_movies.append(parsed)
-                        existing_links.add(parsed['Link'])
-                        existing_titles.add(parsed['Name'])
-                        found_movie_for_title.add(current_movie_title)
-            except:
+            result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=60)
+            output = result.stdout.strip()
+            if not output:
                 continue
 
-        combined = existing_movies + all_movies
-        try:
-            with open('output.json', 'w', encoding='utf-8') as f:
-                json.dump(combined, f, indent=2, ensure_ascii=False)
-        except Exception as e:
-            print(f"❌ Failed to save output.json: {e}")
+            movie_blocks = output.split('~')
+            for block in movie_blocks:
+                if not block.strip():
+                    continue
+                lines = block.strip().split('~~')
+                title_line = lines[0].strip()
+                torrents = []
+                for t in lines[1:]:
+                    parts = t.strip().split('||')
+                    if len(parts) < 5:
+                        continue
+                    source = parts[0].strip()
+                    resolution = parts[1].strip()
+                    release_name = parts[2].strip()
+                    try:
+                        seeders = int(parts[3].strip())
+                    except:
+                        seeders = 0
+                    link = parts[4].strip()
 
-        return jsonify({'status': 'success', 'added': len(all_movies), 'total': len(combined)})
+                    if '2160p' in resolution or seeders <= 0:
+                        continue
+
+                    normalized_source = 'Remux' if 'Remux' in source or 'Remux' in release_name else source
+                    if normalized_source not in priority_order:
+                        continue
+
+                    torrents.append({
+                        'Name': release_name,
+                        'Source': normalized_source,
+                        'Resolution': resolution,
+                        'Seeders': seeders,
+                        'Link': link,
+                        'date_added': datetime.now().isoformat()
+                    })
+
+                if torrents:
+                    best = get_best_torrent(torrents)
+                    if best:
+                        parsed_movies[title_line] = best
+
+        try:
+            with open('output.json', 'r', encoding='utf-8') as f:
+                existing_data = json.load(f)
+        except:
+            existing_data = {}
+
+        updated_data = {f"{item['Name']} by {item.get('Director', 'unknown')}": item for item in existing_data if isinstance(item, dict) and 'Link' in item}
+        updated_data.update(parsed_movies)
+
+        with open('output.json', 'w', encoding='utf-8') as f:
+            json.dump(list(updated_data.values()), f, indent=2, ensure_ascii=False)
+
+        return jsonify({'status': 'success', 'added': len(parsed_movies), 'total': len(updated_data)})
 
     except Exception as e:
-        print(f"❌ Fatal error: {e}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
+
 
 @app.route('/ptp/movies', methods=['GET'])
 def handle_movies():
