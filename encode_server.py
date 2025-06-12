@@ -625,6 +625,7 @@ def start_ptp_scrape():
     try:
         data = request.get_json()
         if not data:
+            print("❌ No data provided in request body")
             return jsonify({'status': 'error', 'message': 'No data provided'}), 400
 
         page_offset = data.get('page_offset')
@@ -632,27 +633,33 @@ def start_ptp_scrape():
         mode = data.get('mode', 'Movies')
 
         if not page_offset or not total_pages:
+            print("❌ Missing page_offset or total_pages")
             return jsonify({'status': 'error', 'message': 'page_offset and total_pages are required'}), 400
 
         try:
             page_offset = int(page_offset)
             total_pages = int(total_pages)
         except ValueError:
+            print("❌ Non-integer values for page_offset or total_pages")
             return jsonify({'status': 'error', 'message': 'page_offset and total_pages must be integers'}), 400
 
         if page_offset <= 0 or total_pages <= 0:
+            print("❌ Invalid values: page_offset and total_pages must be > 0")
             return jsonify({'status': 'error', 'message': 'page_offset and total_pages must be greater than 0'}), 400
 
         def parse_movie_block(movie_block):
             lines = movie_block.strip().split('\n')
             if not lines:
+                print("⚠️ Empty block")
                 return None
 
             movie_header = lines[0].strip('~')
             if not movie_header:
+                print("⚠️ Skipping block with missing header")
                 return None
 
             try:
+                print(f"🔎 Processing movie: {movie_header}")
                 title_year_director = movie_header.strip()
                 torrents = []
                 sources = set()
@@ -666,18 +673,27 @@ def start_ptp_scrape():
                 for line in lines[1:]:
                     if not line.startswith('~~'):
                         continue
-                    _, source, resolution, release_name, seeders, link = line.split('||')
-                    seeders = int(seeders)
+                    try:
+                        _, source, resolution, release_name, seeders, link = line.split('||')
+                        seeders = int(seeders)
+                    except Exception as e:
+                        print(f"⚠️ Skipping malformed line: {line} | Error: {e}")
+                        continue
+
                     if seeders <= 0:
-                        continue  # Skip dead torrents
+                        print(f"⛔ Dead torrent skipped (0 seeders): {release_name}")
+                        continue
 
                     if '2160p' in resolution:
-                        return None  # Skip UHD
+                        print(f"⛔ UHD torrent skipped: {release_name}")
+                        return None
 
-                    if source.strip() not in {'DVD', 'Blu-ray', 'Remux', 'BD25', 'BD50'}:
+                    if source.strip() not in {'DVD', 'Blu-ray', 'Remux', 'BD25', 'BD50', 'DVD5', 'DVD9'}:
+                        print(f"⛔ Unsupported source '{source}' skipped: {release_name}")
                         continue
 
                     if source.strip() in {'DVD5', 'DVD9'} and 'VOB IFO' not in release_name:
+                        print(f"⛔ DVD5/DVD9 missing 'VOB IFO' skipped: {release_name}")
                         continue
 
                     if source.strip() == 'Remux' or 'Remux' in release_name:
@@ -694,14 +710,17 @@ def start_ptp_scrape():
                         selected_format = source.strip()
 
                 if not sources:
+                    print("⚠️ No valid sources found for movie")
                     return None
 
                 missing_hd = sorted(list(resolutions_hd - found_hd)) or None
                 missing_sd = sorted(list(resolutions_sd - found_sd)) or None
 
                 if not missing_hd and not missing_sd:
+                    print("⚠️ Movie has all SD/HD resolutions, skipping")
                     return None
 
+                print(f"✅ Movie accepted: {title_year_director}")
                 return {
                     'Name': title_year_director,
                     'Source': ', '.join(sources),
@@ -712,7 +731,7 @@ def start_ptp_scrape():
                 }
 
             except Exception as e:
-                print(f"Error parsing block: {e}")
+                print(f"❌ Error parsing block: {e}")
                 return None
 
         all_movies = []
@@ -721,33 +740,53 @@ def start_ptp_scrape():
             with open('output.json', 'r', encoding='utf-8') as f:
                 existing_movies = json.load(f)
                 existing_links = {m['Link'] for m in existing_movies}
-        except:
+            print(f"📁 Loaded {len(existing_movies)} existing movies")
+        except Exception as e:
+            print(f"⚠️ Could not load existing output.json: {e}")
             existing_movies = []
 
         for page in range(page_offset, page_offset + total_pages):
-            print(f"Processing page {page}...")
+            print(f"\n📄 Processing page {page}")
             cmd = f'ptp search "" -p {page} --movie-format "~{{{{Title}}}} [{{{{Year}}}}] by {{{{Directors}}}}" --torrent-format "~~||{{{{Source}}}}||{{{{Resolution}}}}||{{{{ReleaseName}}}}||{{{{Seeders}}}}||{{{{Link}}}}"'
             args = shlex.split(cmd)
+            print(f"▶️ Running: {cmd}")
             try:
                 result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=60)
-                output = result.stdout
+                if result.stderr:
+                    print(f"⚠️ CLI stderr: {result.stderr.strip()}")
+                output = result.stdout.strip()
+                if not output:
+                    print("⚠️ No output returned from CLI")
+                    continue
+
                 movie_blocks = output.split('~')
                 for block in movie_blocks:
+                    if not block.strip():
+                        continue
                     parsed = parse_movie_block('~' + block.strip())
                     if parsed and parsed['Link'] not in existing_links:
+                        print(f"➕ Added movie: {parsed['Name']}")
                         all_movies.append(parsed)
                         existing_links.add(parsed['Link'])
+                    elif parsed:
+                        print(f"🔁 Duplicate movie skipped: {parsed['Name']}")
             except Exception as e:
-                print(f"Failed to run command on page {page}: {e}")
+                print(f"❌ Failed to run command on page {page}: {e}")
 
         combined = existing_movies + all_movies
-        with open('output.json', 'w', encoding='utf-8') as f:
-            json.dump(combined, f, indent=2, ensure_ascii=False)
+        try:
+            with open('output.json', 'w', encoding='utf-8') as f:
+                json.dump(combined, f, indent=2, ensure_ascii=False)
+            print(f"✅ Saved output.json with {len(combined)} total movies")
+        except Exception as e:
+            print(f"❌ Failed to save output.json: {e}")
 
         return jsonify({'status': 'success', 'added': len(all_movies), 'total': len(combined)})
 
     except Exception as e:
+        print(f"❌ Fatal error: {e}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
+
 
 @app.route('/ptp/movies', methods=['GET'])
 def handle_movies():
