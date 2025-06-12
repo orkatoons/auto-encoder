@@ -10,6 +10,7 @@ from datetime import datetime
 from ptp_routes import ptp_bp, handle_ptp_download, get_ptp_movies
 import subprocess
 import threading
+import requests
 
 app = Flask(__name__)
 
@@ -674,6 +675,11 @@ def start_ptp_scrape():
                     str(total_pages),
                     mode
                 ], check=True)
+                # Notify Node.js backend of completion
+                try:
+                    requests.post('http://geekyandbrain.ddns.net:3030/api/ptp/scrape/complete')
+                except Exception as e:
+                    print(f"Error notifying Node.js backend of completion: {str(e)}")
             except subprocess.CalledProcessError as e:
                 print(f"Error running scraper: {str(e)}")
 

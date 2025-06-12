@@ -78,14 +78,11 @@ def get_ptp_movies():
                     'status': 'error',
                     'message': 'Page number must be greater than 0'
                 }), 400
-                
             start_idx = (page_num - 1) * items_per_page
             end_idx = start_idx + items_per_page
-            
-            # Sort movies by Name to ensure consistent ordering
-            sorted_movies = sorted(movies, key=lambda x: x.get('Name', ''), reverse=True)
+            # Sort movies by date_added in descending order (latest first)
+            sorted_movies = sorted(movies, key=lambda x: x.get('date_added', ''), reverse=True)
             paginated_movies = sorted_movies[start_idx:end_idx]
-            
             return jsonify({
                 'status': 'success',
                 'data': paginated_movies,
