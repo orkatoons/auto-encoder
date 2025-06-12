@@ -709,6 +709,11 @@ def start_ptp_scrape():
                                         any(term in release_name.lower() for term in ['2160', '4k', 'uhd'])):
                                         continue
                                         
+                                    # Skip if resolution is not an exact match for allowed values
+                                    allowed_resolutions = ['480p', '576p', '720p', '1080p']
+                                    if resolution.lower() not in allowed_resolutions:
+                                        continue
+                                        
                                     # Skip if seeders is 0
                                     if seeders == '0':
                                         continue
