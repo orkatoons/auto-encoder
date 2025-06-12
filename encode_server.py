@@ -668,29 +668,32 @@ def start_ptp_scrape():
                     args = shlex.split(cmd)
                     
                     print(f"Running command: {cmd}")
-                    # Run the command and capture output
-                    result = subprocess.run(args, capture_output=True, text=True)
-                    if result.returncode != 0:
-                        print(f"Error running ptp command: {result.stderr}")
-                        continue
-                    print(result.stdout)
-                    print("Parsing output...")
-                    # Parse the output
-                    current_movie = None
-                    contains_uhd = False
-                    movies_on_page = 0
-                    for line in result.stdout.splitlines():
-                        if line.startswith('~'):
-                            # New movie entry
-                            if current_movie and not contains_uhd:
-                                # Check if movie meets criteria for inclusion
-                                has_missing_resolutions = (
-                                    current_movie['Standard Definition'] != "NULL" or 
-                                    current_movie['High Definition'] != "NULL"
-                                )
-                                if has_missing_resolutions and current_movie['Source']:
-                                    all_movies.append(current_movie)
-                                    movies_on_page += 1
+                    # Run the command and capture output with proper encoding handling
+                    try:
+                        result = subprocess.run(args, capture_output=True, text=True, encoding='utf-8', errors='replace')
+                        if result.returncode != 0:
+                            print(f"Error running ptp command: {result.stderr}")
+                            continue
+                        print(result.stdout)
+                        print("Parsing output...")
+                        
+                        # Parse the output
+                        current_movie = None
+                        contains_uhd = False
+                        movies_on_page = 0
+                        
+                        for line in result.stdout.splitlines():
+                            if line.startswith('~'):
+                                # New movie entry
+                                if current_movie and not contains_uhd:
+                                    # Check if movie meets criteria for inclusion
+                                    has_missing_resolutions = (
+                                        current_movie['Standard Definition'] != "NULL" or 
+                                        current_movie['High Definition'] != "NULL"
+                                    )
+                                    if has_missing_resolutions and current_movie['Source']:
+                                        all_movies.append(current_movie)
+                                        movies_on_page += 1
                                 
                                 # Reset for new movie
                                 contains_uhd = False
@@ -717,7 +720,7 @@ def start_ptp_scrape():
                                     'Link': None,
                                     'date_added': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                                 }
-                            elif line.startswith('~~||'):
+                            elif line.startswith('~~||') and current_movie:
                                 # Parse torrent info
                                 parts = line[4:].split('||')
                                 if len(parts) >= 6:
@@ -765,18 +768,25 @@ def start_ptp_scrape():
                                         # Store the link of the first valid torrent
                                         if not current_movie['Link']:
                                             current_movie['Link'] = link
-                    
-                    # Add the last movie if it meets criteria
-                    if current_movie and not contains_uhd:
-                        has_missing_resolutions = (
-                            current_movie['Standard Definition'] != "NULL" or 
-                            current_movie['High Definition'] != "NULL"
-                        )
-                        if has_missing_resolutions and current_movie['Source']:
-                            all_movies.append(current_movie)
-                            movies_on_page += 1
-                    
-                    print(f"Found {movies_on_page} valid movies on page {page}")
+                        
+                        # Add the last movie if it meets criteria
+                        if current_movie and not contains_uhd:
+                            has_missing_resolutions = (
+                                current_movie['Standard Definition'] != "NULL" or 
+                                current_movie['High Definition'] != "NULL"
+                            )
+                            if has_missing_resolutions and current_movie['Source']:
+                                all_movies.append(current_movie)
+                                movies_on_page += 1
+                        
+                        print(f"Found {movies_on_page} valid movies on page {page}")
+                        
+                    except UnicodeEncodeError as e:
+                        print(f"Unicode encoding error on page {page}: {str(e)}")
+                        continue
+                    except Exception as e:
+                        print(f"Error processing page {page}: {str(e)}")
+                        continue
                 
                 print(f"\nTotal movies found: {len(all_movies)}")
                 
