@@ -664,7 +664,7 @@ def start_ptp_scrape():
                 # Run the ptp command for each page
                 for page in range(page_offset, page_offset + total_pages):
                     print(f"\nProcessing page {page}...")
-                    cmd = f'ptp search "" -p {page} --movie-format "~{{Title}} [{{Year}}] by {{Directors}}" --torrent-format "~~||{{Source}}||{{Resolution}}||{{ReleaseName}}||{{Seeders}}||{{Link}}"'
+                    cmd = f'ptp search "" -p {page} --movie-format "~{{{{Title}}}} [{{{{Year}}}}] by {{{{Directors}}}}" --torrent-format "~~||{{{{Source}}}}||{{{{Resolution}}}}||{{{{ReleaseName}}}}||{{{{Seeders}}}}||{{{{Link}}}}"'
                     args = shlex.split(cmd)
                     
                     print(f"Running command: {cmd}")
@@ -699,7 +699,15 @@ def start_ptp_scrape():
                                 movie_info = line[1:].split(' [')
                                 title = movie_info[0]
                                 year = movie_info[1].split(']')[0]
-                                directors = movie_info[1].split('by ')[1].strip()
+                                directors_str = movie_info[1].split('by ')[1].strip()
+                                
+                                # Parse directors from the format [{'Name': 'Director Name', 'Id': '123'}]
+                                try:
+                                    import ast
+                                    directors_list = ast.literal_eval(directors_str)
+                                    directors = ', '.join(d['Name'] for d in directors_list)
+                                except:
+                                    directors = directors_str
                                 
                                 current_movie = {
                                     'Name': f"{title} [{year}] by {directors}",
