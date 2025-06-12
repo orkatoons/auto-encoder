@@ -697,11 +697,16 @@ def start_ptp_scrape():
                             if torrent_lines:
                                 print("Torrents:")
                                 for torrent in torrent_lines:
-                                    # Split torrent line into components
-                                    torrent_parts = torrent[2:].split('||')  # Remove ~~ and split
-                                    if len(torrent_parts) >= 6:  # Make sure we have all parts
-                                        source, resolution, release_name, seeders, link = torrent_parts[1:6]
-                                        print(f"  - {source} | {resolution} | {release_name} | {seeders} seeders | {link}")
+                                    if torrent.startswith('~~'):
+                                        # Split torrent line into components
+                                        torrent_parts = torrent[2:].split('||')  # Remove ~~ and split
+                                        if len(torrent_parts) >= 5:  # Make sure we have all parts
+                                            source = torrent_parts[0].strip()
+                                            resolution = torrent_parts[1].strip()
+                                            release_name = torrent_parts[2].strip()
+                                            seeders = torrent_parts[3].strip()
+                                            link = torrent_parts[4].strip()
+                                            print(f"  - {source} | {resolution} | {release_name} | {seeders} seeders | {link}")
                             print()  # Add a blank line between movies
                         except Exception as e:
                             print(f"Error parsing movie: {title} - {str(e)}")
