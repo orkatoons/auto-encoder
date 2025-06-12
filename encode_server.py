@@ -709,6 +709,14 @@ def start_ptp_scrape():
                                         any(term in release_name.lower() for term in ['2160', '4k', 'uhd'])):
                                         continue
                                         
+                                    # Skip if seeders is 0
+                                    if seeders == '0':
+                                        continue
+                                        
+                                    # Append Remux to source if release name contains remux
+                                    if 'remux' in release_name.lower():
+                                        source = f"{source}, Remux"
+                                        
                                     print(f"  - {source} | {resolution} | {release_name} | {seeders} seeders | {link}")
                         print()  # Add a blank line between movies
                     except Exception as e:
