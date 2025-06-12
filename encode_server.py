@@ -754,6 +754,9 @@ def start_ptp_scrape():
                                                 current_movie['High Definition'] = resolution
                                             elif resolution == '1080p' and current_movie['High Definition'] == '720p':
                                                 current_movie['High Definition'] = '720p, 1080p'
+                                        elif resolution in ['NTSC', 'PAL']:
+                                            if current_movie['Standard Definition'] == "NULL":
+                                                current_movie['Standard Definition'] = "NA"
                                         
                                         # Add source if not already present
                                         if source not in current_movie['Source']:
