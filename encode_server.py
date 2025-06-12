@@ -697,12 +697,12 @@ def start_ptp_scrape():
                             for torrent in torrent_lines:
                                 # Remove the TORRENT_START marker and split
                                 torrent_parts = torrent.replace('TORRENT_START~~', '').split('||')
-                                if len(torrent_parts) >= 5:
-                                    source = torrent_parts[0].strip()
-                                    resolution = torrent_parts[1].strip()
-                                    release_name = torrent_parts[2].strip()
-                                    seeders = torrent_parts[3].strip()
-                                    link = torrent_parts[4].strip()
+                                if len(torrent_parts) >= 6:  # Changed from 5 to 6 to account for empty string
+                                    source = torrent_parts[1].strip()  # Changed from 0 to 1
+                                    resolution = torrent_parts[2].strip()  # Changed from 1 to 2
+                                    release_name = torrent_parts[3].strip()  # Changed from 2 to 3
+                                    seeders = torrent_parts[4].strip()  # Changed from 3 to 4
+                                    link = torrent_parts[5].strip()  # Changed from 4 to 5
                                     
                                     # Skip if resolution is 2160p or release name contains 2160/4K/UHD
                                     if (resolution.lower() == '2160p' or 
@@ -715,7 +715,8 @@ def start_ptp_scrape():
                                         
                                     # Append Remux to source if release name contains remux
                                     if 'remux' in release_name.lower():
-                                        source = f"{source}, Remux"
+                                        if 'Remux' not in source:
+                                            source = f"{source}, Remux"
                                         
                                     print(f"  - {source} | {resolution} | {release_name} | {seeders} seeders | {link}")
                         print()  # Add a blank line between movies
