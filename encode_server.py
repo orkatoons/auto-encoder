@@ -667,16 +667,24 @@ def start_ptp_scrape():
             # Split the movie line into title and directors
             parts = movie.split(' by ')
             if len(parts) == 2:
-                title = parts[0].strip()
+                title_part = parts[0].strip()
                 directors_str = parts[1].strip()
                 
-                # Parse the directors list
-                try:
-                    directors = ast.literal_eval(directors_str)
-                    director_names = [d['Name'] for d in directors]
-                    print(f"{title} by {', '.join(director_names)}")
-                except:
-                    print(f"Error parsing directors for: {title}")
+                # Extract title and year
+                title_year_match = re.match(r'(.*?)\s*\|\|\[(\d{4})\]', title_part)
+                if title_year_match:
+                    title = title_year_match.group(1).strip()
+                    year = title_year_match.group(2)
+                    
+                    # Parse the directors list
+                    try:
+                        directors = ast.literal_eval(directors_str)
+                        director_names = [d['Name'] for d in directors]
+                        print(f"{title} by {', '.join(director_names)}")
+                        print(f"Year: {year}")
+                        print()  # Add a blank line between movies
+                    except:
+                        print(f"Error parsing directors for: {title}")
 
         return jsonify({'status': 'success', 'message': 'Scraping completed'}), 200
 
