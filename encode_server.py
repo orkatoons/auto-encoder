@@ -673,41 +673,42 @@ def start_ptp_scrape():
                 for line in lines[1:]:
                     if not line.startswith('~~'):
                         continue
-                    try:
-                        _, source, resolution, release_name, seeders, link = line.split('||')
-                        seeders = int(seeders)
-                    except Exception as e:
-                        print(f"⚠️ Skipping malformed line: {line} | Error: {e}")
-                        continue
-
+                    _, source, resolution, release_name, seeders, link = line.split('||')
+                    print(f"🔎 Processing torrent: {source} | {resolution} | {release_name} | {seeders}")
+                    seeders = int(seeders)
                     if seeders <= 0:
-                        print(f"⛔ Dead torrent skipped (0 seeders): {release_name}")
+                        print(f"⛔ Skipped due to 0 seeders: {release_name}")
                         continue
 
                     if '2160p' in resolution:
-                        print(f"⛔ UHD torrent skipped: {release_name}")
+                        print(f"⛔ Skipped due to 2160p: {release_name}")
                         return None
 
-                    if source.strip() not in {'DVD', 'Blu-ray', 'Remux', 'BD25', 'BD50', 'DVD5', 'DVD9'}:
-                        print(f"⛔ Unsupported source '{source}' skipped: {release_name}")
+                    valid_sources = {'DVD', 'Blu-ray', 'Remux', 'BD25', 'BD50'}
+                    if not any(valid in source for valid in valid_sources):
+                        print(f"⚠️ Rejected due to source: {source}")
                         continue
 
                     if source.strip() in {'DVD5', 'DVD9'} and 'VOB IFO' not in release_name:
-                        print(f"⛔ DVD5/DVD9 missing 'VOB IFO' skipped: {release_name}")
+                        print(f"⚠️ Skipped DVD5/9 without VOB IFO: {release_name}")
                         continue
 
                     if source.strip() == 'Remux' or 'Remux' in release_name:
                         source = 'Remux'
 
                     sources.add(source.strip())
-                    if resolution in resolutions_hd:
-                        found_hd.add(resolution)
-                    if resolution in resolutions_sd:
-                        found_sd.add(resolution)
+
+                    for hd in resolutions_hd:
+                        if hd in resolution:
+                            found_hd.add(hd)
+                    for sd in resolutions_sd:
+                        if sd in resolution:
+                            found_sd.add(sd)
 
                     if not selected_torrent_link:
                         selected_torrent_link = link
                         selected_format = source.strip()
+
 
                 if not sources:
                     print("⚠️ No valid sources found for movie")
