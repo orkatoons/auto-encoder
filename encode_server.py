@@ -647,104 +647,38 @@ def start_ptp_scrape():
             print("❌ Invalid values: page_offset and total_pages must be > 0")
             return jsonify({'status': 'error', 'message': 'page_offset and total_pages must be greater than 0'}), 400
 
-        def parse_directors(directors_str):
-            try:
-                # Parse the directors string which is in format [{'Name': 'Director Name', 'Id': '12345'}]
-                directors = eval(directors_str)
-                if isinstance(directors, list):
-                    return [d['Name'] for d in directors]
-                return []
-            except:
-                return []
+        # Add the command to fetch movies and torrents
+        cmd = f'ptp search "" -p {page_offset} --movie-format "~{{{{Title}}}} ||[{{{{Year}}}}] by {{{{Directors}}}}" --torrent-format "~~||{{{{Source}}}}||{{{{Resolution}}}}||{{{{ReleaseName}}}}||{{{{Seeders}}}}||{{{{Link}}}}"'
+        args = shlex.split(cmd)
+        
+        # Execute the command and get output
+        result = subprocess.run(args, capture_output=True, text=True)
+        output = result.stdout
 
-        def parse_movie_block(movie_block):
-            try:
-                # Split the block into parts
-                parts = movie_block.strip().split('||')
-                if len(parts) < 3:
-                    print("⚠️ Invalid block format")
-                    return None
-
-                # Extract movie information
+        # Parse the output
+        import re
+        import ast
+        
+        # Find all movie entries (lines starting with ~)
+        movie_pattern = r'~(.*?)(?=~|$)'
+        movies = re.findall(movie_pattern, output, re.DOTALL)
+        
+        for movie in movies:
+            # Split the movie line into title and directors
+            parts = movie.split(' by ')
+            if len(parts) == 2:
                 title = parts[0].strip()
-                year = parts[1].strip('[] ')  # Remove brackets and spaces
-                directors_str = parts[2].strip()
-
-                # Parse directors
-                directors = parse_directors(directors_str)
-                directors_str = ', '.join(directors) if directors else 'Unknown'
-
-                print(f"\n🔎 Processing movie: {title} by {directors_str}")
+                directors_str = parts[1].strip()
                 
-                # Create movie entry
-                movie_entry = {
-                    'Name': f"{title} [{year}] by {directors_str}",
-                    'date_added': datetime.now().isoformat()
-                }
+                # Parse the directors list
+                try:
+                    directors = ast.literal_eval(directors_str)
+                    director_names = [d['Name'] for d in directors]
+                    print(f"{title} by {', '.join(director_names)}")
+                except:
+                    print(f"Error parsing directors for: {title}")
 
-                print(f"\n✅ Movie accepted: {movie_entry['Name']}")
-                return movie_entry
-
-            except Exception as e:
-                print(f"❌ Error parsing block: {e}")
-                return None
-
-        all_movies = []
-        existing_links = set()
-        try:
-            with open('output.json', 'r', encoding='utf-8') as f:
-                existing_movies = json.load(f)
-                existing_links = {m['Link'] for m in existing_movies}
-            print(f"📁 Loaded {len(existing_movies)} existing movies")
-        except Exception as e:
-            print(f"⚠️ Could not load existing output.json: {e}")
-            existing_movies = []
-
-        for page in range(page_offset, page_offset + total_pages):
-            print(f"\n📄 Processing page {page}")
-            cmd = f'ptp search "" -p {page} --movie-format "~{{{{Title}}}} ||[{{{{Year}}}}] by {{{{Directors}}}}" --torrent-format "~~||{{{{Source}}}}||{{{{Resolution}}}}||{{{{ReleaseName}}}}||{{{{Seeders}}}}||{{{{Link}}}}"'
-            args = shlex.split(cmd)
-            print(f"▶️ Running: {cmd}")
-            try:
-                result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=60)
-                if result.stderr:
-                    print(f"⚠️ CLI stderr: {result.stderr.strip()}")
-                output = result.stdout.strip()
-                if not output:
-                    print("⚠️ No output returned from CLI")
-                    continue
-
-                movie_blocks = output.split('~')
-                for block in movie_blocks:
-                    if not block.strip():
-                        continue
-                    parsed = parse_movie_block('~' + block.strip())
-                    if parsed:
-                        print(f"➕ Added movie: {parsed['Name']}")
-                        all_movies.append(parsed)
-            except Exception as e:
-                print(f"❌ Failed to run command on page {page}: {e}")
-
-        combined = existing_movies + all_movies
-        try:
-            with open('output.json', 'w', encoding='utf-8') as f:
-                json.dump(combined, f, indent=2, ensure_ascii=False)
-            print(f"✅ Saved output.json with {len(combined)} total movies")
-            
-            # Notify completion after successful save
-            print("📢 Notifying completion...")
-            try:
-                response = requests.post('http://geekyandbrain.ddns.net:3030/api/ptp/scrape/complete')
-                if response.status_code != 200:
-                    print(f"Warning: Failed to notify completion: {response.status_code}")
-            except Exception as e:
-                print(f"Warning: Error notifying completion: {str(e)}")
-            print("✅ Completion notification sent")
-            
-        except Exception as e:
-            print(f"❌ Failed to save output.json: {e}")
-
-        return jsonify({'status': 'success', 'added': len(all_movies), 'total': len(combined)})
+        return jsonify({'status': 'success', 'message': 'Scraping completed'}), 200
 
     except Exception as e:
         print(f"❌ Fatal error: {e}")
