@@ -647,8 +647,8 @@ def start_ptp_scrape():
             print("❌ Invalid values: page_offset and total_pages must be > 0")
             return jsonify({'status': 'error', 'message': 'page_offset and total_pages must be greater than 0'}), 400
 
-        # Add the command to fetch movies and torrents
-        cmd = f'ptp search "" -p {page_offset} --movie-format "~{{{{Title}}}} ||[{{{{Year}}}}] by {{{{Directors}}}}" --torrent-format "~~||{{{{Source}}}}||{{{{Resolution}}}}||{{{{ReleaseName}}}}||{{{{Seeders}}}}||{{{{Link}}}}"'
+        # Add the command to fetch movies and torrents with a clearer format
+        cmd = f'ptp search "" -p {page_offset} --movie-format "MOVIE_START~{{{{Title}}}} ||[{{{{Year}}}}] by {{{{Directors}}}}" --torrent-format "TORRENT_START~~||{{{{Source}}}}||{{{{Resolution}}}}||{{{{ReleaseName}}}}||{{{{Seeders}}}}||{{{{Link}}}}"'
         args = shlex.split(cmd)
         
         # Execute the command and get output
@@ -659,8 +659,8 @@ def start_ptp_scrape():
         import re
         import ast
         
-        # Split the output into movie blocks
-        movie_blocks = re.split(r'(?=~)', output)
+        # Split the output into movie blocks using the new markers
+        movie_blocks = re.split(r'MOVIE_START~', output)
         
         for block in movie_blocks:
             if not block.strip():
@@ -669,47 +669,44 @@ def start_ptp_scrape():
             # Split into movie and torrents
             parts = block.split('\n')
             movie_line = parts[0]
-            torrent_lines = [line for line in parts[1:] if line.startswith('~~')]
+            torrent_lines = [line for line in parts[1:] if line.startswith('TORRENT_START~~')]
             
             # Parse movie line
-            if movie_line.startswith('~'):
-                movie_line = movie_line[1:]  # Remove the ~
-                movie_parts = movie_line.split(' by ')
+            movie_parts = movie_line.split(' by ')
+            
+            if len(movie_parts) == 2:
+                title_part = movie_parts[0].strip()
+                directors_str = movie_parts[1].strip()
                 
-                if len(movie_parts) == 2:
-                    title_part = movie_parts[0].strip()
-                    directors_str = movie_parts[1].strip()
+                # Extract title and year
+                title_year_match = re.match(r'(.*?)\s*\|\|\[(\d{4})\]', title_part)
+                if title_year_match:
+                    title = title_year_match.group(1).strip()
+                    year = title_year_match.group(2)
                     
-                    # Extract title and year
-                    title_year_match = re.match(r'(.*?)\s*\|\|\[(\d{4})\]', title_part)
-                    if title_year_match:
-                        title = title_year_match.group(1).strip()
-                        year = title_year_match.group(2)
+                    # Parse the directors list
+                    try:
+                        directors = ast.literal_eval(directors_str)
+                        director_names = [d['Name'] for d in directors]
+                        print(f"{title} by {', '.join(director_names)}")
+                        print(f"Year: {year}")
                         
-                        # Parse the directors list
-                        try:
-                            directors = ast.literal_eval(directors_str)
-                            director_names = [d['Name'] for d in directors]
-                            print(f"{title} by {', '.join(director_names)}")
-                            print(f"Year: {year}")
-                            
-                            # Print torrent links
-                            if torrent_lines:
-                                print("Torrents:")
-                                for torrent in torrent_lines:
-                                    if torrent.startswith('~~'):
-                                        # Split torrent line into components
-                                        torrent_parts = torrent[2:].split('||')  # Remove ~~ and split
-                                        if len(torrent_parts) >= 5:  # Make sure we have all parts
-                                            source = torrent_parts[0].strip()
-                                            resolution = torrent_parts[1].strip()
-                                            release_name = torrent_parts[2].strip()
-                                            seeders = torrent_parts[3].strip()
-                                            link = torrent_parts[4].strip()
-                                            print(f"  - {source} | {resolution} | {release_name} | {seeders} seeders | {link}")
-                            print()  # Add a blank line between movies
-                        except Exception as e:
-                            print(f"Error parsing movie: {title} - {str(e)}")
+                        # Print torrent links
+                        if torrent_lines:
+                            print("Torrents:")
+                            for torrent in torrent_lines:
+                                # Remove the TORRENT_START marker and split
+                                torrent_parts = torrent.replace('TORRENT_START~~', '').split('||')
+                                if len(torrent_parts) >= 5:
+                                    source = torrent_parts[0].strip()
+                                    resolution = torrent_parts[1].strip()
+                                    release_name = torrent_parts[2].strip()
+                                    seeders = torrent_parts[3].strip()
+                                    link = torrent_parts[4].strip()
+                                    print(f"  - {source} | {resolution} | {release_name} | {seeders} seeders | {link}")
+                        print()  # Add a blank line between movies
+                    except Exception as e:
+                        print(f"Error parsing movie: {title} - {str(e)}")
 
         return jsonify({'status': 'success', 'message': 'Scraping completed'}), 200
 
