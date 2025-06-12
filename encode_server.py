@@ -812,19 +812,23 @@ def start_ptp_scrape():
                 print(f"❌ Error parsing block: {e}")
                 return None
 
-        all_movies = []
-        existing_links = set()
-        existing_names = set()  # Track movie names to prevent duplicates
+        # Load existing movies
+        existing_movies = []
         try:
             with open('output.json', 'r', encoding='utf-8') as f:
                 existing_movies = json.load(f)
-                existing_links = {m['Link'] for m in existing_movies}
-                existing_names = {m['Name'] for m in existing_movies}
             print(f"📁 Loaded {len(existing_movies)} existing movies")
         except Exception as e:
             print(f"⚠️ Could not load existing output.json: {e}")
             existing_movies = []
 
+        # Create a set of existing movie names for quick lookup
+        existing_movie_names = {movie['Name'] for movie in existing_movies}
+        print(f"📊 Found {len(existing_movie_names)} unique existing movies")
+
+        # Dictionary to store the best torrent for each movie
+        new_movies = {}
+        
         for page in range(page_offset, page_offset + total_pages):
             print(f"\n📄 Processing page {page}")
             cmd = f'ptp search "" -p {page} --movie-format "~{{{{Title}}}} [{{{{Year}}}}] by {{{{Directors}}}}" --torrent-format "~~||{{{{Source}}}}||{{{{Resolution}}}}||{{{{ReleaseName}}}}||{{{{Seeders}}}}||{{{{Link}}}}"'
@@ -839,36 +843,41 @@ def start_ptp_scrape():
                     print("⚠️ No output returned from CLI")
                     continue
 
+                # Split into movie blocks
                 movie_blocks = output.split('~')
                 for block in movie_blocks:
                     if not block.strip():
                         continue
                     parsed = parse_movie_block('~' + block.strip())
                     if parsed:
-                        # Check if we already have this movie (by name) or this torrent (by link)
-                        if parsed['Name'] in existing_names:
-                            print(f"🔁 Movie already exists: {parsed['Name']}")
-                            continue
-                        if parsed['Link'] in existing_links:
-                            print(f"🔁 Torrent already exists: {parsed['Link']}")
-                            continue
-                        
-                        print(f"➕ Added new movie: {parsed['Name']}")
-                        all_movies.append(parsed)
-                        existing_names.add(parsed['Name'])
-                        existing_links.add(parsed['Link'])
+                        movie_name = parsed['Name']
+                        # Only add if we haven't seen this movie before
+                        if movie_name not in existing_movie_names and movie_name not in new_movies:
+                            print(f"➕ Adding new movie: {movie_name}")
+                            new_movies[movie_name] = parsed
+                            existing_movie_names.add(movie_name)
+                        else:
+                            print(f"🔁 Skipping duplicate movie: {movie_name}")
+
             except Exception as e:
                 print(f"❌ Failed to run command on page {page}: {e}")
 
-        combined = existing_movies + all_movies
+        # Combine existing and new movies
+        all_movies = existing_movies + list(new_movies.values())
+        
         try:
             with open('output.json', 'w', encoding='utf-8') as f:
-                json.dump(combined, f, indent=2, ensure_ascii=False)
-            print(f"✅ Saved output.json with {len(combined)} total movies")
+                json.dump(all_movies, f, indent=2, ensure_ascii=False)
+            print(f"✅ Saved output.json with {len(all_movies)} total movies")
+            print(f"📊 Added {len(new_movies)} new movies")
         except Exception as e:
             print(f"❌ Failed to save output.json: {e}")
 
-        return jsonify({'status': 'success', 'added': len(all_movies), 'total': len(combined)})
+        return jsonify({
+            'status': 'success', 
+            'added': len(new_movies), 
+            'total': len(all_movies)
+        })
 
     except Exception as e:
         print(f"❌ Fatal error: {e}")
