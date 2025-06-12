@@ -1,4 +1,3 @@
-import pyautogui
 import time
 import pyperclip
 from bs4 import BeautifulSoup
@@ -7,6 +6,7 @@ from urllib.parse import urlparse, urlunparse
 import os
 import shutil
 import json
+from pywinauto.keyboard import send_keys
 
 # Base directories
 base_dir = "C:\\Encode Tools\\auto-encoder\\SOVAS Scraper"
@@ -18,11 +18,11 @@ html_file_path = os.path.join(saved_pages_dir, "Voice123 _ Find voice actors for
 os.makedirs(json_dir, exist_ok=True)
 json_file = os.path.join(json_dir, "voice_actors.json")
 
-# === Step 1: Copy content using pyautogui ===
+# === Step 1: Copy content using pywinauto ===
 time.sleep(2)  # Small delay to switch to browser manually  
-pyautogui.hotkey('ctrl', 'a')
+send_keys("^a")  # Ctrl+A
 time.sleep(0.5)
-pyautogui.hotkey('ctrl', 'c')
+send_keys("^c")  # Ctrl+C
 time.sleep(1)
 
 # === Step 2: Extract Names from clipboard ===

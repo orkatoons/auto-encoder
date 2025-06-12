@@ -4,13 +4,9 @@ import time
 import os
 import json
 import contextlib
+from pywinauto.keyboard import send_keys
 
 PROGRESS_FILE = "C:/Encode Tools/auto-encoder/SOVAS Scraper/json data/progress1.json"
-
-def import_pyautogui_safely():
-    with open(os.devnull, 'w') as devnull, contextlib.redirect_stderr(devnull):
-        import pyautogui
-    return pyautogui
 
 def load_last_page():
     if not os.path.exists(PROGRESS_FILE):
@@ -64,9 +60,9 @@ if __name__ == "__main__":
     # Update progress
     save_last_page(start_page + num_pages)
 
-    pyautogui = import_pyautogui_safely()
+    # Replaces pyautogui.alt+tab
     time.sleep(0.5)
-    pyautogui.hotkey('alt', 'tab')
+    send_keys('%{TAB}')  # ALT + TAB
 
     print("Phase 1 has finished\n")
 

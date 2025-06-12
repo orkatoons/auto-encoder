@@ -1,168 +1,176 @@
-import pyautogui
 import time
 import os
 import subprocess
 import sys
-import pygetwindow as gw
 import requests
 from datetime import datetime
 import json
+from pywinauto import Desktop, keyboard
 
-def notify_completion():
+def notify_completion(parsed_count):
     try:
-        response = requests.post('http://geekyandbrain.ddns.net:3030/api/ptp/scrape/complete')
+        payload = {
+            "message": f"PTP scraping completed successfully! Parsed {parsed_count} movies."
+        }
+        response = requests.post('http://geekyandbrain.ddns.net:3030/api/ptp/scrape/complete', json=payload)
         if response.status_code != 200:
             print(f"Warning: Failed to notify completion: {response.status_code}")
     except Exception as e:
         print(f"Warning: Error notifying completion: {str(e)}")
 
+
 def activate_firefox():
-    firefox_window = None
-    for w in gw.getAllWindows():
-        if "Mozilla Firefox" in w.title and not w.isMinimized:
-            firefox_window = w
-            break
-    if not firefox_window:
-        print("⚠️ Could not find Firefox window. Please make sure Firefox is open.")
+    try:
+        firefox = next((w for w in Desktop(backend="uia").windows() if "firefox" in w.window_text().lower() and w.is_visible()), None)
+        if firefox:
+            firefox.set_focus()
+            time.sleep(1)
+        else:
+            print("Could not find Firefox window. Please make sure Firefox is open.")
+            sys.exit(1)
+    except Exception as e:
+        print(f"Error activating Firefox: {e}")
         sys.exit(1)
-    firefox_window.activate()
-    time.sleep(1)  # Wait for the window to activate
 
 def save_page(delay=3, first_tab=False):
-    time.sleep(delay)  
-    print("Simulating Ctrl + S...")
-    pyautogui.hotkey("ctrl", "s")
-    time.sleep(2)  # Wait for save dialog to fully appear
+    time.sleep(delay)
+    print("Simulating Ctrl+S...")
+    keyboard.send_keys("^s")  # Ctrl+S to open Save dialog
+    time.sleep(2)
 
     if first_tab:
         print("Performing first-tab-specific actions...")
-        # First tab to get to the save button
         for i in range(6):
-            pyautogui.press("tab")
+            keyboard.send_keys("{TAB}")
             time.sleep(0.5)
-        
-        # Press enter to confirm save location
-        pyautogui.press("enter")
+        keyboard.send_keys("{ENTER}")
         time.sleep(1)
-        
-        # Type the save path
-        pyautogui.typewrite("C:\\Encode Tools\\auto-encoder\\PTP Scraper\\offline PTP pages")
+        keyboard.send_keys("C:\\Encode{SPACE}Tools\\auto-encoder\\PTP{SPACE}Scraper\\offline{SPACE}PTP{SPACE}pages")
         time.sleep(0.5)
-        pyautogui.press("enter")
+        keyboard.send_keys("{ENTER}")
         time.sleep(1)
-        
-        # Tab to the save button
         for _ in range(8):
-            pyautogui.press("tab")
+            keyboard.send_keys("{TAB}")
             time.sleep(0.2)
-        
-        # Press enter to save
         time.sleep(0.5)
-        pyautogui.press("enter")
-        time.sleep(2)  # Wait for save to complete
+        keyboard.send_keys("{ENTER}")
+        time.sleep(2)
     else:
-        print("Simulating Enter...")
+        print("Simulating Enter to save...")
         time.sleep(1)
-        pyautogui.press("enter")
-        time.sleep(2)  # Wait for save to complete
+        keyboard.send_keys("{ENTER}")
+        time.sleep(2)
 
-    time.sleep(delay)  # Additional delay after save
+    time.sleep(delay)
 
 def navigate_to_next_tab(tab_number, mode, page_offset):
     print("Navigating to the desired page...")
-    pyautogui.hotkey("ctrl", "l")
-    time.sleep(1) 
+    keyboard.send_keys("^l")  # Focus address bar
+    time.sleep(1)
 
     if tab_number == 1:
         if mode == "Movies":
-            pyautogui.typewrite(f"https://passthepopcorn.me/torrents.php?page={page_offset}")
-        pyautogui.press("enter")
+            keyboard.send_keys(f"https://passthepopcorn.me/torrents.php?page={page_offset}")
+        keyboard.send_keys("{ENTER}")
     else:
-        pyautogui.press("right")
-        pyautogui.press("backspace")
-        pyautogui.typewrite(str(page_offset + tab_number - 1))
-        pyautogui.press("space")
-        pyautogui.press("enter")
+        keyboard.send_keys("{RIGHT}")
+        digits_to_erase = len(str(page_offset + tab_number - 2))  # previous number
+        keyboard.send_keys("{BACKSPACE}" * digits_to_erase)
+        keyboard.send_keys(str(page_offset + tab_number - 1))
+        keyboard.send_keys(" {ENTER}")
+
+
 
 def run_test_script(mode):
     if mode == "Movies":
         script_path = "C:/Encode Tools/auto-encoder/PTP Scraper/code/scrapers/MoviesScraper.py"
-
     print(f"Running {script_path}...")
-    subprocess.run(["python", script_path], check=True)
-    print(f"{mode} scraper finished.")
+    result = subprocess.run(["python", script_path], capture_output=True, text=True, check=True)
+    output = result.stdout
+
+    # Try extracting the count from the output
+    total_parsed = 0
+    for line in output.splitlines():
+        if line.startswith("Total parsed movies:"):
+            try:
+                total_parsed = int(line.split(":")[1].strip())
+            except ValueError:
+                pass
+
+    print(f"{mode} scraper finished. Parsed {total_parsed} movies.")
+    return total_parsed
+
+
 
 def auto_save_pages(total_pages, save_path, delay, mode, page_offset):
     print("Activating Firefox browser window...")
     activate_firefox()
 
+    total_parsed = 0
+
     try:
         for page_number in range(1, total_pages + 1):
             print(f"Navigating to page {page_number}...")
-            navigate_to_next_tab(page_number, mode, page_offset) 
-            
+            navigate_to_next_tab(page_number, mode, page_offset)
+
             print(f"Processing page {page_number}...")
-            save_page(delay, first_tab=(page_number == 1))  
+            save_page(delay, first_tab=(page_number == 1))
             print(f"Page {page_number} saved.")
-            
-            # Run the scraper script
-            run_test_script(mode) 
-        
+
+            parsed_this_round = run_test_script(mode)
+            total_parsed += parsed_this_round
+
         print("All pages saved successfully!")
-        notify_completion()
     except Exception as e:
         print(f"Error during scraping: {str(e)}")
         sys.exit(1)
 
+    notify_completion(total_parsed)
+
+
+
 def get_last_page_number():
     print("Fetching the last available page number...")
     activate_firefox()
-    pyautogui.hotkey("ctrl", "l")
+    keyboard.send_keys("^l")
     time.sleep(1)
-    pyautogui.typewrite(f"https://passthepopcorn.me/torrents.php")
-    pyautogui.press("enter")
-    time.sleep(3)   
+    keyboard.send_keys("https://passthepopcorn.me/torrents.php")
+    keyboard.send_keys("{ENTER}")
+    time.sleep(3)
+
     for _ in range(28):
-        pyautogui.press("tab")
-    pyautogui.press("enter")
+        keyboard.send_keys("{TAB}")
+    keyboard.send_keys("{ENTER}")
     time.sleep(1)
-    pyautogui.hotkey("ctrl", "l")
+
+    keyboard.send_keys("^l")
     time.sleep(1)
-    pyautogui.press("right")
-
-    # These hotkeys seem unusual but retained from original code
-    pyautogui.hotkey("ctrl","shiftright","shiftleft", "left")
-
-    pyautogui.hotkey("ctrl", "c")
+    keyboard.send_keys("{RIGHT}")
+    keyboard.send_keys("^c")  # Copy current URL
     time.sleep(1)
 
     activate_firefox()
-    pyautogui.hotkey("ctrl", "v")
+    keyboard.send_keys("^v")
     time.sleep(1)
-    pyautogui.press("enter")
+    keyboard.send_keys("{ENTER}")
 
 def initialize_scraper(page_offset, total_pages, mode="Movies"):
-    """
-    Initialize the scraper with the given parameters
-    """
     if page_offset <= 0:
         raise ValueError("Page offset must be greater than 0")
-    
     if total_pages <= 0:
         raise ValueError("Total pages must be greater than 0")
 
     save_path = "C:/Encode Tools/auto-encoder/PTP Scraper/offline PTP pages"
     delay = 2
-    
+
     print(f"Starting scraper with parameters:")
     print(f"- Mode: {mode}")
     print(f"- Page offset: {page_offset}")
     print(f"- Total pages: {total_pages}")
-    
+
     auto_save_pages(total_pages, save_path, delay, mode, page_offset)
 
 if __name__ == "__main__":
-    # This will be called by the API
     if len(sys.argv) > 1:
         page_offset = int(sys.argv[1])
         total_pages = int(sys.argv[2])

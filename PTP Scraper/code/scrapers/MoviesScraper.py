@@ -179,6 +179,8 @@ def main():
         movies = parse_movies(html)
         save_to_json(movies, OUTPUT_JSON)
         delete_downloaded_files(os.path.dirname(INPUT_PATH))
+        return len(movies)
 
+        
 if __name__ == "__main__":
     main()

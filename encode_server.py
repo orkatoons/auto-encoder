@@ -675,11 +675,6 @@ def start_ptp_scrape():
                     str(total_pages),
                     mode
                 ], check=True)
-                # Notify Node.js backend of completion
-                try:
-                    requests.post('http://geekyandbrain.ddns.net:3030/api/ptp/scrape/complete')
-                except Exception as e:
-                    print(f"Error notifying Node.js backend of completion: {str(e)}")
             except subprocess.CalledProcessError as e:
                 print(f"Error running scraper: {str(e)}")
 
