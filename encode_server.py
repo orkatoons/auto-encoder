@@ -703,6 +703,12 @@ def start_ptp_scrape():
                                     release_name = torrent_parts[2].strip()
                                     seeders = torrent_parts[3].strip()
                                     link = torrent_parts[4].strip()
+                                    
+                                    # Skip if resolution is 2160p or release name contains 2160/4K/UHD
+                                    if (resolution.lower() == '2160p' or 
+                                        any(term in release_name.lower() for term in ['2160', '4k', 'uhd'])):
+                                        continue
+                                        
                                     print(f"  - {source} | {resolution} | {release_name} | {seeders} seeders | {link}")
                         print()  # Add a blank line between movies
                     except Exception as e:
