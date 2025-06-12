@@ -699,27 +699,44 @@ def start_ptp_scrape():
                                 contains_uhd = False
                                 
                                 # Parse movie info
-                                movie_info = line[1:].split(' [')
-                                title = movie_info[0]
-                                year = movie_info[1].split(']')[0]
-                                directors_str = movie_info[1].split('by ')[1].strip()
-                                
-                                # Parse directors from the format [{'Name': 'Director Name', 'Id': '123'}]
                                 try:
-                                    import ast
-                                    directors_list = ast.literal_eval(directors_str)
-                                    directors = ', '.join(d['Name'] for d in directors_list)
-                                except:
-                                    directors = directors_str
-                                
-                                current_movie = {
-                                    'Name': f"{title} [{year}] by {directors}",
-                                    'Source': [],
-                                    'Standard Definition': "NULL",
-                                    'High Definition': "NULL",
-                                    'Link': None,
-                                    'date_added': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                                }
+                                    # Remove the leading ~ and split on ' ['
+                                    movie_info = line[1:].split(' [')
+                                    if len(movie_info) < 2:
+                                        print(f"Invalid movie format: {line}")
+                                        continue
+                                    
+                                    title = movie_info[0]
+                                    # Split the rest on '] by '
+                                    year_and_directors = movie_info[1].split('] by ')
+                                    if len(year_and_directors) < 2:
+                                        print(f"Invalid year/directors format: {movie_info[1]}")
+                                        continue
+                                    
+                                    year = year_and_directors[0]
+                                    directors_str = year_and_directors[1].strip()
+                                    
+                                    # Parse directors from the format [{'Name': 'Director Name', 'Id': '123'}]
+                                    try:
+                                        import ast
+                                        directors_list = ast.literal_eval(directors_str)
+                                        directors = ', '.join(d['Name'] for d in directors_list)
+                                    except:
+                                        directors = directors_str
+                                    
+                                    current_movie = {
+                                        'Name': f"{title} [{year}] by {directors}",
+                                        'Source': [],
+                                        'Standard Definition': "NULL",
+                                        'High Definition': "NULL",
+                                        'Link': None,
+                                        'date_added': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                    }
+                                    print(f"Parsed movie: {current_movie['Name']}")
+                                except Exception as e:
+                                    print(f"Error parsing movie info: {str(e)}")
+                                    print(f"Problematic line: {line}")
+                                    continue
                             elif line.startswith('~~||') and current_movie:
                                 # Parse torrent info
                                 parts = line[4:].split('||')
