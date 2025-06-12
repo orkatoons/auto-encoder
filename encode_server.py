@@ -647,188 +647,99 @@ def start_ptp_scrape():
             print("❌ Invalid values: page_offset and total_pages must be > 0")
             return jsonify({'status': 'error', 'message': 'page_offset and total_pages must be greater than 0'}), 400
 
-        def parse_movie_block(movie_block):
+        def parse_movie_block(movie_block, current_movie_title):
             try:
-                # Split the block into parts
                 parts = movie_block.strip().split('||')
                 if len(parts) < 6:
-                    print("⚠️ Invalid block format")
                     return None
 
-                # Extract movie information
                 source = parts[1]
                 resolution = parts[2]
                 release_name = parts[3]
                 seeders = parts[4]
                 link = parts[5]
 
-                print(f"\n🔎 Processing movie: {release_name}")
-                print(f"Source: {source} | Resolution: {resolution} | Seeders: {seeders}")
-                
-                # Initialize check counter
-                total_checks = 0
-                passed_checks = 0
-                
-                # Check 1: Seeders
-                total_checks += 1
                 seeders = int(seeders)
-                print(f"\nCheck 1: Seeders Check")
-                print(f"Looking for: seeders > 0")
-                print(f"Found: {seeders} seeders")
                 if seeders <= 0:
-                    print("❌ Check 1: Failed - No seeders")
                     return None
-                else:
-                    print("✅ Check 1: Passed - Has seeders")
-                    passed_checks += 1
 
-                # Check 2: UHD/2160p
-                total_checks += 1
-                print(f"\nCheck 2: UHD Check")
-                print(f"Looking for: No '2160p' in resolution")
-                print(f"Found: Resolution contains '{resolution}'")
                 if '2160p' in resolution:
-                    print("❌ Check 2: Failed - Contains 2160p")
                     return None
-                else:
-                    print("✅ Check 2: Passed - No 2160p")
-                    passed_checks += 1
 
-                # Check 3: Valid Source
-                total_checks += 1
                 valid_sources = {'DVD', 'Blu-ray', 'Remux', 'BD25', 'BD50'}
-                print(f"\nCheck 3: Source Validation")
-                print(f"Looking for: One of {valid_sources}")
-                print(f"Found: Source is '{source}'")
                 if not any(valid in source for valid in valid_sources):
-                    print("❌ Check 3: Failed - Invalid source")
                     return None
-                else:
-                    print("✅ Check 3: Passed - Valid source")
-                    passed_checks += 1
 
-                # Check 4: DVD Format with VOB IFO
-                total_checks += 1
-                print(f"\nCheck 4: DVD Format Check")
-                print(f"Looking for: If DVD5/DVD9, must have 'VOB IFO'")
-                print(f"Found: Source '{source}' with release '{release_name}'")
                 if source.strip() in {'DVD5', 'DVD9'} and 'VOB IFO' not in release_name:
-                    print("❌ Check 4: Failed - DVD without VOB IFO")
                     return None
-                else:
-                    print("✅ Check 4: Passed - DVD format valid")
-                    passed_checks += 1
 
-                # Check 5: Remux Format
-                total_checks += 1
-                print(f"\nCheck 5: Remux Format Check")
-                print(f"Looking for: 'Remux' in source or release name")
-                print(f"Found: Source '{source}' with release '{release_name}'")
                 if source.strip() == 'Remux' or 'Remux' in release_name:
                     source = 'Remux'
-                    print("✅ Check 5: Passed - Remux format detected")
-                else:
-                    print("✅ Check 5: Passed - Not a Remux")
-                passed_checks += 1
 
-                # Check 6: HD Resolution
-                total_checks += 1
                 resolutions_hd = {'720p', '1080p'}
-                print(f"\nCheck 6: HD Resolution Check")
-                print(f"Looking for: One of {resolutions_hd}")
-                print(f"Found: Resolution '{resolution}'")
-                hd_found = False
-                for hd in resolutions_hd:
-                    if hd in resolution:
-                        hd_found = True
-                if hd_found:
-                    print("✅ Check 6: Passed - HD resolution found")
-                else:
-                    print("❌ Check 6: Failed - No HD resolution")
-                passed_checks += 1
+                hd_found = any(hd in resolution for hd in resolutions_hd)
 
-                # Check 7: SD Resolution
-                total_checks += 1
                 resolutions_sd = {'480p', '576p'}
-                print(f"\nCheck 7: SD Resolution Check")
-                print(f"Looking for: One of {resolutions_sd}")
-                print(f"Found: Resolution '{resolution}'")
-                sd_found = False
-                for sd in resolutions_sd:
-                    if sd in resolution:
-                        sd_found = True
-                if sd_found:
-                    print("✅ Check 7: Passed - SD resolution found")
-                else:
-                    print("❌ Check 7: Failed - No SD resolution")
-                passed_checks += 1
+                sd_found = any(sd in resolution for sd in resolutions_sd)
 
-                print(f"\n📊 Torrent Check Summary: {passed_checks}/{total_checks} checks passed")
-
-                # Create movie entry
-                movie_entry = {
-                    'Name': release_name,
+                return {
+                    'Name': current_movie_title,
                     'Source': source.strip(),
                     'Standard Definition': None if not sd_found else '480p, 576p',
                     'High Definition': None if not hd_found else resolution,
                     'Link': link,
                     'date_added': datetime.now().isoformat()
                 }
-
-                print(f"\n✅ Movie accepted: {release_name}")
-                print(f"📝 Source: {source}")
-                print(f"📝 Resolution: {resolution}")
-                
-                return movie_entry
-
-            except Exception as e:
-                print(f"❌ Error parsing block: {e}")
+            except:
                 return None
 
         all_movies = []
         existing_links = set()
+        existing_titles = set()
         try:
             with open('output.json', 'r', encoding='utf-8') as f:
                 existing_movies = json.load(f)
                 existing_links = {m['Link'] for m in existing_movies}
-            print(f"📁 Loaded {len(existing_movies)} existing movies")
-        except Exception as e:
-            print(f"⚠️ Could not load existing output.json: {e}")
+                existing_titles = {m['Name'] for m in existing_movies}
+        except:
             existing_movies = []
 
+        current_movie_title = None
+        found_movie_for_title = set()
+
         for page in range(page_offset, page_offset + total_pages):
-            print(f"\n📄 Processing page {page}")
             cmd = f'ptp search "" -p {page} --movie-format "~{{{{Title}}}} [{{{{Year}}}}] by {{{{Directors}}}}" --torrent-format "~~||{{{{Source}}}}||{{{{Resolution}}}}||{{{{ReleaseName}}}}||{{{{Seeders}}}}||{{{{Link}}}}"'
             args = shlex.split(cmd)
-            print(f"▶️ Running: {cmd}")
             try:
                 result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=60)
-                if result.stderr:
-                    print(f"⚠️ CLI stderr: {result.stderr.strip()}")
                 output = result.stdout.strip()
                 if not output:
-                    print("⚠️ No output returned from CLI")
                     continue
 
                 movie_blocks = output.split('~')
                 for block in movie_blocks:
                     if not block.strip():
                         continue
-                    parsed = parse_movie_block('~' + block.strip())
-                    if parsed and parsed['Link'] not in existing_links:
-                        print(f"➕ Added movie: {parsed['Name']}")
+                    if 'by' in block:
+                        current_movie_title = block.strip()
+                        continue
+
+                    if not current_movie_title or current_movie_title in found_movie_for_title:
+                        continue
+
+                    parsed = parse_movie_block('~' + block.strip(), current_movie_title)
+                    if parsed and parsed['Link'] not in existing_links and parsed['Name'] not in existing_titles:
                         all_movies.append(parsed)
                         existing_links.add(parsed['Link'])
-                    elif parsed:
-                        print(f"🔁 Duplicate movie skipped: {parsed['Name']}")
-            except Exception as e:
-                print(f"❌ Failed to run command on page {page}: {e}")
+                        existing_titles.add(parsed['Name'])
+                        found_movie_for_title.add(current_movie_title)
+            except:
+                continue
 
         combined = existing_movies + all_movies
         try:
             with open('output.json', 'w', encoding='utf-8') as f:
                 json.dump(combined, f, indent=2, ensure_ascii=False)
-            print(f"✅ Saved output.json with {len(combined)} total movies")
         except Exception as e:
             print(f"❌ Failed to save output.json: {e}")
 
@@ -837,7 +748,6 @@ def start_ptp_scrape():
     except Exception as e:
         print(f"❌ Fatal error: {e}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
-
 
 @app.route('/ptp/movies', methods=['GET'])
 def handle_movies():
