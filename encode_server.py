@@ -11,6 +11,7 @@ from ptp_routes import ptp_bp, handle_ptp_download, get_ptp_movies
 import subprocess
 import threading
 import requests
+import shlex
 
 app = Flask(__name__)
 
@@ -663,20 +664,16 @@ def start_ptp_scrape():
                 # Run the ptp command for each page
                 for page in range(page_offset, page_offset + total_pages):
                     print(f"\nProcessing page {page}...")
-                    cmd = [
-                        'ptp', 'search', '""',
-                        '-p', str(page),
-                        '--movie-format', '"~{{Title}} [{{Year}}] by {{Directors}}"',
-                        '--torrent-format', '"~~||{{Source}}||{{Resolution}}||{{ReleaseName}}||{{Seeders}}||{{Link}}"'
-                    ]
+                    cmd = f'ptp search "" -p {page} --movie-format "~{{Title}} [{{Year}}] by {{Directors}}" --torrent-format "~~||{{Source}}||{{Resolution}}||{{ReleaseName}}||{{Seeders}}||{{Link}}"'
+                    args = shlex.split(cmd)
                     
-                    print(f"Running command: {' '.join(cmd)}")
+                    print(f"Running command: {cmd}")
                     # Run the command and capture output
-                    result = subprocess.run(cmd, capture_output=True, text=True)
+                    result = subprocess.run(args, capture_output=True, text=True)
                     if result.returncode != 0:
                         print(f"Error running ptp command: {result.stderr}")
                         continue
-                    
+                    print(result.stdout)
                     print("Parsing output...")
                     # Parse the output
                     current_movie = None
