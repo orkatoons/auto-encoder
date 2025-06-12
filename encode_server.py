@@ -648,165 +648,138 @@ def start_ptp_scrape():
             return jsonify({'status': 'error', 'message': 'page_offset and total_pages must be greater than 0'}), 400
 
         def parse_movie_block(movie_block):
-            lines = movie_block.strip().split('\n')
-            if not lines:
-                print("⚠️ Empty block")
-                return None
-
-            movie_header = lines[0].strip('~')
-            if not movie_header:
-                print("⚠️ Skipping block with missing header")
-                return None
-
             try:
-                print(f"\n🔎 Processing movie: {movie_header}")
-                title_year_director = movie_header.strip()
-                torrents = []
-                sources = set()
-                resolutions_hd = {'720p', '1080p'}
-                resolutions_sd = {'480p', '576p'}
-                found_hd = set()
-                found_sd = set()
-                selected_torrent_link = None
-                selected_format = None
-
-                for line in lines[1:]:
-                    if not line.startswith('~~'):
-                        continue
-                    
-                    print("\n📋 Starting new torrent check...")
-                    _, source, resolution, release_name, seeders, link = line.split('||')
-                    print(f"🔍 Checking torrent: {source} | {resolution} | {release_name} | {seeders}")
-                    
-                    # Initialize check counter
-                    total_checks = 0
-                    passed_checks = 0
-                    
-                    # Check 1: Seeders
-                    total_checks += 1
-                    seeders = int(seeders)
-                    print(f"\nCheck 1: Seeders Check")
-                    print(f"Looking for: seeders > 0")
-                    print(f"Found: {seeders} seeders")
-                    if seeders <= 0:
-                        print("❌ Check 1: Failed - No seeders")
-                    else:
-                        print("✅ Check 1: Passed - Has seeders")
-                        passed_checks += 1
-
-                    # Check 2: UHD/2160p
-                    total_checks += 1
-                    print(f"\nCheck 2: UHD Check")
-                    print(f"Looking for: No '2160p' in resolution")
-                    print(f"Found: Resolution contains '{resolution}'")
-                    if '2160p' in resolution:
-                        print("❌ Check 2: Failed - Contains 2160p")
-                        return None
-                    else:
-                        print("✅ Check 2: Passed - No 2160p")
-                        passed_checks += 1
-
-                    # Check 3: Valid Source
-                    total_checks += 1
-                    valid_sources = {'DVD', 'Blu-ray', 'Remux', 'BD25', 'BD50'}
-                    print(f"\nCheck 3: Source Validation")
-                    print(f"Looking for: One of {valid_sources}")
-                    print(f"Found: Source is '{source}'")
-                    if not any(valid in source for valid in valid_sources):
-                        print("❌ Check 3: Failed - Invalid source")
-                        continue
-                    else:
-                        print("✅ Check 3: Passed - Valid source")
-                        passed_checks += 1
-
-                    # Check 4: DVD Format with VOB IFO
-                    total_checks += 1
-                    print(f"\nCheck 4: DVD Format Check")
-                    print(f"Looking for: If DVD5/DVD9, must have 'VOB IFO'")
-                    print(f"Found: Source '{source}' with release '{release_name}'")
-                    if source.strip() in {'DVD5', 'DVD9'} and 'VOB IFO' not in release_name:
-                        print("❌ Check 4: Failed - DVD without VOB IFO")
-                        continue
-                    else:
-                        print("✅ Check 4: Passed - DVD format valid")
-                        passed_checks += 1
-
-                    # Check 5: Remux Format
-                    total_checks += 1
-                    print(f"\nCheck 5: Remux Format Check")
-                    print(f"Looking for: 'Remux' in source or release name")
-                    print(f"Found: Source '{source}' with release '{release_name}'")
-                    if source.strip() == 'Remux' or 'Remux' in release_name:
-                        source = 'Remux'
-                        print("✅ Check 5: Passed - Remux format detected")
-                    else:
-                        print("✅ Check 5: Passed - Not a Remux")
-                    passed_checks += 1
-
-                    # Check 6: HD Resolution
-                    total_checks += 1
-                    print(f"\nCheck 6: HD Resolution Check")
-                    print(f"Looking for: One of {resolutions_hd}")
-                    print(f"Found: Resolution '{resolution}'")
-                    hd_found = False
-                    for hd in resolutions_hd:
-                        if hd in resolution:
-                            found_hd.add(hd)
-                            hd_found = True
-                    if hd_found:
-                        print("✅ Check 6: Passed - HD resolution found")
-                    else:
-                        print("❌ Check 6: Failed - No HD resolution")
-                    passed_checks += 1
-
-                    # Check 7: SD Resolution
-                    total_checks += 1
-                    print(f"\nCheck 7: SD Resolution Check")
-                    print(f"Looking for: One of {resolutions_sd}")
-                    print(f"Found: Resolution '{resolution}'")
-                    sd_found = False
-                    for sd in resolutions_sd:
-                        if sd in resolution:
-                            found_sd.add(sd)
-                            sd_found = True
-                    if sd_found:
-                        print("✅ Check 7: Passed - SD resolution found")
-                    else:
-                        print("❌ Check 7: Failed - No SD resolution")
-                    passed_checks += 1
-
-                    sources.add(source.strip())
-
-                    if not selected_torrent_link:
-                        selected_torrent_link = link
-                        selected_format = source.strip()
-
-                    print(f"\n📊 Torrent Check Summary: {passed_checks}/{total_checks} checks passed")
-
-                if not sources:
-                    print("⚠️ No valid sources found for movie")
+                # Split the block into parts
+                parts = movie_block.strip().split('||')
+                if len(parts) < 6:
+                    print("⚠️ Invalid block format")
                     return None
 
-                missing_hd = sorted(list(resolutions_hd - found_hd)) or None
-                missing_sd = sorted(list(resolutions_sd - found_sd)) or None
+                # Extract movie information
+                source = parts[1]
+                resolution = parts[2]
+                release_name = parts[3]
+                seeders = parts[4]
+                link = parts[5]
 
-                if not missing_hd and not missing_sd:
-                    print("⚠️ Movie has all SD/HD resolutions, skipping")
-                    return None
-
-                print(f"\n✅ Movie accepted: {title_year_director}")
-                print(f"📝 Missing HD: {missing_hd}")
-                print(f"📝 Missing SD: {missing_sd}")
-                print(f"📝 Sources: {sources}")
+                print(f"\n🔎 Processing movie: {release_name}")
+                print(f"Source: {source} | Resolution: {resolution} | Seeders: {seeders}")
                 
-                return {
-                    'Name': title_year_director,
-                    'Source': ', '.join(sources),
-                    'Standard Definition': ', '.join(missing_sd) if missing_sd else None,
-                    'High Definition': ', '.join(missing_hd) if missing_hd else None,
-                    'Link': selected_torrent_link,
+                # Initialize check counter
+                total_checks = 0
+                passed_checks = 0
+                
+                # Check 1: Seeders
+                total_checks += 1
+                seeders = int(seeders)
+                print(f"\nCheck 1: Seeders Check")
+                print(f"Looking for: seeders > 0")
+                print(f"Found: {seeders} seeders")
+                if seeders <= 0:
+                    print("❌ Check 1: Failed - No seeders")
+                    return None
+                else:
+                    print("✅ Check 1: Passed - Has seeders")
+                    passed_checks += 1
+
+                # Check 2: UHD/2160p
+                total_checks += 1
+                print(f"\nCheck 2: UHD Check")
+                print(f"Looking for: No '2160p' in resolution")
+                print(f"Found: Resolution contains '{resolution}'")
+                if '2160p' in resolution:
+                    print("❌ Check 2: Failed - Contains 2160p")
+                    return None
+                else:
+                    print("✅ Check 2: Passed - No 2160p")
+                    passed_checks += 1
+
+                # Check 3: Valid Source
+                total_checks += 1
+                valid_sources = {'DVD', 'Blu-ray', 'Remux', 'BD25', 'BD50'}
+                print(f"\nCheck 3: Source Validation")
+                print(f"Looking for: One of {valid_sources}")
+                print(f"Found: Source is '{source}'")
+                if not any(valid in source for valid in valid_sources):
+                    print("❌ Check 3: Failed - Invalid source")
+                    return None
+                else:
+                    print("✅ Check 3: Passed - Valid source")
+                    passed_checks += 1
+
+                # Check 4: DVD Format with VOB IFO
+                total_checks += 1
+                print(f"\nCheck 4: DVD Format Check")
+                print(f"Looking for: If DVD5/DVD9, must have 'VOB IFO'")
+                print(f"Found: Source '{source}' with release '{release_name}'")
+                if source.strip() in {'DVD5', 'DVD9'} and 'VOB IFO' not in release_name:
+                    print("❌ Check 4: Failed - DVD without VOB IFO")
+                    return None
+                else:
+                    print("✅ Check 4: Passed - DVD format valid")
+                    passed_checks += 1
+
+                # Check 5: Remux Format
+                total_checks += 1
+                print(f"\nCheck 5: Remux Format Check")
+                print(f"Looking for: 'Remux' in source or release name")
+                print(f"Found: Source '{source}' with release '{release_name}'")
+                if source.strip() == 'Remux' or 'Remux' in release_name:
+                    source = 'Remux'
+                    print("✅ Check 5: Passed - Remux format detected")
+                else:
+                    print("✅ Check 5: Passed - Not a Remux")
+                passed_checks += 1
+
+                # Check 6: HD Resolution
+                total_checks += 1
+                resolutions_hd = {'720p', '1080p'}
+                print(f"\nCheck 6: HD Resolution Check")
+                print(f"Looking for: One of {resolutions_hd}")
+                print(f"Found: Resolution '{resolution}'")
+                hd_found = False
+                for hd in resolutions_hd:
+                    if hd in resolution:
+                        hd_found = True
+                if hd_found:
+                    print("✅ Check 6: Passed - HD resolution found")
+                else:
+                    print("❌ Check 6: Failed - No HD resolution")
+                passed_checks += 1
+
+                # Check 7: SD Resolution
+                total_checks += 1
+                resolutions_sd = {'480p', '576p'}
+                print(f"\nCheck 7: SD Resolution Check")
+                print(f"Looking for: One of {resolutions_sd}")
+                print(f"Found: Resolution '{resolution}'")
+                sd_found = False
+                for sd in resolutions_sd:
+                    if sd in resolution:
+                        sd_found = True
+                if sd_found:
+                    print("✅ Check 7: Passed - SD resolution found")
+                else:
+                    print("❌ Check 7: Failed - No SD resolution")
+                passed_checks += 1
+
+                print(f"\n📊 Torrent Check Summary: {passed_checks}/{total_checks} checks passed")
+
+                # Create movie entry
+                movie_entry = {
+                    'Name': release_name,
+                    'Source': source.strip(),
+                    'Standard Definition': None if not sd_found else '480p, 576p',
+                    'High Definition': None if not hd_found else resolution,
+                    'Link': link,
                     'date_added': datetime.now().isoformat()
                 }
+
+                print(f"\n✅ Movie accepted: {release_name}")
+                print(f"📝 Source: {source}")
+                print(f"📝 Resolution: {resolution}")
+                
+                return movie_entry
 
             except Exception as e:
                 print(f"❌ Error parsing block: {e}")
