@@ -734,7 +734,9 @@ def start_ptp_scrape():
 
                                     # Check for valid source format
                                     valid_source = False
-                                    if source in ['Blu-ray', 'DVD']:
+                                    if source == 'Blu-ray':
+                                        valid_source = True
+                                    elif source == 'DVD':
                                         valid_source = True
                                     elif 'Remux' in release_name:
                                         valid_source = True
