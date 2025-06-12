@@ -659,7 +659,7 @@ def start_ptp_scrape():
                 return None
 
             try:
-                print(f"🔎 Processing movie: {movie_header}")
+                print(f"\n🔎 Processing movie: {movie_header}")
                 title_year_director = movie_header.strip()
                 torrents = []
                 sources = set()
@@ -673,42 +673,115 @@ def start_ptp_scrape():
                 for line in lines[1:]:
                     if not line.startswith('~~'):
                         continue
+                    
+                    print("\n📋 Starting new torrent check...")
                     _, source, resolution, release_name, seeders, link = line.split('||')
-                    print(f"🔎 Processing torrent: {source} | {resolution} | {release_name} | {seeders}")
+                    print(f"🔍 Checking torrent: {source} | {resolution} | {release_name} | {seeders}")
+                    
+                    # Initialize check counter
+                    total_checks = 0
+                    passed_checks = 0
+                    
+                    # Check 1: Seeders
+                    total_checks += 1
                     seeders = int(seeders)
+                    print(f"\nCheck 1: Seeders Check")
+                    print(f"Looking for: seeders > 0")
+                    print(f"Found: {seeders} seeders")
                     if seeders <= 0:
-                        print(f"⛔ Skipped due to 0 seeders: {release_name}")
-                        continue
+                        print("❌ Check 1: Failed - No seeders")
+                    else:
+                        print("✅ Check 1: Passed - Has seeders")
+                        passed_checks += 1
 
+                    # Check 2: UHD/2160p
+                    total_checks += 1
+                    print(f"\nCheck 2: UHD Check")
+                    print(f"Looking for: No '2160p' in resolution")
+                    print(f"Found: Resolution contains '{resolution}'")
                     if '2160p' in resolution:
-                        print(f"⛔ Skipped due to 2160p: {release_name}")
+                        print("❌ Check 2: Failed - Contains 2160p")
                         return None
+                    else:
+                        print("✅ Check 2: Passed - No 2160p")
+                        passed_checks += 1
 
+                    # Check 3: Valid Source
+                    total_checks += 1
                     valid_sources = {'DVD', 'Blu-ray', 'Remux', 'BD25', 'BD50'}
+                    print(f"\nCheck 3: Source Validation")
+                    print(f"Looking for: One of {valid_sources}")
+                    print(f"Found: Source is '{source}'")
                     if not any(valid in source for valid in valid_sources):
-                        print(f"⚠️ Rejected due to source: {source}")
+                        print("❌ Check 3: Failed - Invalid source")
                         continue
+                    else:
+                        print("✅ Check 3: Passed - Valid source")
+                        passed_checks += 1
 
+                    # Check 4: DVD Format with VOB IFO
+                    total_checks += 1
+                    print(f"\nCheck 4: DVD Format Check")
+                    print(f"Looking for: If DVD5/DVD9, must have 'VOB IFO'")
+                    print(f"Found: Source '{source}' with release '{release_name}'")
                     if source.strip() in {'DVD5', 'DVD9'} and 'VOB IFO' not in release_name:
-                        print(f"⚠️ Skipped DVD5/9 without VOB IFO: {release_name}")
+                        print("❌ Check 4: Failed - DVD without VOB IFO")
                         continue
+                    else:
+                        print("✅ Check 4: Passed - DVD format valid")
+                        passed_checks += 1
 
+                    # Check 5: Remux Format
+                    total_checks += 1
+                    print(f"\nCheck 5: Remux Format Check")
+                    print(f"Looking for: 'Remux' in source or release name")
+                    print(f"Found: Source '{source}' with release '{release_name}'")
                     if source.strip() == 'Remux' or 'Remux' in release_name:
                         source = 'Remux'
+                        print("✅ Check 5: Passed - Remux format detected")
+                    else:
+                        print("✅ Check 5: Passed - Not a Remux")
+                    passed_checks += 1
 
-                    sources.add(source.strip())
-
+                    # Check 6: HD Resolution
+                    total_checks += 1
+                    print(f"\nCheck 6: HD Resolution Check")
+                    print(f"Looking for: One of {resolutions_hd}")
+                    print(f"Found: Resolution '{resolution}'")
+                    hd_found = False
                     for hd in resolutions_hd:
                         if hd in resolution:
                             found_hd.add(hd)
+                            hd_found = True
+                    if hd_found:
+                        print("✅ Check 6: Passed - HD resolution found")
+                    else:
+                        print("❌ Check 6: Failed - No HD resolution")
+                    passed_checks += 1
+
+                    # Check 7: SD Resolution
+                    total_checks += 1
+                    print(f"\nCheck 7: SD Resolution Check")
+                    print(f"Looking for: One of {resolutions_sd}")
+                    print(f"Found: Resolution '{resolution}'")
+                    sd_found = False
                     for sd in resolutions_sd:
                         if sd in resolution:
                             found_sd.add(sd)
+                            sd_found = True
+                    if sd_found:
+                        print("✅ Check 7: Passed - SD resolution found")
+                    else:
+                        print("❌ Check 7: Failed - No SD resolution")
+                    passed_checks += 1
+
+                    sources.add(source.strip())
 
                     if not selected_torrent_link:
                         selected_torrent_link = link
                         selected_format = source.strip()
 
+                    print(f"\n📊 Torrent Check Summary: {passed_checks}/{total_checks} checks passed")
 
                 if not sources:
                     print("⚠️ No valid sources found for movie")
@@ -721,7 +794,11 @@ def start_ptp_scrape():
                     print("⚠️ Movie has all SD/HD resolutions, skipping")
                     return None
 
-                print(f"✅ Movie accepted: {title_year_director}")
+                print(f"\n✅ Movie accepted: {title_year_director}")
+                print(f"📝 Missing HD: {missing_hd}")
+                print(f"📝 Missing SD: {missing_sd}")
+                print(f"📝 Sources: {sources}")
+                
                 return {
                     'Name': title_year_director,
                     'Source': ', '.join(sources),
