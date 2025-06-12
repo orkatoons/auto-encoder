@@ -659,32 +659,52 @@ def start_ptp_scrape():
         import re
         import ast
         
-        # Find all movie entries (lines starting with ~)
-        movie_pattern = r'~(.*?)(?=~|$)'
-        movies = re.findall(movie_pattern, output, re.DOTALL)
+        # Split the output into movie blocks
+        movie_blocks = re.split(r'(?=~)', output)
         
-        for movie in movies:
-            # Split the movie line into title and directors
-            parts = movie.split(' by ')
-            if len(parts) == 2:
-                title_part = parts[0].strip()
-                directors_str = parts[1].strip()
+        for block in movie_blocks:
+            if not block.strip():
+                continue
                 
-                # Extract title and year
-                title_year_match = re.match(r'(.*?)\s*\|\|\[(\d{4})\]', title_part)
-                if title_year_match:
-                    title = title_year_match.group(1).strip()
-                    year = title_year_match.group(2)
+            # Split into movie and torrents
+            parts = block.split('\n')
+            movie_line = parts[0]
+            torrent_lines = [line for line in parts[1:] if line.startswith('~~')]
+            
+            # Parse movie line
+            if movie_line.startswith('~'):
+                movie_line = movie_line[1:]  # Remove the ~
+                movie_parts = movie_line.split(' by ')
+                
+                if len(movie_parts) == 2:
+                    title_part = movie_parts[0].strip()
+                    directors_str = movie_parts[1].strip()
                     
-                    # Parse the directors list
-                    try:
-                        directors = ast.literal_eval(directors_str)
-                        director_names = [d['Name'] for d in directors]
-                        print(f"{title} by {', '.join(director_names)}")
-                        print(f"Year: {year}")
-                        print()  # Add a blank line between movies
-                    except:
-                        print(f"Error parsing directors for: {title}")
+                    # Extract title and year
+                    title_year_match = re.match(r'(.*?)\s*\|\|\[(\d{4})\]', title_part)
+                    if title_year_match:
+                        title = title_year_match.group(1).strip()
+                        year = title_year_match.group(2)
+                        
+                        # Parse the directors list
+                        try:
+                            directors = ast.literal_eval(directors_str)
+                            director_names = [d['Name'] for d in directors]
+                            print(f"{title} by {', '.join(director_names)}")
+                            print(f"Year: {year}")
+                            
+                            # Print torrent links
+                            if torrent_lines:
+                                print("Torrents:")
+                                for torrent in torrent_lines:
+                                    # Split torrent line into components
+                                    torrent_parts = torrent[2:].split('||')  # Remove ~~ and split
+                                    if len(torrent_parts) >= 6:  # Make sure we have all parts
+                                        source, resolution, release_name, seeders, link = torrent_parts[1:6]
+                                        print(f"  - {source} | {resolution} | {release_name} | {seeders} seeders | {link}")
+                            print()  # Add a blank line between movies
+                        except Exception as e:
+                            print(f"Error parsing movie: {title} - {str(e)}")
 
         return jsonify({'status': 'success', 'message': 'Scraping completed'}), 200
 
