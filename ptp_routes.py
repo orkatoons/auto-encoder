@@ -17,7 +17,7 @@ def get_best_torrent_from_cli(movie_url):
     cmd = [
         "ptp", "search", movie_url,
         "--movie-format", "",  # disable movie header
-        "--torrent-format", "{{Id}}||{{ReleaseName}}||{{Seeders}}||{{Source}}"
+        "--torrent-format", "{{Id}}||{{ReleaseName}}||{{Seeders}}||{{Source}}||{{Resolution}}||{{Codec}}"
     ]
     res = subprocess.run(cmd, capture_output=True, text=True)
     if res.returncode != 0:
@@ -26,21 +26,46 @@ def get_best_torrent_from_cli(movie_url):
     torrents = []
     for line in res.stdout.strip().splitlines():
         parts = line.split("||")
-        if len(parts) != 4:
+        if len(parts) != 6:
             continue
-        tid, name, seeders, source = parts
+        tid, name, seeders, source, resolution, codec = parts
         seeders = int(seeders)
-        if seeders < 1 or re.search(r'2160p|uhd', name, re.IGNORECASE):
+        # Skip if not 1080p or no seeders
+        if seeders < 1 or resolution.lower() != "1080p":
             continue
-        torrents.append({"Id": tid, "Name": name, "Seeders": seeders, "Source": source})
-    # Filter for remux first, else Blu-ray
-    for t in torrents:
-        if "remux" in t["Name"].lower():
-            return t
-    for t in torrents:
-        if any(x in t["Name"].lower() for x in ["bd50", "bd25", "bluray"]):
-            return t
-    return None
+        # Skip if not Blu-ray source
+        if "bluray" not in source.lower():
+            continue
+        torrents.append({
+            "Id": tid, 
+            "Name": name, 
+            "Seeders": seeders, 
+            "Source": source,
+            "Resolution": resolution,
+            "Codec": codec
+        })
+    
+    # Define codec preference order
+    codec_preference = {
+        "h.264": 1,
+        "h.265": 2,
+        "bd66": 3,
+        "bd50": 3,
+        "x264": 4
+    }
+    
+    # Sort torrents by codec preference
+    def get_codec_priority(codec):
+        codec_lower = codec.lower()
+        for key, value in codec_preference.items():
+            if key in codec_lower:
+                return value
+        return 999  # Lowest priority for unknown codecs
+    
+    # Sort by codec preference and then by seeders
+    torrents.sort(key=lambda x: (get_codec_priority(x["Codec"]), -x["Seeders"]))
+    
+    return torrents[0] if torrents else None
 
 def get_ptp_movies():
     try:

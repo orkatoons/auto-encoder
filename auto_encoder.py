@@ -849,35 +849,63 @@ def encode_file(input_file, resolutions, job_id):
 
 def determine_encodes(file_path):
     """
-    Determines the encoding resolutions based on the filename.
-    - BluRay sources get ["720p", "576p", "480p"].
-    - Everything else gets only ["720p"].
+    Determines the encoding resolutions based on the movie data in output.json.
+    Matches the movie name from the file path with the JSON data and uses available resolutions.
     """
     global encoding_source_format
-    source_keywords = [
-        ("bluray", "BluRay"), ("blu-ray", "BluRay"), ("brrip", "BluRay"),
-        ("bdrip", "BluRay"), ("bd25", "BluRay"), ("bd50", "BluRay"),
-        ("remux", "BluRay"), ("web-dl", "WEB-DL"), ("webdl", "WEB-DL"),
-        ("webrip", "WEB-DL"), ("amzn", "WEB-DL"), ("netflix", "WEB-DL"),
-        ("hdrip", "WEB-DL"), ("dvdrip", "WEB-DL"), ("hdtv", "WEB-DL")
-    ]
-
-    filename = os.path.basename(file_path).lower()
-
-    # Detect source format
-    source_format = "Unknown"
-    for keyword, fmt in source_keywords:
-        if keyword in filename:
-            source_format = fmt
-            encoding_source_format = fmt
-            break  # Stop at first match
-
-    # Assign resolutions based on format
-    if source_format == "BluRay":
-        return ["720p", "576p", "480p"]
-    else:
-        return ["720p"]
     
+    # Get the movie name from the grandparent directory
+    grandparent_dir = os.path.basename(os.path.dirname(os.path.dirname(file_path)))
+    
+    # Read the output.json file
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    json_path = os.path.join(current_dir, 'PTP Scraper', 'output.json')
+    
+    try:
+        with open(json_path, 'r', encoding='utf-8') as f:
+            movies_data = json.load(f)
+    except Exception as e:
+        print(f"Error reading output.json: {e}")
+        return ["720p"]  # Default fallback
+    
+    # Find matching movie in JSON data
+    matching_movie = None
+    for movie in movies_data:
+        # Extract movie name from JSON (remove [[year]] and "by director" parts)
+        json_name = movie["Name"].split(" [[")[0].strip()
+        if json_name.lower() == grandparent_dir.lower():
+            matching_movie = movie
+            break
+    
+    if not matching_movie:
+        print(f"No matching movie found in output.json for: {grandparent_dir}")
+        return ["720p", "576p", "480p"]  # Default fallback
+    
+    # Get available resolutions
+    resolutions = []
+    
+    # Check High Definition
+    hd_res = matching_movie.get("High Definition", "NULL")
+    if hd_res and hd_res.lower() != "null":
+        resolutions.extend([r.strip() for r in hd_res.split(",")])
+    
+    # Check Standard Definition
+    sd_res = matching_movie.get("Standard Definition", "NULL")
+    if sd_res and sd_res.lower() != "null":
+        resolutions.extend([r.strip() for r in sd_res.split(",")])
+    
+    # If no resolutions found, use default
+    if not resolutions:
+        print(f"No resolutions found in JSON for: {grandparent_dir}")
+        return ["720p", "576p", "480p"]
+    
+    # Remove duplicates and sort by resolution (highest first)
+    resolutions = list(dict.fromkeys(resolutions))
+    resolution_order = {"720p": 1, "576p": 2, "480p": 3}
+    resolutions.sort(key=lambda x: resolution_order.get(x, 999))
+    
+    print(f"Found resolutions for {grandparent_dir}: {resolutions}")
+    return resolutions
 
 def log(message, end="\n"):
     logging.info(message)

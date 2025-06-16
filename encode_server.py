@@ -23,7 +23,7 @@ filename = None
 job_store = {}
 STATUS_FILE = 'status.json'
 LOG_DIR = 'encode_logs'
-CONFIG_FILE = 'config.json'
+CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config.json')
 
 def initialize_status_file():
     """Initialize the status.json file if it doesn't exist or is empty"""
@@ -310,21 +310,28 @@ def get_encoding_logs(job_id):
 
 def load_config():
     """Load the config file if it exists, create with defaults if it doesn't"""
-    if os.path.exists(CONFIG_FILE):
-        with open(CONFIG_FILE, 'r') as f:
-            return json.load(f)
-    else:
-        default_config = {
-            "baseDirectories": []
-        }
-        with open(CONFIG_FILE, 'w') as f:
-            json.dump(default_config, f, indent=4)
-        return default_config
+    try:
+        if os.path.exists(CONFIG_FILE):
+            with open(CONFIG_FILE, 'r') as f:
+                return json.load(f)
+        else:
+            default_config = {
+                "baseDirectories": []
+            }
+            with open(CONFIG_FILE, 'w') as f:
+                json.dump(default_config, f, indent=4)
+            return default_config
+    except Exception as e:
+        print(f"Error loading config: {str(e)}")
+        return {"baseDirectories": []}
 
 def save_config(config):
     """Save the config to file"""
-    with open(CONFIG_FILE, 'w') as f:
-        json.dump(config, f, indent=4)
+    try:
+        with open(CONFIG_FILE, 'w') as f:
+            json.dump(config, f, indent=4)
+    except Exception as e:
+        print(f"Error saving config: {str(e)}")
 
 @app.route('/encode/directories/config', methods=['GET'])
 def get_config():
