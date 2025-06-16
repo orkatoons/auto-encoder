@@ -11,6 +11,7 @@ from ptp_routes import ptp_bp, handle_ptp_download, get_ptp_movies
 import subprocess
 import threading
 import requests
+from waitress import serve
 
 app = Flask(__name__)
 
@@ -730,5 +731,5 @@ def handle_download():
 if __name__ == '__main__':
     # Initialize status file on startup
     initialize_status_file()
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    serve(app, host='0.0.0.0', port=5001)
 

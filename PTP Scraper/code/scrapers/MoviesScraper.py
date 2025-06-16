@@ -43,6 +43,10 @@ def parse_movies(html):
             standard_def_resolutions = []
             hd_counts = {"720p": 0, "1080p": 0}
             contains_uhd = False
+            
+            contains_1080i = False
+            has_bluray_576p = False
+            contains_dvd = False
 
             for torrent_row in torrent_rows:
                 torrent_info = torrent_row.find("a", class_="torrent-info-link")
@@ -56,16 +60,14 @@ def parse_movies(html):
                         contains_uhd = True
                         break
 
-                    if "DVD9" in source_text and "VOB IFO" in source_text:
-                        format_name = "DVD9 - VOB IFO"
-                        if not dead_torrent:
-                            valid_formats.append(format_name)
-                            detected_formats.append(format_name)
-                    elif "DVD" in source_text and "VOB IFO" in source_text:
-                        format_name = "DVD5 - VOB IFO"
-                        if not dead_torrent:
-                            valid_formats.append(format_name)
-                            detected_formats.append(format_name)
+                    if "1080i" in source_text:
+                        contains_1080i = True
+                        break
+
+                    if "DVD" in source_text:
+                        contains_dvd = True
+                        break
+
                     elif "Remux" in source_text:
                         format_name = "Remux"
                         if not dead_torrent:
@@ -86,14 +88,20 @@ def parse_movies(html):
                         hd_counts["720p"] += 1
                     if "1080p" in source_text and not dead_torrent:
                         hd_counts["1080p"] += 1
-
-                    if "480p" in source_text:
-                        standard_def_resolutions.append("480p")
                     if "576p" in source_text:
                         standard_def_resolutions.append("576p")
+                        if "BluRay" in source_text or "Blu-ray" in source_text:
+                            has_bluray_576p = True
+                    if "480p" in source_text:
+                        standard_def_resolutions.append("480p")
 
-            if contains_uhd:
+
+            if contains_uhd or contains_1080i or contains_dvd:
                 continue
+
+            if has_bluray_576p and "480p" in standard_def_resolutions:
+                standard_def_resolutions.remove("480p")
+
 
             if any(source in valid_formats for source in COMPATIBLE_SOURCES):
                 high_def = []
