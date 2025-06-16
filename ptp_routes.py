@@ -22,20 +22,40 @@ def get_best_torrent_from_cli(movie_url):
     res = subprocess.run(cmd, capture_output=True, text=True)
     if res.returncode != 0:
         raise RuntimeError(f"ptp CLI failed: {res.stderr}")
+    
+    print(f"[FLASK] PTP CLI output: {res.stdout}")  # Debug output
+    
     # Parse torrents
     torrents = []
     for line in res.stdout.strip().splitlines():
         parts = line.split("||")
         if len(parts) != 6:
+            print(f"[FLASK] Skipping malformed line: {line}")
             continue
+            
         tid, name, seeders, source, resolution, codec = parts
-        seeders = int(seeders)
-        # Skip if not 1080p or no seeders
-        if seeders < 1 or resolution.lower() != "1080p":
+        try:
+            seeders = int(seeders)
+        except ValueError:
+            print(f"[FLASK] Invalid seeder count: {seeders}")
             continue
-        # Skip if not Blu-ray source
-        if "bluray" not in source.lower():
+            
+        # Skip if no seeders
+        if seeders < 1:
+            print(f"[FLASK] Skipping torrent with no seeders: {name}")
             continue
+            
+        # Skip if not 1080p
+        if resolution.lower() != "1080p":
+            print(f"[FLASK] Skipping non-1080p torrent: {name} ({resolution})")
+            continue
+            
+        # Skip if not Blu-ray source (case-insensitive)
+        if "blu-ray" not in source.lower():
+            print(f"[FLASK] Skipping non-Blu-ray torrent: {name} ({source})")
+            continue
+            
+        print(f"[FLASK] Found valid torrent: {name} ({source}, {resolution}, {codec}, {seeders} seeders)")
         torrents.append({
             "Id": tid, 
             "Name": name, 
@@ -44,6 +64,10 @@ def get_best_torrent_from_cli(movie_url):
             "Resolution": resolution,
             "Codec": codec
         })
+    
+    if not torrents:
+        print("[FLASK] No valid torrents found after filtering")
+        return None
     
     # Define codec preference order
     codec_preference = {
@@ -65,7 +89,9 @@ def get_best_torrent_from_cli(movie_url):
     # Sort by codec preference and then by seeders
     torrents.sort(key=lambda x: (get_codec_priority(x["Codec"]), -x["Seeders"]))
     
-    return torrents[0] if torrents else None
+    best_torrent = torrents[0]
+    print(f"[FLASK] Selected best torrent: {best_torrent['Name']} ({best_torrent['Source']}, {best_torrent['Resolution']}, {best_torrent['Codec']}, {best_torrent['Seeders']} seeders)")
+    return best_torrent
 
 def get_ptp_movies():
     try:
