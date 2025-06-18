@@ -52,7 +52,19 @@ for card in cards:
         profiles.append(clean_url)
 
 # === Step 4: Combine names and profiles ===
-combined_data = [{"Name": name, "Profile": profiles[i] if i < len(profiles) else ""} for i, name in enumerate(names)]
+combined_data = [
+    {
+        "Name": name,
+        "Email": None,  # Placeholder for now
+        "Work Samples": profiles[i] if i < len(profiles) else "",
+        "Source": "voices123.com",
+        "Phone No": None,
+        "Job Title": "Voice Actor",
+        "Company": None,
+        "Industry": "voice acting"
+    }
+    for i, name in enumerate(names)
+]
 
 # === Step 5: Load existing JSON and avoid duplicates ===
 existing_data = []
@@ -64,10 +76,10 @@ if os.path.exists(json_file):
         print(f"Error loading existing JSON: {e}")
 
 # Deduplicate based on both Name and Profile (case-insensitive)
-existing_entries = {(entry["Name"].lower(), entry["Profile"].lower()) for entry in existing_data}
+existing_entries = {(entry["Name"].lower(), entry["Work Samples"].lower()) for entry in existing_data}
 new_data = [
     entry for entry in combined_data 
-    if (entry["Name"].lower(), entry["Profile"].lower()) not in existing_entries
+    if (entry["Name"].lower(), entry["Work Samples"].lower()) not in existing_entries
 ]
 
 # Merge and save
@@ -77,7 +89,7 @@ final_data = existing_data + new_data
 seen = set()
 deduped_final_data = []
 for entry in final_data:
-    key = (entry["Name"].lower(), entry["Profile"].lower())
+    key = (entry["Name"].lower(), entry["Work Samples"].lower())
     if key not in seen:
         deduped_final_data.append(entry)
         seen.add(key)
