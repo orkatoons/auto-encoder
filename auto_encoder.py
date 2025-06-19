@@ -534,6 +534,8 @@ def find_movie(filename):
                     ia.update(movie)
                     year = movie.get('year', 'Unknown')
                     print(f"✅ Found movie: {movie.get('title', 'Unknown Title')} ({year})")
+                    print(f"DEBUG: Movie data keys: {list(movie.keys())}")
+                    print(f"DEBUG: Movie data: {movie}")
                     return movie
                 break  # If no results, skip to next shorter query
             except (IMDbError, Exception) as e:
@@ -640,11 +642,14 @@ def multiplex_file(
 
     # Run the command
     print("Running command:", " ".join(cmd))
-    subprocess.run(cmd)
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                text=True, encoding="utf-8", errors="ignore")
     for line in process.stdout:
         print(line, end="")
+    process.wait()
+    
+    if process.returncode != 0:
+        raise Exception(f"mkvmerge failed with return code {process.returncode}")
 
     send_webhook_message("✅ Mutliplexing Completed")
 
@@ -776,8 +781,19 @@ def encode_file(input_file, resolutions, job_id):
             grandparent_dir = os.path.basename(os.path.dirname(os.path.dirname(input_file)))
             movie_data = find_movie(grandparent_dir)  # or find_movie(output_file)
             if movie_data:
-                official_title = movie_data['original title']
+                # Debug: Print available keys
+                log(f"IMDb movie data keys: {list(movie_data.keys())}")
+                log(f"IMDb movie data: {movie_data}")
+                
+                # Try to get the title with fallbacks
+                official_title = (
+                    movie_data.get('original title') or 
+                    movie_data.get('title') or 
+                    movie_data.get('long imdb title', '').split(' (')[0] or
+                    os.path.splitext(filename)[0]
+                )
                 official_year = movie_data.get('year', '0000')
+                log(f"Using title: {official_title}, year: {official_year}")
             else:
                 # Fallback if IMDb not found
                 official_title = os.path.splitext(filename)[0]
@@ -786,6 +802,20 @@ def encode_file(input_file, resolutions, job_id):
             # 2. Construct final output name (Step 13)
             encoding_used = "x264"  # We used x264 in the HandBrake command
             global encoding_source_format
+            
+            # Set encoding_source_format based on filename or default to BluRay
+            if encoding_source_format is None:
+                if "BluRay" in filename or "bluray" in filename.lower():
+                    encoding_source_format = "BluRay"
+                elif "WEB-DL" in filename or "webdl" in filename.lower():
+                    encoding_source_format = "WEB-DL"
+                elif "HDRip" in filename or "hdrip" in filename.lower():
+                    encoding_source_format = "HDRip"
+                elif "DVDRip" in filename or "dvdrip" in filename.lower():
+                    encoding_source_format = "DVDRip"
+                else:
+                    encoding_source_format = "BluRay"  # Default fallback
+            
             language = detect_languages_ffmpeg(input_file)         # Adjust or auto-detect
             final_filename = os.path.join(
                 output_dir,
@@ -793,53 +823,72 @@ def encode_file(input_file, resolutions, job_id):
                 f"{official_year}.{res}.{encoding_source_format}.{encoding_used}-HANDJOB.mkv"
             )
 
+            # Validate final filename
+            if not official_title or not official_year or not encoding_source_format:
+                log(f"❌ Invalid filename components: title='{official_title}', year='{official_year}', format='{encoding_source_format}'")
+                send_webhook_message(f"❌ Invalid filename components for {filename}@{res}")
+                status_callback(filename, res, "Failed - Invalid filename")
+                continue
+
             # 3. Construct the file title (Step 14)
             file_title = f"{official_title} [{official_year}] {res} {encoding_source_format} - HJ"
 
             # 4. Run the multiplex
-            multiplex_file(
-                video_file=output_file,
-                audio_files=audio_files,
-                subtitle_files=subtitle_files,
-                language=language,
-                resolution=res,
-                source_format=encoding_source_format,
-                encoding_used=encoding_used,
-                final_filename=final_filename,
-                file_title=file_title
-            )
-            update_resolution_status(job_id, filename, res, f"Completed Multiplexing", "85")
+            try:
+                multiplex_file(
+                    video_file=output_file,
+                    audio_files=audio_files,
+                    subtitle_files=subtitle_files,
+                    language=language,
+                    resolution=res,
+                    source_format=encoding_source_format,
+                    encoding_used=encoding_used,
+                    final_filename=final_filename,
+                    file_title=file_title
+                )
+                update_resolution_status(job_id, filename, res, f"Completed Multiplexing", "85")
+            except Exception as e:
+                log(f"❌ Error during multiplexing: {str(e)}")
+                send_webhook_message(f"❌ Multiplexing failed for {filename}@{res}: {str(e)}")
+                status_callback(filename, res, "Multiplexing Failed")
+                continue
             #---------------Screenshots---------------
-            output_dir = os.path.normpath(os.path.join(parent_dir, res))
-            screenshot_output_dir = os.path.join(output_dir, "screenshots")
-            send_webhook_message("Extracting Screenshots for ptp upload")
-            screenshot_bbcodes = config.extract_screenshots(screenshot_output_dir, final_filename)
-            update_resolution_status(job_id, filename, res, f"Extracted Screenshots", "90")
-            send_webhook_message("Creating Approval Document")
-            update_resolution_status(job_id, filename, res, f"Creating Upload Doc", "91")
-            log("Extracting MediaInfo...")
-            mediainfo_text = config.extract_mediainfo(final_filename)
+            try:
+                output_dir = os.path.normpath(os.path.join(parent_dir, res))
+                screenshot_output_dir = os.path.join(output_dir, "screenshots")
+                send_webhook_message("Extracting Screenshots for ptp upload")
+                screenshot_bbcodes = config.extract_screenshots(screenshot_output_dir, final_filename)
+                update_resolution_status(job_id, filename, res, f"Extracted Screenshots", "90")
+                send_webhook_message("Creating Approval Document")
+                update_resolution_status(job_id, filename, res, f"Creating Upload Doc", "91")
+                log("Extracting MediaInfo...")
+                mediainfo_text = config.extract_mediainfo(final_filename)
 
-            log("\nSearching PTP...")
-            movie_title = official_title.replace('.', ' ')
+                log("\nSearching PTP...")
+                movie_title = official_title.replace('.', ' ')
 
-            print(f"Sending {movie_title}, {official_year}, {final_filename}, {original_filename}")
+                print(f"Sending {movie_title}, {official_year}, {final_filename}, {original_filename}")
 
-            ptp_url = config.get_ptp_permalink(movie_title, official_year, final_filename, original_filename)
-            update_resolution_status(job_id, filename, res, f"Fetching Torrent Details", "95")
-            # Step 4: Get movie sources
-            log("\nGetting torrent sources")
-            ptp_sources = config.find_movie_source_cli(ptp_url)
+                ptp_url = config.get_ptp_permalink(movie_title, official_year, final_filename, original_filename)
+                update_resolution_status(job_id, filename, res, f"Fetching Torrent Details", "95")
+                # Step 4: Get movie sources
+                log("\nGetting torrent sources")
+                ptp_sources = config.find_movie_source_cli(ptp_url)
 
-            # Step 5: Generate approval file
-            log("\nGenerating approval document...")
-            approval_output_dir = os.path.join(output_dir, "approval.txt")
-            upload_output_dir = os.path.join(output_dir, "upload.txt")
-            config.generate_approval_form(ptp_url, mediainfo_text, screenshot_bbcodes, approval_output_dir, final_encode_log)
-            config.generate_upload_form(ptp_url, mediainfo_text, screenshot_bbcodes, ptp_sources, upload_output_dir, movie_title)
-            update_resolution_status(job_id, filename, res, f"Completed", "100")
-            print(f"\nProcess complete! Approval file saved to {APPROVAL_FILENAME}")
-            send_completion_webhook(completion_bitrate, res, input_file)
+                # Step 5: Generate approval file
+                log("\nGenerating approval document...")
+                approval_output_dir = os.path.join(output_dir, "approval.txt")
+                upload_output_dir = os.path.join(output_dir, "upload.txt")
+                config.generate_approval_form(ptp_url, mediainfo_text, screenshot_bbcodes, approval_output_dir, final_encode_log)
+                config.generate_upload_form(ptp_url, mediainfo_text, screenshot_bbcodes, ptp_sources, upload_output_dir, movie_title)
+                update_resolution_status(job_id, filename, res, f"Completed", "100")
+                print(f"\nProcess complete! Approval file saved to {APPROVAL_FILENAME}")
+                send_completion_webhook(completion_bitrate, res, input_file)
+            except Exception as e:
+                log(f"❌ Error during post-processing (screenshots/approval): {str(e)}")
+                send_webhook_message(f"❌ Post-processing failed for {filename}@{res}: {str(e)}")
+                # Don't fail the entire encode, just log the error
+                update_resolution_status(job_id, filename, res, f"Completed with warnings", "100")
 
 
         else:
