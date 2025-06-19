@@ -275,17 +275,15 @@ def generate_upload_form(ptp_url, mediainfo_text, screenshot_bbcodes, ptp_source
 [pre]
 
 [/pre]
-[mediainfo]
-{mediainfo_text}
-[/mediainfo]
+[mediainfo] {mediainfo_text} [/mediainfo]
 [pre]
 
 [/pre]
 [align=center][img]https://ptpimg.me/9w353i.png[/img]
 [pre]
 
-[/pre]
-{bbcode_screenshots}
+[/pre] 
+{bbcode_screenshots} 
 [pre]
 
 [/pre]
@@ -300,13 +298,11 @@ def generate_approval_form(ptp_url, mediainfo_text, screenshot_bbcodes, approval
 
     bbcode_screenshots = "\n".join(screenshot_bbcodes)
 
-    content = f"""Requesting approval for encode of [{ptp_url}]
+    content = f"""Requesting approval for encode of {ptp_url}
 
     [mediainfo]{mediainfo_text}[/mediainfo]
     
-    [hide=Encode Screenshots]
-    {bbcode_screenshots}
-    [/hide]
+    [hide=Encode Screenshots]{bbcode_screenshots}[/hide]
     
     [hide=HandBrake log][code]{handbrake_log}[/code][/hide]"""
 
