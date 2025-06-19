@@ -329,6 +329,34 @@ def adjust_cq_for_bitrate(input_file, res, approved_crop):
             return 17
 
 
+def clean_encode_log(log_file_path):
+    """
+    Removes progress lines from the encode log file to keep only relevant information.
+    Progress lines look like: "Encoding: task 1 of 1, 0.14 %"
+    """
+    try:
+        log(f"Cleaning progress lines from log file: {log_file_path}")
+        # Read all lines from the log file
+        with open(log_file_path, 'r', encoding='utf-8', errors="ignore") as f:
+            lines = f.readlines()
+        
+        # Filter out progress lines
+        cleaned_lines = []
+        for line in lines:
+            # Skip lines that match the progress pattern
+            if re.match(r'Encoding: task \d+ of \d+, \d+\.\d+ %', line.strip()):
+                continue
+            cleaned_lines.append(line)
+        
+        # Write the cleaned content back to the file
+        with open(log_file_path, 'w', encoding='utf-8', errors="ignore") as f:
+            f.writelines(cleaned_lines)
+        
+        log(f"✅ Cleaned progress lines from log file: {log_file_path}")
+    except Exception as e:
+        log(f"⚠️ Error cleaning log file: {str(e)}")
+
+
 def run_final_encode(input_file, output_file, approved_crop, cq, settings, final_encode_log, res, attempts=1, max_attempts=5):
     min_bitrate, max_bitrate = BITRATE_RANGES[res]
     send_webhook_message(f"Beginning encode {attempts} with cq {cq}")
@@ -362,6 +390,9 @@ def run_final_encode(input_file, output_file, approved_crop, cq, settings, final
             log_file.write(line)
             log_file.flush()
         process.wait()
+
+    # Clean the log file by removing progress lines
+    clean_encode_log(final_encode_log)
 
     bitrate = get_bitrate(output_file)
     send_webhook_message(f"Encoding attempt #{attempts} completed at {bitrate} with cq {cq} ")
@@ -775,11 +806,11 @@ def encode_file(input_file, resolutions, job_id):
             status_callback(filename, res, "Completed")
             update_resolution_status(job_id, filename, res, f"Starting Multiplexing", "76")
             # ---------------------------
-            # >>> ADD MULTIPLEXING CALL <<<
-            # ---------------------------
             # 1. Find official IMDb data
             grandparent_dir = os.path.basename(os.path.dirname(os.path.dirname(input_file)))
-            movie_data = find_movie(grandparent_dir)  # or find_movie(output_file)
+            # Extract English name if the title is in "Regional Name AKA English Name" format
+            movie_name_for_imdb = extract_english_name_from_aka(grandparent_dir)
+            movie_data = find_movie(movie_name_for_imdb)  # Use extracted English name for IMDb search
             if movie_data:
                 # Debug: Print available keys
                 log(f"IMDb movie data keys: {list(movie_data.keys())}")
@@ -869,7 +900,15 @@ def encode_file(input_file, resolutions, job_id):
 
                 print(f"Sending {movie_title}, {official_year}, {final_filename}, {original_filename}")
 
-                ptp_url = config.get_ptp_permalink(movie_title, official_year, final_filename, original_filename)
+                # Check for saved PTP link first
+                ptp_url = get_ptp_url_from_source_folder(input_file)
+                if ptp_url is None:
+                    # Generate new PTP URL if no saved link found
+                    log("No saved PTP link found, generating new one...")
+                    ptp_url = config.get_ptp_permalink(movie_title, official_year, final_filename, original_filename)
+                else:
+                    log("Using saved PTP link from source folder")
+                
                 update_resolution_status(job_id, filename, res, f"Fetching Torrent Details", "95")
                 # Step 4: Get movie sources
                 log("\nGetting torrent sources")
@@ -895,6 +934,49 @@ def encode_file(input_file, resolutions, job_id):
             log(f"\n❌ Encoding failed for {res}!\n")
             send_webhook_message(f"Encoding failed for {filename}@{res}")
             status_callback(filename, res, "Failed")
+
+def get_ptp_url_from_source_folder(input_file):
+    """
+    Check if there's a saved PTP link in the source folder and return it if found.
+    Returns the saved link or None if not found.
+    """
+    try:
+        # Get the source directory path
+        source_dir = os.path.dirname(input_file)
+        link_file_path = os.path.join(source_dir, "ptp_link.txt")
+        
+        if os.path.exists(link_file_path):
+            with open(link_file_path, 'r', encoding='utf-8') as f:
+                saved_link = f.read().strip()
+            log(f"✅ Found saved PTP link: {saved_link}")
+            return saved_link
+        else:
+            log(f"ℹ️ No saved PTP link found at: {link_file_path}")
+            return None
+    except Exception as e:
+        log(f"⚠️ Error reading saved PTP link: {str(e)}")
+        return None
+
+
+def extract_english_name_from_aka(title):
+    """
+    Extract the English name from titles in format "Regional Name AKA English Name".
+    Returns the English name if found, otherwise returns the original title.
+    """
+    if not title:
+        return title
+    
+    # Look for "AKA" pattern (case insensitive)
+    aka_pattern = r'\s+AKA\s+(.+)$'
+    match = re.search(aka_pattern, title, re.IGNORECASE)
+    
+    if match:
+        english_name = match.group(1).strip()
+        log(f"✅ Extracted English name from AKA format: '{english_name}' from '{title}'")
+        return english_name
+    
+    return title
+
 
 def determine_encodes(file_path):
     """
@@ -984,5 +1066,20 @@ def start_encoding(file, job_id=None):
         print(f"Failed to notify completion: {e}")
 
 if __name__ == "__main__":
+    # Test the AKA extraction function
+    test_cases = [
+        "Los Rodríguez y el más allá AKA The Rodriguez and the Beyond",
+        "Some Regional Movie AKA The English Title",
+        "Just English Title",
+        "Another Regional AKA English Version",
+        "No AKA here",
+        ""
+    ]
+    
+    print("Testing AKA extraction function:")
+    for test_case in test_cases:
+        result = extract_english_name_from_aka(test_case)
+        print(f"Input: '{test_case}' -> Output: '{result}'")
+    
     # Get the file path from the command-line argument
     start_encoding(r"W:\Encodes\Bajirao Mastani\source\Bajirao Mastani 2015 1080p Blu-ray Remux AVC TrueHD 7.1 - KRaLiMaRKo.mkv")

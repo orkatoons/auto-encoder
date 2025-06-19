@@ -84,7 +84,7 @@ def get_best_torrent_from_cli(movie_url):
         for key, value in codec_preference.items():
             if key in codec_lower:
                 return value
-        return 999  # Lowest priority for unknown codecs
+        return 999  # Lowest priority for unknown 
     
     # Sort by codec preference and then by seeders
     torrents.sort(key=lambda x: (get_codec_priority(x["Codec"]), -x["Seeders"]))
@@ -224,6 +224,15 @@ def download_torrent(final_link, movie_name):
         if not torrent_files:
             print("[FLASK] No torrent file found after download")
             return None
+        
+        # Save the final link to a text file in the source folder
+        link_file_path = source_dir / "ptp_link.txt"
+        try:
+            with open(link_file_path, 'w', encoding='utf-8') as f:
+                f.write(final_link)
+            print(f"[FLASK] ✅ Saved PTP link to: {link_file_path}")
+        except Exception as e:
+            print(f"[FLASK] ⚠️ Failed to save PTP link: {str(e)}")
             
         return str(torrent_files[0])
         
