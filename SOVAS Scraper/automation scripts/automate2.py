@@ -55,6 +55,22 @@ def wait_if_paused():
     while pause_flag[0]:
         time.sleep(0.1)
 
+def has_existing_email(person_data):
+    """Check if the person already has an email in their data"""
+    # Check the main Email field
+    if person_data.get("Email") and person_data["Email"] not in [None, "", "null"]:
+        return True
+    
+    # Check the Emails array
+    emails = person_data.get("Emails", [])
+    if isinstance(emails, list) and len(emails) > 0:
+        # Filter out empty or invalid emails
+        valid_emails = [email for email in emails if email and email not in [None, "", "null"]]
+        if valid_emails:
+            return True
+    
+    return False
+
 def extract_emails_from_url(url):
     try:
         headers = {'User-Agent': random.choice(USER_AGENTS)}
@@ -98,6 +114,14 @@ for i in range(start_index, len(data)):
     name = data[i].get("Name", "")
     if not name:
         print(f"❌ No name at index {i}, skipping...")
+        continue
+
+    # Check if person already has an email
+    if has_existing_email(data[i]):
+        print(f"⏭️ Skipping [{i + 1}/{len(data)}]: {name} - already has email")
+        # Still save progress
+        with open(progress_path, 'w') as f:
+            json.dump({"last_index": i + 1}, f)
         continue
 
     query = f"@gmail.com {name} voice actor"
