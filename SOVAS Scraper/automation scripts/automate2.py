@@ -6,6 +6,7 @@ import re
 import requests
 import html
 import random
+import shutil
 from urllib.parse import unquote
 from googlesearch import search
 from bs4 import BeautifulSoup
@@ -16,8 +17,10 @@ base_dir = r"C:\Encode Tools\auto-encoder\SOVAS Scraper"
 voice_actors_path = os.path.join(base_dir, "json data", "voice_actors.json")
 final_data_path = os.path.join(base_dir, "json data", "final_data.json")
 progress_path = os.path.join(base_dir, "json data", "progress2.json")
+saved_pages_dir = os.path.join(base_dir, "saved offline pages")
 
 MAX_RATE_LIMIT_HITS = 1  # Changed to 1 to end on first rate limit
+MAX_SEARCHES_BEFORE_RATE_LIMIT = 50  # Allow 50 searches before rate limit
 COOLDOWN_TIME = 4800  # 80 minutes (but we won't use this anymore)
 
 USER_AGENTS = [
@@ -39,6 +42,20 @@ def notify_completion(scraped_pages):
             print(f"Warning: Failed to notify completion: {response.status_code} {response.text}")
     except Exception as e:
         print(f"Warning: Error notifying completion: {str(e)}")
+
+def cleanup_html_files():
+    """Clean up saved HTML files at the end"""
+    if os.path.exists(saved_pages_dir):
+        try:
+            for item in os.listdir(saved_pages_dir):
+                item_path = os.path.join(saved_pages_dir, item)
+                if os.path.isfile(item_path) or os.path.islink(item_path):
+                    os.unlink(item_path)
+                elif os.path.isdir(item_path):
+                    shutil.rmtree(item_path)
+            print("🧹 Cleaned up saved HTML files")
+        except Exception as e:
+            print(f"⚠️ Failed to clean up HTML files: {e}")
 
 # Load voice_actors.json data
 if not os.path.exists(voice_actors_path):
@@ -115,110 +132,129 @@ consecutive_rate_limit_hits = 0
 google_search_count = 0
 emails_found_count = 0
 
-for i in range(start_index, len(voice_actors_data)):
-    wait_if_paused()
+try:
+    for i in range(start_index, len(voice_actors_data)):
+        wait_if_paused()
 
-    name = voice_actors_data[i].get("Name", "")
-    if not name:
-        print(f"❌ No name at index {i}, skipping...")
-        continue
-
-    # Check if person needs email search
-    if not needs_email_search(voice_actors_data[i]):
-        print(f"⏭️ Skipping [{i + 1}/{len(voice_actors_data)}]: {name} - already has email")
-        # Still save progress
-        with open(progress_path, 'w') as f:
-            json.dump({"last_index": i + 1}, f)
-        continue
-
-    query = f"@gmail.com {name} voice actor"
-    print(f"\n🔍 Searching [{i + 1}/{len(voice_actors_data)}]: {query}")
-
-    try:
-        results = list(search(query, num_results=5))
-        consecutive_rate_limit_hits = 0
-        google_search_count += 1
-    except Exception as e:
-        if "429" in str(e):
-            print("🚨 Google rate-limited. Ending session and saving progress...")
-            # Save current state and exit
-            with open(voice_actors_path, 'w', encoding='utf-8') as f:
-                json.dump(voice_actors_data, f, ensure_ascii=False, indent=4)
-            with open(progress_path, 'w') as f:
-                json.dump({"last_index": i}, f)
-            notify_completion(google_search_count)
-            print(f"🎉 Session ended. Processed {google_search_count} searches, found {emails_found_count} emails.")
-            exit(0)
-        else:
-            print(f"❌ Google search failed: {e}")
-            # Mark as unavailable due to search error
-            voice_actors_data[i]['Email'] = "unavailable"
-            print("❌ Marked as unavailable due to search error.")
+        name = voice_actors_data[i].get("Name", "")
+        if not name:
+            print(f"❌ No name at index {i}, skipping...")
             continue
 
-    time.sleep(random.uniform(3, 10))
+        # Check if person needs email search
+        if not needs_email_search(voice_actors_data[i]):
+            print(f"⏭️ Skipping [{i + 1}/{len(voice_actors_data)}]: {name} - already has email")
+            # Still save progress
+            with open(progress_path, 'w') as f:
+                json.dump({"last_index": i + 1}, f)
+            continue
 
-    best_email = ""
-    max_match_count = 0
-    name_words = [w.lower() for w in name.split()]
+        query = f"@gmail.com {name} voice actor"
+        print(f"\n🔍 Searching [{i + 1}/{len(voice_actors_data)}]: {query}")
 
-    # Track if any URLs were successfully scraped
-    successful_scrapes = 0
-    total_urls = len(results)
-
-    for url in results:
-        print(f"🌐 Scraping: {url}")
         try:
-            emails = extract_emails_from_url(url)
+            results = list(search(query, num_results=5))
             consecutive_rate_limit_hits = 0
-            successful_scrapes += 1
+            google_search_count += 1
         except Exception as e:
             if "429" in str(e):
-                print("🚨 Scraping rate-limited. Ending session and saving progress...")
+                print("🚨 Google rate-limited. Ending session and saving progress...")
                 # Save current state and exit
                 with open(voice_actors_path, 'w', encoding='utf-8') as f:
                     json.dump(voice_actors_data, f, ensure_ascii=False, indent=4)
                 with open(progress_path, 'w') as f:
                     json.dump({"last_index": i}, f)
-                notify_completion(google_search_count)
                 print(f"🎉 Session ended. Processed {google_search_count} searches, found {emails_found_count} emails.")
+                cleanup_html_files()
+                notify_completion(google_search_count)
                 exit(0)
             else:
-                print(f"❌ Error scraping URL: {e}")
+                print(f"❌ Google search failed: {e}")
+                # Mark as unavailable due to search error
+                voice_actors_data[i]['Email'] = "unavailable"
+                print("❌ Marked as unavailable due to search error.")
                 continue
 
-        for email in emails:
-            local_part = email.split('@')[0].lower()
-            match_count = sum(word in local_part for word in name_words)
-            if match_count > max_match_count:
-                best_email = email
-                max_match_count = match_count
+        time.sleep(random.uniform(3, 10))
 
-        time.sleep(random.uniform(1, 3))
+        best_email = ""
+        max_match_count = 0
+        name_words = [w.lower() for w in name.split()]
 
-    # Update voice_actors.json and final_data.json based on results
-    if successful_scrapes == 0 and total_urls > 0:
-        voice_actors_data[i]['Email'] = "unavailable"
-        print("❌ All URLs failed to scrape. Marked as unavailable.")
-    elif best_email:
-        voice_actors_data[i]['Email'] = best_email
-        emails_found_count += 1
-        print(f"✅ Found Email: {best_email}")
-        
-        # Add complete entry to final_data.json at the top
-        complete_entry = voice_actors_data[i].copy()
-        final_data.insert(0, complete_entry)  # Insert at the beginning
-    else:
-        voice_actors_data[i]['Email'] = "unavailable"
-        print("❌ No email found. Marked as unavailable for future skips.")
+        # Track if any URLs were successfully scraped
+        successful_scrapes = 0
+        total_urls = len(results)
 
-    # Save both files after each entry
+        for url in results:
+            print(f"🌐 Scraping: {url}")
+            try:
+                emails = extract_emails_from_url(url)
+                consecutive_rate_limit_hits = 0
+                successful_scrapes += 1
+            except Exception as e:
+                if "429" in str(e):
+                    print("🚨 Scraping rate-limited. Ending session and saving progress...")
+                    # Save current state and exit
+                    with open(voice_actors_path, 'w', encoding='utf-8') as f:
+                        json.dump(voice_actors_data, f, ensure_ascii=False, indent=4)
+                    with open(progress_path, 'w') as f:
+                        json.dump({"last_index": i}, f)
+                    print(f"🎉 Session ended. Processed {google_search_count} searches, found {emails_found_count} emails.")
+                    cleanup_html_files()
+                    notify_completion(google_search_count)
+                    exit(0)
+                else:
+                    print(f"❌ Error scraping URL: {e}")
+                    continue
+
+            for email in emails:
+                local_part = email.split('@')[0].lower()
+                match_count = sum(word in local_part for word in name_words)
+                if match_count > max_match_count:
+                    best_email = email
+                    max_match_count = match_count
+
+            time.sleep(random.uniform(1, 3))
+
+        # Update voice_actors.json and final_data.json based on results
+        if successful_scrapes == 0 and total_urls > 0:
+            voice_actors_data[i]['Email'] = "unavailable"
+            print("❌ All URLs failed to scrape. Marked as unavailable.")
+        elif best_email:
+            voice_actors_data[i]['Email'] = best_email
+            emails_found_count += 1
+            print(f"✅ Found Email: {best_email}")
+            
+            # Add complete entry to final_data.json at the top
+            complete_entry = voice_actors_data[i].copy()
+            final_data.insert(0, complete_entry)  # Insert at the beginning
+        else:
+            voice_actors_data[i]['Email'] = "unavailable"
+            print("❌ No email found. Marked as unavailable for future skips.")
+
+        # Save both files after each entry
+        with open(voice_actors_path, 'w', encoding='utf-8') as f:
+            json.dump(voice_actors_data, f, ensure_ascii=False, indent=4)
+        with open(final_data_path, 'w', encoding='utf-8') as f:
+            json.dump(final_data, f, ensure_ascii=False, indent=4)
+        with open(progress_path, 'w') as f:
+            json.dump({"last_index": i + 1}, f)
+
+        # Check if we've reached the search limit
+        if google_search_count >= MAX_SEARCHES_BEFORE_RATE_LIMIT:
+            print(f"🎯 Reached {MAX_SEARCHES_BEFORE_RATE_LIMIT} searches. Ending session...")
+            break
+
+    print(f"\n🎉 Done! Processed {google_search_count} searches, found {emails_found_count} emails.")
+
+except KeyboardInterrupt:
+    print("\n⚠️ Script interrupted by user. Saving progress...")
     with open(voice_actors_path, 'w', encoding='utf-8') as f:
         json.dump(voice_actors_data, f, ensure_ascii=False, indent=4)
-    with open(final_data_path, 'w', encoding='utf-8') as f:
-        json.dump(final_data, f, ensure_ascii=False, indent=4)
     with open(progress_path, 'w') as f:
         json.dump({"last_index": i + 1}, f)
 
-print(f"\n🎉 Done! Processed {google_search_count} searches, found {emails_found_count} emails.")
-notify_completion(google_search_count)
+finally:
+    # Always clean up and notify at the end
+    cleanup_html_files()
+    notify_completion(google_search_count)
