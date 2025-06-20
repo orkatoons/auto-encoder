@@ -195,10 +195,16 @@ try:
     seen = set()
     deduped_final_data = []
     for entry in final_data:
-        key = (entry["Name"].lower(), entry["Work Samples"].lower())
-        if key not in seen:
-            deduped_final_data.append(entry)
-            seen.add(key)
+        name = entry.get("Name", "")
+        work_samples = entry.get("Work Samples", "")
+        if name and work_samples:  # Only process if both fields have values
+            key = (name.lower(), work_samples.lower())
+            if key not in seen:
+                deduped_final_data.append(entry)
+                seen.add(key)
+        else:
+            # Skip entries with missing data
+            print(f"🔍 DEBUG: Skipping entry with missing data in final dedup: '{name}' -> '{work_samples}'")
 
     print(f"🔍 DEBUG: Final data count after deduplication: {len(deduped_final_data)}")
     print(f"🔍 DEBUG: Saving to: {output_file}")
