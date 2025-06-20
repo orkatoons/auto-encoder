@@ -8,5 +8,47 @@
       }
     },
     "updated_at": "2025-06-03T15:07:19.049476"
+  },
+  "sU4DuOe2hRzw-fieohALu": {
+    "filename": "W:\\Encodes\\Los RodrÃƒÂ­guez y el mÃƒÂ¡s allÃƒÂ¡ AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv",
+    "resolutions": {
+      "576p": {
+        "status": "Completed",
+        "progress": "100"
+      },
+      "480p": {
+        "status": "Completed",
+        "progress": "100"
+      }
+    },
+    "updated_at": "2025-06-19T16:14:35.419429"
+  },
+  "3avA7em8VKUCp0fdplgCi": {
+    "filename": "W:\\Encodes\\Los RodrÃ­guez y el mÃ¡s allÃ¡ AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv",
+    "resolutions": {
+      "576p": {
+        "status": "Starting Multiplexing",
+        "progress": "76"
+      },
+      "480p": {
+        "status": "Starting Multiplexing",
+        "progress": "76"
+      }
+    },
+    "updated_at": "2025-06-20T03:18:37.049032"
+  },
+  "bK8Gj2nh--G6lDdatFKTx": {
+    "filename": "W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv",
+    "resolutions": {
+      "576p": {
+        "status": "Completed",
+        "progress": "100"
+      },
+      "480p": {
+        "status": "Proceeding to final encode",
+        "progress": "25"
+      }
+    },
+    "updated_at": "2025-06-20T12:14:47.843824"
   }
 }

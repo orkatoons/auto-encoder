@@ -1,0 +1,704 @@
+Found resolutions for Los Rodríguez y el más allá AKA The Rodriguez and the Beyond: ['576p', '480p']
+MKV merge output:
+{'mkvmerge_path': 'mkvmerge', 'title': None, '_chapters_file': None, '_chapter_language': None, '_global_tags_file': None, '_link_to_previous_file': None, '_link_to_next_file': None, 'tracks': [{'_track_codec': 'AVC/H.264/MPEG-4p10', '_track_type': 'video', 'mkvmerge_path': 'mkvmerge', '_file_path': 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv', '_track_id': 0, 'track_name': None, '_language': 'und', '_tags': None, 'default_track': True, 'forced_track': False, 'no_chapters': False, 'no_global_tags': False, 'no_track_tags': False, 'no_attachments': False}, {'_track_codec': 'DTS-HD Master Audio', '_track_type': 'audio', 'mkvmerge_path': 'mkvmerge', '_file_path': 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv', '_track_id': 1, 'track_name': 'Original Spanish Surround', '_language': 'spa', '_tags': None, 'default_track': True, 'forced_track': False, 'no_chapters': False, 'no_global_tags': False, 'no_track_tags': False, 'no_attachments': False}, {'_track_codec': 'HDMV PGS', '_track_type': 'subtitles', 'mkvmerge_path': 'mkvmerge', '_file_path': 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv', '_track_id': 2, 'track_name': None, '_language': 'spa', '_tags': None, 'default_track': False, 'forced_track': False, 'no_chapters': False, 'no_global_tags': False, 'no_track_tags': False, 'no_attachments': False}, {'_track_codec': 'HDMV PGS', '_track_type': 'subtitles', 'mkvmerge_path': 'mkvmerge', '_file_path': 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv', '_track_id': 3, 'track_name': None, '_language': 'eng', '_tags': None, 'default_track': False, 'forced_track': False, 'no_chapters': False, 'no_global_tags': False, 'no_track_tags': False, 'no_attachments': False}], 'attachments': [], '_split_options': []}
+Found track: {'_track_codec': 'AVC/H.264/MPEG-4p10', '_track_type': 'video', 'mkvmerge_path': 'mkvmerge', '_file_path': 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv', '_track_id': 0, 'track_name': None, '_language': 'und', '_tags': None, 'default_track': True, 'forced_track': False, 'no_chapters': False, 'no_global_tags': False, 'no_track_tags': False, 'no_attachments': False}
+Found track: {'_track_codec': 'DTS-HD Master Audio', '_track_type': 'audio', 'mkvmerge_path': 'mkvmerge', '_file_path': 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv', '_track_id': 1, 'track_name': 'Original Spanish Surround', '_language': 'spa', '_tags': None, 'default_track': True, 'forced_track': False, 'no_chapters': False, 'no_global_tags': False, 'no_track_tags': False, 'no_attachments': False}
+Found track: {'_track_codec': 'HDMV PGS', '_track_type': 'subtitles', 'mkvmerge_path': 'mkvmerge', '_file_path': 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv', '_track_id': 2, 'track_name': None, '_language': 'spa', '_tags': None, 'default_track': False, 'forced_track': False, 'no_chapters': False, 'no_global_tags': False, 'no_track_tags': False, 'no_attachments': False}
+Running command: C:\Program Files\MKVToolNix\mkvextract.exe tracks W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\source\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv 2:W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\source\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS_subtitle_2_spa.sup
+Found track: {'_track_codec': 'HDMV PGS', '_track_type': 'subtitles', 'mkvmerge_path': 'mkvmerge', '_file_path': 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv', '_track_id': 3, 'track_name': None, '_language': 'eng', '_tags': None, 'default_track': False, 'forced_track': False, 'no_chapters': False, 'no_global_tags': False, 'no_track_tags': False, 'no_attachments': False}
+Running command: C:\Program Files\MKVToolNix\mkvextract.exe tracks W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\source\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv 3:W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\source\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS_subtitle_3_eng.sup
+Extraction complete!
+MKV merge output:
+{'mkvmerge_path': 'mkvmerge', 'title': None, '_chapters_file': None, '_chapter_language': None, '_global_tags_file': None, '_link_to_previous_file': None, '_link_to_next_file': None, 'tracks': [{'_track_codec': 'AVC/H.264/MPEG-4p10', '_track_type': 'video', 'mkvmerge_path': 'mkvmerge', '_file_path': 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv', '_track_id': 0, 'track_name': None, '_language': 'und', '_tags': None, 'default_track': True, 'forced_track': False, 'no_chapters': False, 'no_global_tags': False, 'no_track_tags': False, 'no_attachments': False}, {'_track_codec': 'DTS-HD Master Audio', '_track_type': 'audio', 'mkvmerge_path': 'mkvmerge', '_file_path': 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv', '_track_id': 1, 'track_name': 'Original Spanish Surround', '_language': 'spa', '_tags': None, 'default_track': True, 'forced_track': False, 'no_chapters': False, 'no_global_tags': False, 'no_track_tags': False, 'no_attachments': False}, {'_track_codec': 'HDMV PGS', '_track_type': 'subtitles', 'mkvmerge_path': 'mkvmerge', '_file_path': 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv', '_track_id': 2, 'track_name': None, '_language': 'spa', '_tags': None, 'default_track': False, 'forced_track': False, 'no_chapters': False, 'no_global_tags': False, 'no_track_tags': False, 'no_attachments': False}, {'_track_codec': 'HDMV PGS', '_track_type': 'subtitles', 'mkvmerge_path': 'mkvmerge', '_file_path': 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv', '_track_id': 3, 'track_name': None, '_language': 'eng', '_tags': None, 'default_track': False, 'forced_track': False, 'no_chapters': False, 'no_global_tags': False, 'no_track_tags': False, 'no_attachments': False}], 'attachments': [], '_split_options': []}
+Found track: {'_track_codec': 'AVC/H.264/MPEG-4p10', '_track_type': 'video', 'mkvmerge_path': 'mkvmerge', '_file_path': 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv', '_track_id': 0, 'track_name': None, '_language': 'und', '_tags': None, 'default_track': True, 'forced_track': False, 'no_chapters': False, 'no_global_tags': False, 'no_track_tags': False, 'no_attachments': False}
+Found track: {'_track_codec': 'DTS-HD Master Audio', '_track_type': 'audio', 'mkvmerge_path': 'mkvmerge', '_file_path': 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv', '_track_id': 1, 'track_name': 'Original Spanish Surround', '_language': 'spa', '_tags': None, 'default_track': True, 'forced_track': False, 'no_chapters': False, 'no_global_tags': False, 'no_track_tags': False, 'no_attachments': False}
+Found track: {'_track_codec': 'HDMV PGS', '_track_type': 'subtitles', 'mkvmerge_path': 'mkvmerge', '_file_path': 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv', '_track_id': 2, 'track_name': None, '_language': 'spa', '_tags': None, 'default_track': False, 'forced_track': False, 'no_chapters': False, 'no_global_tags': False, 'no_track_tags': False, 'no_attachments': False}
+Running command: C:\Program Files\MKVToolNix\mkvextract.exe tracks W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\source\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv 2:W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\source\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS_subtitle_2_spa.sup
+Found track: {'_track_codec': 'HDMV PGS', '_track_type': 'subtitles', 'mkvmerge_path': 'mkvmerge', '_file_path': 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv', '_track_id': 3, 'track_name': None, '_language': 'eng', '_tags': None, 'default_track': False, 'forced_track': False, 'no_chapters': False, 'no_global_tags': False, 'no_track_tags': False, 'no_attachments': False}
+Running command: C:\Program Files\MKVToolNix\mkvextract.exe tracks W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\source\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv 3:W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\source\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS_subtitle_3_eng.sup
+Extraction complete!
+PROGRESS::The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv::5
+CompletedProcess(args=['C:\\Program Files\\MediaInfo_CLI_25.03_Windows_x64\\MediaInfo.exe', 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv'], returncode=0, stdout="General\nUnique ID                                : 87485695788471892472289258546573889678 (0x41D121D2C7000373D8CA33D101A8508E)\nComplete name                            : W:\\Encodes\\Los RodrÃ\xadguez y el mÃ¡s allÃ¡ AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv\nFormat                                   : Matroska\nFormat version                           : Version 4\nFile size                                : 10.9 GiB\nDuration                                 : 1 h 56 min\nOverall bit rate mode                    : Variable\nOverall bit rate                         : 13.4 Mb/s\nFrame rate                               : 24.000 FPS\nEncoded date                             : 2024-03-27 15:04:20 UTC\nWriting application                      : mkvmerge v80.0 ('Roundabout') 64-bit\nWriting library                          : libebml v1.4.4 + libmatroska v1.7.1\n\nVideo\nID                                       : 1\nID in the original source medium         : 4113 (0x1011)\nFormat                                   : AVC\nFormat/Info                              : Advanced Video Codec\nFormat profile                           : High@L4.1\nFormat settings                          : CABAC / 4 Ref Frames\nFormat settings, CABAC                   : Yes\nFormat settings, Reference frames        : 4 frames\nFormat settings, Slice count             : 4 slices per frame\nCodec ID                                 : V_MPEG4/ISO/AVC\nDuration                                 : 1 h 56 min\nBit rate mode                            : Variable\nBit rate                                 : 9 997 kb/s\nMaximum bit rate                         : 13.0 Mb/s\nWidth                                    : 1 920 pixels\nHeight                                   : 1 080 pixels\nDisplay aspect ratio                     : 16:9\nFrame rate mode                          : Constant\nFrame rate                               : 24.000 FPS\nColor space                              : YUV\nChroma subsampling                       : 4:2:0\nBit depth                                : 8 bits\nScan type                                : Progressive\nBits/(Pixel*Frame)                       : 0.201\nStream size                              : 8.13 GiB (75%)\nDefault                                  : Yes\nForced                                   : No\nColor range                              : Limited\nColor primaries                          : BT.709\nTransfer characteristics                 : BT.709\nMatrix coefficients                      : BT.709\nOriginal source medium                   : Blu-ray\n\nAudio\nID                                       : 2\nID in the original source medium         : 4352 (0x1100)\nFormat                                   : DTS XLL\nFormat/Info                              : Digital Theater Systems\nCommercial name                          : DTS-HD Master Audio\nCodec ID                                 : A_DTS\nDuration                                 : 1 h 56 min\nBit rate mode                            : Variable\nBit rate                                 : 3 389 kb/s\nChannel(s)                               : 6 channels\nChannel layout                           : C L R Ls Rs LFE\nSampling rate                            : 48.0 kHz\nFrame rate                               : 93.750 FPS (512 SPF)\nBit depth                                : 24 bits\nCompression mode                         : Lossless\nStream size                              : 2.75 GiB (25%)\nTitle                                    : Original Spanish Surround\nLanguage                                 : Spanish\nDefault                                  : Yes\nForced                                   : No\nOriginal source medium                   : Blu-ray\n\nText #1\nID                                       : 3\nID in the original source medium         : 4608 (0x1200)\nFormat                                   : PGS\nMuxing mode                              : zlib\nCodec ID                                 : S_HDMV/PGS\nCodec ID/Info                            : Picture based subtitle format used on BDs/HD-DVDs\nDuration                                 : 1 h 40 min\nBit rate                                 : 1 239 b/s\nFrame rate                               : 0.017 FPS\nCount of elements                        : 104\nStream size                              : 908 KiB (0%)\nLanguage                                 : Spanish\nDefault                                  : No\nForced                                   : No\nOriginal source medium                   : Blu-ray\n\nText #2\nID                                       : 4\nID in the original source medium         : 4609 (0x1201)\nFormat                                   : PGS\nMuxing mode                              : zlib\nCodec ID                                 : S_HDMV/PGS\nCodec ID/Info                            : Picture based subtitle format used on BDs/HD-DVDs\nDuration                                 : 1 h 52 min\nBit rate                                 : 46.9 kb/s\nFrame rate                               : 0.540 FPS\nCount of elements                        : 3644\nStream size                              : 37.8 MiB (0%)\nLanguage                                 : English\nDefault                                  : No\nForced                                   : No\nOriginal source medium                   : Blu-ray\n\nMenu\n00:00:00.000                             : en:chapter01 \n00:05:18.458                             : en:chapter02 \n00:14:55.125                             : en:chapter03 \n00:20:17.416                             : en:chapter04 \n00:27:08.833                             : en:chapter05 \n00:38:35.333                             : en:chapter06 \n00:45:59.791                             : en:chapter07 \n00:52:44.708                             : en:chapter08 \n00:58:30.416                             : en:chapter09 \n01:03:15.791                             : en:chapter10 \n01:10:48.791                             : en:chapter11 \n01:16:32.875                             : en:chapter12 \n01:27:20.708                             : en:chapter13 \n01:33:19.958                             : en:chapter14 \n01:38:46.625                             : en:chapter15 \n01:46:47.416                             : en:chapter16 \n01:50:03.208                             : en:chapter17 \n\n\n", stderr='')
+🎵 Scanning audio tracks for The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS...
+🎯 Best track: 2 - DTS Master Audio, Spanish, 5.1 channels, 24 bits, 48kHz, dialnorm: 0dB
+🔧 Extracting audio...
+Running in fast mode                                                           
+Keeping dialnorm                                                               
+analyze: 1%
+analyze: 2%
+analyze: 3%
+analyze: 4%
+analyze: 5%
+analyze: 6%
+analyze: 7%
+analyze: 8%
+analyze: 9%
+analyze: 10%
+analyze: 11%
+analyze: 12%
+analyze: 13%
+analyze: 14%
+analyze: 15%
+analyze: 16%
+analyze: 17%
+analyze: 18%
+analyze: 19%
+analyze: 20%
+analyze: 21%
+analyze: 22%
+analyze: 23%
+analyze: 24%
+analyze: 25%
+analyze: 26%
+analyze: 27%
+analyze: 28%
+analyze: 29%
+analyze: 30%
+analyze: 31%
+analyze: 32%
+analyze: 33%
+analyze: 34%
+analyze: 35%
+analyze: 36%
+analyze: 37%
+analyze: 38%
+analyze: 39%
+analyze: 40%
+analyze: 41%
+analyze: 42%
+analyze: 43%
+analyze: 44%
+analyze: 45%
+analyze: 46%
+analyze: 47%
+analyze: 48%
+analyze: 49%
+analyze: 50%
+analyze: 51%
+analyze: 52%
+analyze: 53%
+analyze: 54%
+analyze: 55%
+analyze: 56%
+analyze: 57%
+analyze: 58%
+analyze: 59%
+analyze: 60%
+analyze: 61%
+analyze: 62%
+analyze: 63%
+analyze: 64%
+analyze: 65%
+analyze: 66%
+analyze: 67%
+analyze: 68%
+analyze: 69%
+analyze: 70%
+analyze: 71%
+analyze: 72%
+analyze: 73%
+analyze: 74%
+analyze: 75%
+analyze: 76%
+analyze: 77%
+analyze: 78%
+analyze: 79%
+analyze: 80%
+analyze: 81%
+analyze: 82%
+analyze: 83%
+analyze: 84%
+analyze: 85%
+analyze: 86%
+analyze: 87%
+analyze: 88%
+analyze: 89%
+analyze: 90%
+analyze: 91%
+analyze: 92%
+analyze: 93%
+analyze: 94%
+analyze: 95%
+analyze: 96%
+analyze: 97%
+analyze: 98%
+analyze: 99%
+analyze: 100%
+MKV, 1 video track, 1 audio track, 2 subtitle tracks, 1:56:22, 24p             
+1: h264/AVC, 1080p24 (16:9)                                                    
+2: DTS Master Audio, Spanish, 5.1 channels, 24 bits, 48kHz, dialnorm: 0dB      
+   (core: DTS, 5.1 channels, 768kbps, 48kHz, dialnorm: 0dB)                    
+   "Original Spanish Surround"                                                 
+3: Subtitle (PGS), Spanish                                                     
+4: Subtitle (PGS), English                                                     
+a02 Extracting audio track number 2...                                         
+a02 Decoding with libDcaDec DTS Decoder...                                     
+a02 Remapping channels...                                                      
+a02 Encoding AC3 <640kbps> with libAften...                                    
+a02 Creating file "W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS@576p.ac3"...
+process: 1%
+process: 2%
+process: 3%
+process: 4%
+process: 5%
+process: 6%
+process: 7%
+process: 8%
+process: 9%
+process: 10%
+process: 11%
+process: 12%
+process: 13%
+process: 14%
+process: 15%
+process: 16%
+process: 17%
+process: 18%
+process: 19%
+process: 20%
+process: 21%
+process: 22%
+process: 23%
+process: 24%
+process: 25%
+process: 26%
+process: 27%
+process: 28%
+process: 29%
+process: 30%
+process: 31%
+process: 32%
+process: 33%
+process: 34%
+process: 35%
+process: 36%
+process: 37%
+process: 38%
+process: 39%
+process: 40%
+process: 41%
+process: 42%
+process: 43%
+process: 44%
+process: 45%
+process: 46%
+process: 47%
+process: 48%
+process: 49%
+process: 50%
+process: 51%
+process: 52%
+process: 53%
+process: 54%
+process: 55%
+process: 56%
+process: 57%
+process: 58%
+process: 59%
+process: 60%
+process: 61%
+process: 62%
+process: 63%
+process: 64%
+process: 65%
+process: 66%
+process: 67%
+process: 68%
+process: 69%
+process: 70%
+process: 71%
+process: 72%
+process: 73%
+process: 74%
+process: 75%
+process: 76%
+process: 77%
+process: 78%
+process: 79%
+process: 80%
+process: 81%
+process: 82%
+process: 83%
+process: 84%
+process: 85%
+process: 86%
+process: 87%
+process: 88%
+process: 89%
+process: 90%
+process: 91%
+process: 92%
+process: 93%
+process: 94%
+process: 95%
+process: 96%
+process: 97%
+process: 98%
+process: 99%
+process: 100%
+a02 The original audio track has a constant bit depth of 24 bits.              
+Video track 1 contains 167559 frames.                                          
+eac3to processing took 2 minutes, 9 seconds.                                   
+Done.                                                                          
+
+Audio extracted
+Extracting frame
+Getting frame
+Crop values for frame at 300s: 
+Top: 138, Bottom: 138, Left: 0, Right: 0
+Extracting frame
+Getting frame
+Crop values for frame at 1000s: 
+Top: 138, Bottom: 138, Left: 0, Right: 0
+Extracting frame
+Getting frame
+Crop values for frame at 1500s: 
+Top: 138, Bottom: 136, Left: 0, Right: 0
+Extracting frame
+Getting frame
+Crop values for frame at 2500s: 
+Top: 138, Bottom: 138, Left: 0, Right: 0
+CQ is 17 Bitrate is  2931
+Output file path: W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS@576p.mkv
+Final ranges are:  2500 1971 3500
+Final ranges are:  2500 2334 3500
+Final ranges are:  2500 2781 3500
+Trying IMDb search: Los Rodríguez y el más allá AKA The Rodriguez and the Beyond
+✅ Found movie: The Rodriguez and the Beyond (2019)
+DEBUG: Movie data keys: ['title', 'kind', 'cover url', 'year', 'plot', 'canonical title', 'long imdb title', 'long imdb canonical title', 'smart canonical title', 'smart long imdb canonical title', 'full-size cover url']
+DEBUG: Movie data: The Rodriguez and the Beyond
+
+    Video File       : W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS@576p.mkv
+    Audio Files      : ['W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\576p\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS@576p.ac3']
+    Subtitle Files   : ['W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS_subtitle_2_spa.sup', 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS_subtitle_3_eng.sup']
+    Language         : spa
+    Resolution       : 576p
+    Source Format    : BluRay
+    Encoding Used    : x264
+    Final Filename   : W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.and.the.Beyond.2019.576p.BluRay.x264-HANDJOB.mkv
+    File Title       : The Rodriguez and the Beyond [2019] 576p BluRay - HJ
+    
+Running command: mkvmerge -o W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.and.the.Beyond.2019.576p.BluRay.x264-HANDJOB.mkv --title The Rodriguez and the Beyond [2019] 576p BluRay - HJ --no-global-tags --no-chapters W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS@576p.mkv --language 0:spa --default-track 0:yes W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS@576p.ac3 --language 0:spa --forced-track 0:no --default-track 0:no W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\source\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS_subtitle_2_spa.sup --language 0:eng --forced-track 0:no --default-track 0:no W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\source\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS_subtitle_3_eng.sup
+mkvmerge v90.0 ('Hanging On') 64-bit
+'W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS@576p.mkv': Using the demultiplexer for the format 'Matroska'.
+'W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS@576p.ac3': Using the demultiplexer for the format 'AC-3'.
+'W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\source\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS_subtitle_2_spa.sup': Using the demultiplexer for the format 'PGSSUP'.
+'W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\source\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS_subtitle_3_eng.sup': Using the demultiplexer for the format 'PGSSUP'.
+'W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS@576p.mkv' track 0: Using the output module for the format 'AVC/H.264'.
+'W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS@576p.ac3' track 0: Using the output module for the format 'AC-3'.
+'W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\source\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS_subtitle_2_spa.sup' track 0: Using the output module for the format 'HDMV PGS'.
+'W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\source\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS_subtitle_3_eng.sup' track 0: Using the output module for the format 'HDMV PGS'.
+The file 'W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.and.the.Beyond.2019.576p.BluRay.x264-HANDJOB.mkv' has been opened for writing.
+Progress: 0%
+Progress: 6%
+Progress: 12%
+Progress: 19%
+Progress: 26%
+Progress: 33%
+Progress: 40%
+Progress: 47%
+Progress: 49%
+Progress: 56%
+Progress: 63%
+Progress: 70%
+Progress: 76%
+Progress: 79%
+Progress: 80%
+Progress: 81%
+Progress: 88%
+Progress: 95%
+Progress: 99%
+Progress: 100%
+The cue entries (the index) are being written...
+Multiplexing took 10 seconds.
+C:\Users\Administrator\AppData\Local\Programs\Python\Python313\Lib\site-packages\moviepy\video\io\ffmpeg_reader.py:517: UserWarning: Subtitle stream parsing is not supported by moviepy and will be ignored
+ffmpeg output:
+
+[matroska,webm @ 000001d395b5f600] Could not find codec parameters for stream 2 (Subtitle: hdmv_pgs_subtitle (pgssub)): unspecified size
+Consider increasing the value for the 'analyzeduration' (0) and 'probesize' (5000000) options
+[matroska,webm @ 000001d395b5f600] Could not find codec parameters for stream 3 (Subtitle: hdmv_pgs_subtitle (pgssub)): unspecified size
+Consider increasing the value for the 'analyzeduration' (0) and 'probesize' (5000000) options
+Input #0, matroska,webm, from 'W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.and.the.Beyond.2019.576p.BluRay.x264-HANDJOB.mkv':
+  Metadata:
+    title           : The Rodriguez and the Beyond [2019] 576p BluRay - HJ
+    encoder         : libebml v1.4.5 + libmatroska v1.7.1
+    creation_time   : 2025-06-20T12:06:59.000000Z
+  Duration: 01:56:21.63, start: 0.000000, bitrate: 3435 kb/s
+  Stream #0:0: Video: h264 (High), yuv420p(tv, bt709, progressive), 1024x428 [SAR 1:1 DAR 256:107], 24 fps, 24 tbr, 1k tbn (default)
+      Metadata:
+        BPS             : 2780110
+        DURATION        : 01:56:21.625000000
+        NUMBER_OF_FRAMES: 167559
+        NUMBER_OF_BYTES : 2426211342
+        _STATISTICS_WRITING_APP: mkvmerge v90.0 ('Hanging On') 64-bit
+        _STATISTICS_WRITING_DATE_UTC: 2025-06-20 12:06:59
+        _STATISTICS_TAGS: BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES
+  Stream #0:1(spa): Audio: ac3, 48000 Hz, 5.1(side), fltp, 640 kb/s (default)
+      Metadata:
+        BPS             : 640000
+        DURATION        : 01:56:21.632000000
+        NUMBER_OF_FRAMES: 218176
+        NUMBER_OF_BYTES : 558530560
+        _STATISTICS_WRITING_APP: mkvmerge v90.0 ('Hanging On') 64-bit
+        _STATISTICS_WRITING_DATE_UTC: 2025-06-20 12:06:59
+        _STATISTICS_TAGS: BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES
+  Stream #0:2(spa): Subtitle: hdmv_pgs_subtitle (pgssub)
+      Metadata:
+        BPS             : 1239
+        DURATION        : 01:40:00.917000000
+        NUMBER_OF_FRAMES: 104
+        NUMBER_OF_BYTES : 929482
+        _STATISTICS_WRITING_APP: mkvmerge v90.0 ('Hanging On') 64-bit
+        _STATISTICS_WRITING_DATE_UTC: 2025-06-20 12:06:59
+        _STATISTICS_TAGS: BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES
+  Stream #0:3(eng): Subtitle: hdmv_pgs_subtitle (pgssub)
+      Metadata:
+        BPS             : 46911
+        DURATION        : 01:52:32.500000000
+        NUMBER_OF_FRAMES: 3644
+        NUMBER_OF_BYTES : 39596105
+        _STATISTICS_WRITING_APP: mkvmerge v90.0 ('Hanging On') 64-bit
+        _STATISTICS_WRITING_DATE_UTC: 2025-06-20 12:06:59
+        _STATISTICS_TAGS: BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES
+At least one output file must be specified
+
+  warnings.warn(
+{'video_found': True, 'audio_found': True, 'metadata': {'title': 'The Rodriguez and the Beyond [2019] 576p BluRay - HJ', 'encoder': 'libebml v1.4.5 + libmatroska v1.7.1', 'creation_time': '2025-06-20T12:06:59.000000Z'}, 'inputs': [{'streams': [{'input_number': 0, 'stream_number': 0, 'stream_type': 'video', 'language': None, 'default': True, 'size': [1024, 428], 'bitrate': None, 'fps': 24.0, 'codec_name': 'h264', 'profile': '(High)', 'metadata': {'Metadata': '', 'BPS': '2780110', 'DURATION': '01:56:21.625000000', 'NUMBER_OF_FRAMES': '167559', 'NUMBER_OF_BYTES': '2426211342', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 1, 'stream_type': 'audio', 'language': 'spa', 'default': True, 'fps': 48000, 'bitrate': 640, 'metadata': {'Metadata': '', 'BPS': '640000', 'DURATION': '01:56:21.632000000', 'NUMBER_OF_FRAMES': '218176', 'NUMBER_OF_BYTES': '558530560', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 2, 'stream_type': 'subtitle', 'language': 'spa', 'default': False, 'metadata': {'Metadata': '', 'BPS': '1239', 'DURATION': '01:40:00.917000000', 'NUMBER_OF_FRAMES': '104', 'NUMBER_OF_BYTES': '929482', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 3, 'stream_type': 'subtitle', 'language': 'eng', 'default': False, 'metadata': {'Metadata': '', 'BPS': '46911', 'DURATION': '01:52:32.500000000', 'NUMBER_OF_FRAMES': '3644', 'NUMBER_OF_BYTES': '39596105', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}], 'input_number': 0}], 'duration': 6981.63, 'bitrate': 3435, 'start': 0.0, 'default_video_input_number': 0, 'default_video_stream_number': 0, 'video_codec_name': 'h264', 'video_profile': '(High)', 'video_size': [1024, 428], 'video_bitrate': None, 'video_fps': 24.0, 'default_audio_input_number': 0, 'default_audio_stream_number': 1, 'audio_fps': 48000, 'audio_bitrate': 640, 'video_duration': 6981.63, 'video_n_frames': 167559}
+C:\Users\Administrator\AppData\Local\Programs\Python\Python313\Lib\site-packages\imageio_ffmpeg\binaries\ffmpeg-win-x86_64-v7.1.exe -i W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.and.the.Beyond.2019.576p.BluRay.x264-HANDJOB.mkv -loglevel error -f image2pipe -vf scale=1024:428 -sws_flags bicubic -pix_fmt rgb24 -vcodec rawvideo -
+C:\Users\Administrator\AppData\Local\Programs\Python\Python313\Lib\site-packages\moviepy\video\io\ffmpeg_reader.py:517: UserWarning: Subtitle stream parsing is not supported by moviepy and will be ignored
+ffmpeg output:
+
+[matroska,webm @ 000002e2db60f600] Could not find codec parameters for stream 2 (Subtitle: hdmv_pgs_subtitle (pgssub)): unspecified size
+Consider increasing the value for the 'analyzeduration' (0) and 'probesize' (5000000) options
+[matroska,webm @ 000002e2db60f600] Could not find codec parameters for stream 3 (Subtitle: hdmv_pgs_subtitle (pgssub)): unspecified size
+Consider increasing the value for the 'analyzeduration' (0) and 'probesize' (5000000) options
+Input #0, matroska,webm, from 'W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.and.the.Beyond.2019.576p.BluRay.x264-HANDJOB.mkv':
+  Metadata:
+    title           : The Rodriguez and the Beyond [2019] 576p BluRay - HJ
+    encoder         : libebml v1.4.5 + libmatroska v1.7.1
+    creation_time   : 2025-06-20T12:06:59.000000Z
+  Duration: 01:56:21.63, start: 0.000000, bitrate: 3435 kb/s
+  Stream #0:0: Video: h264 (High), yuv420p(tv, bt709, progressive), 1024x428 [SAR 1:1 DAR 256:107], 24 fps, 24 tbr, 1k tbn (default)
+      Metadata:
+        BPS             : 2780110
+        DURATION        : 01:56:21.625000000
+        NUMBER_OF_FRAMES: 167559
+        NUMBER_OF_BYTES : 2426211342
+        _STATISTICS_WRITING_APP: mkvmerge v90.0 ('Hanging On') 64-bit
+        _STATISTICS_WRITING_DATE_UTC: 2025-06-20 12:06:59
+        _STATISTICS_TAGS: BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES
+  Stream #0:1(spa): Audio: ac3, 48000 Hz, 5.1(side), fltp, 640 kb/s (default)
+      Metadata:
+        BPS             : 640000
+        DURATION        : 01:56:21.632000000
+        NUMBER_OF_FRAMES: 218176
+        NUMBER_OF_BYTES : 558530560
+        _STATISTICS_WRITING_APP: mkvmerge v90.0 ('Hanging On') 64-bit
+        _STATISTICS_WRITING_DATE_UTC: 2025-06-20 12:06:59
+        _STATISTICS_TAGS: BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES
+  Stream #0:2(spa): Subtitle: hdmv_pgs_subtitle (pgssub)
+      Metadata:
+        BPS             : 1239
+        DURATION        : 01:40:00.917000000
+        NUMBER_OF_FRAMES: 104
+        NUMBER_OF_BYTES : 929482
+        _STATISTICS_WRITING_APP: mkvmerge v90.0 ('Hanging On') 64-bit
+        _STATISTICS_WRITING_DATE_UTC: 2025-06-20 12:06:59
+        _STATISTICS_TAGS: BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES
+  Stream #0:3(eng): Subtitle: hdmv_pgs_subtitle (pgssub)
+      Metadata:
+        BPS             : 46911
+        DURATION        : 01:52:32.500000000
+        NUMBER_OF_FRAMES: 3644
+        NUMBER_OF_BYTES : 39596105
+        _STATISTICS_WRITING_APP: mkvmerge v90.0 ('Hanging On') 64-bit
+        _STATISTICS_WRITING_DATE_UTC: 2025-06-20 12:06:59
+        _STATISTICS_TAGS: BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES
+At least one output file must be specified
+
+  warnings.warn(
+{'video_found': True, 'audio_found': True, 'metadata': {'title': 'The Rodriguez and the Beyond [2019] 576p BluRay - HJ', 'encoder': 'libebml v1.4.5 + libmatroska v1.7.1', 'creation_time': '2025-06-20T12:06:59.000000Z'}, 'inputs': [{'streams': [{'input_number': 0, 'stream_number': 0, 'stream_type': 'video', 'language': None, 'default': True, 'size': [1024, 428], 'bitrate': None, 'fps': 24.0, 'codec_name': 'h264', 'profile': '(High)', 'metadata': {'Metadata': '', 'BPS': '2780110', 'DURATION': '01:56:21.625000000', 'NUMBER_OF_FRAMES': '167559', 'NUMBER_OF_BYTES': '2426211342', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 1, 'stream_type': 'audio', 'language': 'spa', 'default': True, 'fps': 48000, 'bitrate': 640, 'metadata': {'Metadata': '', 'BPS': '640000', 'DURATION': '01:56:21.632000000', 'NUMBER_OF_FRAMES': '218176', 'NUMBER_OF_BYTES': '558530560', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 2, 'stream_type': 'subtitle', 'language': 'spa', 'default': False, 'metadata': {'Metadata': '', 'BPS': '1239', 'DURATION': '01:40:00.917000000', 'NUMBER_OF_FRAMES': '104', 'NUMBER_OF_BYTES': '929482', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 3, 'stream_type': 'subtitle', 'language': 'eng', 'default': False, 'metadata': {'Metadata': '', 'BPS': '46911', 'DURATION': '01:52:32.500000000', 'NUMBER_OF_FRAMES': '3644', 'NUMBER_OF_BYTES': '39596105', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}], 'input_number': 0}], 'duration': 6981.63, 'bitrate': 3435, 'start': 0.0, 'default_video_input_number': 0, 'default_video_stream_number': 0, 'video_codec_name': 'h264', 'video_profile': '(High)', 'video_size': [1024, 428], 'video_bitrate': None, 'video_fps': 24.0, 'default_audio_input_number': 0, 'default_audio_stream_number': 1, 'audio_fps': 48000, 'audio_bitrate': 640, 'video_duration': 6981.63, 'video_n_frames': 167559}
+C:\Users\Administrator\AppData\Local\Programs\Python\Python313\Lib\site-packages\imageio_ffmpeg\binaries\ffmpeg-win-x86_64-v7.1.exe -ss 299.000000 -i W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.and.the.Beyond.2019.576p.BluRay.x264-HANDJOB.mkv -ss 1.000000 -loglevel error -f image2pipe -vf scale=1024:428 -sws_flags bicubic -pix_fmt rgb24 -vcodec rawvideo -
+{'video_found': True, 'audio_found': True, 'metadata': {'title': 'The Rodriguez and the Beyond [2019] 576p BluRay - HJ', 'encoder': 'libebml v1.4.5 + libmatroska v1.7.1', 'creation_time': '2025-06-20T12:06:59.000000Z'}, 'inputs': [{'streams': [{'input_number': 0, 'stream_number': 0, 'stream_type': 'video', 'language': None, 'default': True, 'size': [1024, 428], 'bitrate': None, 'fps': 24.0, 'codec_name': 'h264', 'profile': '(High)', 'metadata': {'Metadata': '', 'BPS': '2780110', 'DURATION': '01:56:21.625000000', 'NUMBER_OF_FRAMES': '167559', 'NUMBER_OF_BYTES': '2426211342', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 1, 'stream_type': 'audio', 'language': 'spa', 'default': True, 'fps': 48000, 'bitrate': 640, 'metadata': {'Metadata': '', 'BPS': '640000', 'DURATION': '01:56:21.632000000', 'NUMBER_OF_FRAMES': '218176', 'NUMBER_OF_BYTES': '558530560', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 2, 'stream_type': 'subtitle', 'language': 'spa', 'default': False, 'metadata': {'Metadata': '', 'BPS': '1239', 'DURATION': '01:40:00.917000000', 'NUMBER_OF_FRAMES': '104', 'NUMBER_OF_BYTES': '929482', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 3, 'stream_type': 'subtitle', 'language': 'eng', 'default': False, 'metadata': {'Metadata': '', 'BPS': '46911', 'DURATION': '01:52:32.500000000', 'NUMBER_OF_FRAMES': '3644', 'NUMBER_OF_BYTES': '39596105', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}], 'input_number': 0}], 'duration': 6981.63, 'bitrate': 3435, 'start': 0.0, 'default_video_input_number': 0, 'default_video_stream_number': 0, 'video_codec_name': 'h264', 'video_profile': '(High)', 'video_size': [1024, 428], 'video_bitrate': None, 'video_fps': 24.0, 'default_audio_input_number': 0, 'default_audio_stream_number': 1, 'audio_fps': 48000, 'audio_bitrate': 640, 'video_duration': 6981.63, 'video_n_frames': 167559}
+C:\Users\Administrator\AppData\Local\Programs\Python\Python313\Lib\site-packages\imageio_ffmpeg\binaries\ffmpeg-win-x86_64-v7.1.exe -ss 855.802500 -i W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.and.the.Beyond.2019.576p.BluRay.x264-HANDJOB.mkv -ss 1.000000 -loglevel error -f image2pipe -vf scale=1024:428 -sws_flags bicubic -pix_fmt rgb24 -vcodec rawvideo -
+{'video_found': True, 'audio_found': True, 'metadata': {'title': 'The Rodriguez and the Beyond [2019] 576p BluRay - HJ', 'encoder': 'libebml v1.4.5 + libmatroska v1.7.1', 'creation_time': '2025-06-20T12:06:59.000000Z'}, 'inputs': [{'streams': [{'input_number': 0, 'stream_number': 0, 'stream_type': 'video', 'language': None, 'default': True, 'size': [1024, 428], 'bitrate': None, 'fps': 24.0, 'codec_name': 'h264', 'profile': '(High)', 'metadata': {'Metadata': '', 'BPS': '2780110', 'DURATION': '01:56:21.625000000', 'NUMBER_OF_FRAMES': '167559', 'NUMBER_OF_BYTES': '2426211342', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 1, 'stream_type': 'audio', 'language': 'spa', 'default': True, 'fps': 48000, 'bitrate': 640, 'metadata': {'Metadata': '', 'BPS': '640000', 'DURATION': '01:56:21.632000000', 'NUMBER_OF_FRAMES': '218176', 'NUMBER_OF_BYTES': '558530560', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 2, 'stream_type': 'subtitle', 'language': 'spa', 'default': False, 'metadata': {'Metadata': '', 'BPS': '1239', 'DURATION': '01:40:00.917000000', 'NUMBER_OF_FRAMES': '104', 'NUMBER_OF_BYTES': '929482', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 3, 'stream_type': 'subtitle', 'language': 'eng', 'default': False, 'metadata': {'Metadata': '', 'BPS': '46911', 'DURATION': '01:52:32.500000000', 'NUMBER_OF_FRAMES': '3644', 'NUMBER_OF_BYTES': '39596105', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}], 'input_number': 0}], 'duration': 6981.63, 'bitrate': 3435, 'start': 0.0, 'default_video_input_number': 0, 'default_video_stream_number': 0, 'video_codec_name': 'h264', 'video_profile': '(High)', 'video_size': [1024, 428], 'video_bitrate': None, 'video_fps': 24.0, 'default_audio_input_number': 0, 'default_audio_stream_number': 1, 'audio_fps': 48000, 'audio_bitrate': 640, 'video_duration': 6981.63, 'video_n_frames': 167559}
+C:\Users\Administrator\AppData\Local\Programs\Python\Python313\Lib\site-packages\imageio_ffmpeg\binaries\ffmpeg-win-x86_64-v7.1.exe -ss 1412.605000 -i W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.and.the.Beyond.2019.576p.BluRay.x264-HANDJOB.mkv -ss 1.000000 -loglevel error -f image2pipe -vf scale=1024:428 -sws_flags bicubic -pix_fmt rgb24 -vcodec rawvideo -
+{'video_found': True, 'audio_found': True, 'metadata': {'title': 'The Rodriguez and the Beyond [2019] 576p BluRay - HJ', 'encoder': 'libebml v1.4.5 + libmatroska v1.7.1', 'creation_time': '2025-06-20T12:06:59.000000Z'}, 'inputs': [{'streams': [{'input_number': 0, 'stream_number': 0, 'stream_type': 'video', 'language': None, 'default': True, 'size': [1024, 428], 'bitrate': None, 'fps': 24.0, 'codec_name': 'h264', 'profile': '(High)', 'metadata': {'Metadata': '', 'BPS': '2780110', 'DURATION': '01:56:21.625000000', 'NUMBER_OF_FRAMES': '167559', 'NUMBER_OF_BYTES': '2426211342', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 1, 'stream_type': 'audio', 'language': 'spa', 'default': True, 'fps': 48000, 'bitrate': 640, 'metadata': {'Metadata': '', 'BPS': '640000', 'DURATION': '01:56:21.632000000', 'NUMBER_OF_FRAMES': '218176', 'NUMBER_OF_BYTES': '558530560', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 2, 'stream_type': 'subtitle', 'language': 'spa', 'default': False, 'metadata': {'Metadata': '', 'BPS': '1239', 'DURATION': '01:40:00.917000000', 'NUMBER_OF_FRAMES': '104', 'NUMBER_OF_BYTES': '929482', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 3, 'stream_type': 'subtitle', 'language': 'eng', 'default': False, 'metadata': {'Metadata': '', 'BPS': '46911', 'DURATION': '01:52:32.500000000', 'NUMBER_OF_FRAMES': '3644', 'NUMBER_OF_BYTES': '39596105', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}], 'input_number': 0}], 'duration': 6981.63, 'bitrate': 3435, 'start': 0.0, 'default_video_input_number': 0, 'default_video_stream_number': 0, 'video_codec_name': 'h264', 'video_profile': '(High)', 'video_size': [1024, 428], 'video_bitrate': None, 'video_fps': 24.0, 'default_audio_input_number': 0, 'default_audio_stream_number': 1, 'audio_fps': 48000, 'audio_bitrate': 640, 'video_duration': 6981.63, 'video_n_frames': 167559}
+C:\Users\Administrator\AppData\Local\Programs\Python\Python313\Lib\site-packages\imageio_ffmpeg\binaries\ffmpeg-win-x86_64-v7.1.exe -ss 1969.407500 -i W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.and.the.Beyond.2019.576p.BluRay.x264-HANDJOB.mkv -ss 1.000000 -loglevel error -f image2pipe -vf scale=1024:428 -sws_flags bicubic -pix_fmt rgb24 -vcodec rawvideo -
+{'video_found': True, 'audio_found': True, 'metadata': {'title': 'The Rodriguez and the Beyond [2019] 576p BluRay - HJ', 'encoder': 'libebml v1.4.5 + libmatroska v1.7.1', 'creation_time': '2025-06-20T12:06:59.000000Z'}, 'inputs': [{'streams': [{'input_number': 0, 'stream_number': 0, 'stream_type': 'video', 'language': None, 'default': True, 'size': [1024, 428], 'bitrate': None, 'fps': 24.0, 'codec_name': 'h264', 'profile': '(High)', 'metadata': {'Metadata': '', 'BPS': '2780110', 'DURATION': '01:56:21.625000000', 'NUMBER_OF_FRAMES': '167559', 'NUMBER_OF_BYTES': '2426211342', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 1, 'stream_type': 'audio', 'language': 'spa', 'default': True, 'fps': 48000, 'bitrate': 640, 'metadata': {'Metadata': '', 'BPS': '640000', 'DURATION': '01:56:21.632000000', 'NUMBER_OF_FRAMES': '218176', 'NUMBER_OF_BYTES': '558530560', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 2, 'stream_type': 'subtitle', 'language': 'spa', 'default': False, 'metadata': {'Metadata': '', 'BPS': '1239', 'DURATION': '01:40:00.917000000', 'NUMBER_OF_FRAMES': '104', 'NUMBER_OF_BYTES': '929482', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 3, 'stream_type': 'subtitle', 'language': 'eng', 'default': False, 'metadata': {'Metadata': '', 'BPS': '46911', 'DURATION': '01:52:32.500000000', 'NUMBER_OF_FRAMES': '3644', 'NUMBER_OF_BYTES': '39596105', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}], 'input_number': 0}], 'duration': 6981.63, 'bitrate': 3435, 'start': 0.0, 'default_video_input_number': 0, 'default_video_stream_number': 0, 'video_codec_name': 'h264', 'video_profile': '(High)', 'video_size': [1024, 428], 'video_bitrate': None, 'video_fps': 24.0, 'default_audio_input_number': 0, 'default_audio_stream_number': 1, 'audio_fps': 48000, 'audio_bitrate': 640, 'video_duration': 6981.63, 'video_n_frames': 167559}
+C:\Users\Administrator\AppData\Local\Programs\Python\Python313\Lib\site-packages\imageio_ffmpeg\binaries\ffmpeg-win-x86_64-v7.1.exe -ss 2526.210000 -i W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.and.the.Beyond.2019.576p.BluRay.x264-HANDJOB.mkv -ss 1.000000 -loglevel error -f image2pipe -vf scale=1024:428 -sws_flags bicubic -pix_fmt rgb24 -vcodec rawvideo -
+{'video_found': True, 'audio_found': True, 'metadata': {'title': 'The Rodriguez and the Beyond [2019] 576p BluRay - HJ', 'encoder': 'libebml v1.4.5 + libmatroska v1.7.1', 'creation_time': '2025-06-20T12:06:59.000000Z'}, 'inputs': [{'streams': [{'input_number': 0, 'stream_number': 0, 'stream_type': 'video', 'language': None, 'default': True, 'size': [1024, 428], 'bitrate': None, 'fps': 24.0, 'codec_name': 'h264', 'profile': '(High)', 'metadata': {'Metadata': '', 'BPS': '2780110', 'DURATION': '01:56:21.625000000', 'NUMBER_OF_FRAMES': '167559', 'NUMBER_OF_BYTES': '2426211342', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 1, 'stream_type': 'audio', 'language': 'spa', 'default': True, 'fps': 48000, 'bitrate': 640, 'metadata': {'Metadata': '', 'BPS': '640000', 'DURATION': '01:56:21.632000000', 'NUMBER_OF_FRAMES': '218176', 'NUMBER_OF_BYTES': '558530560', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 2, 'stream_type': 'subtitle', 'language': 'spa', 'default': False, 'metadata': {'Metadata': '', 'BPS': '1239', 'DURATION': '01:40:00.917000000', 'NUMBER_OF_FRAMES': '104', 'NUMBER_OF_BYTES': '929482', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 3, 'stream_type': 'subtitle', 'language': 'eng', 'default': False, 'metadata': {'Metadata': '', 'BPS': '46911', 'DURATION': '01:52:32.500000000', 'NUMBER_OF_FRAMES': '3644', 'NUMBER_OF_BYTES': '39596105', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}], 'input_number': 0}], 'duration': 6981.63, 'bitrate': 3435, 'start': 0.0, 'default_video_input_number': 0, 'default_video_stream_number': 0, 'video_codec_name': 'h264', 'video_profile': '(High)', 'video_size': [1024, 428], 'video_bitrate': None, 'video_fps': 24.0, 'default_audio_input_number': 0, 'default_audio_stream_number': 1, 'audio_fps': 48000, 'audio_bitrate': 640, 'video_duration': 6981.63, 'video_n_frames': 167559}
+C:\Users\Administrator\AppData\Local\Programs\Python\Python313\Lib\site-packages\imageio_ffmpeg\binaries\ffmpeg-win-x86_64-v7.1.exe -ss 855.802500 -i W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.and.the.Beyond.2019.576p.BluRay.x264-HANDJOB.mkv -ss 1.000000 -loglevel error -f image2pipe -vf scale=1024:428 -sws_flags bicubic -pix_fmt rgb24 -vcodec rawvideo -
+{'video_found': True, 'audio_found': True, 'metadata': {'title': 'The Rodriguez and the Beyond [2019] 576p BluRay - HJ', 'encoder': 'libebml v1.4.5 + libmatroska v1.7.1', 'creation_time': '2025-06-20T12:06:59.000000Z'}, 'inputs': [{'streams': [{'input_number': 0, 'stream_number': 0, 'stream_type': 'video', 'language': None, 'default': True, 'size': [1024, 428], 'bitrate': None, 'fps': 24.0, 'codec_name': 'h264', 'profile': '(High)', 'metadata': {'Metadata': '', 'BPS': '2780110', 'DURATION': '01:56:21.625000000', 'NUMBER_OF_FRAMES': '167559', 'NUMBER_OF_BYTES': '2426211342', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 1, 'stream_type': 'audio', 'language': 'spa', 'default': True, 'fps': 48000, 'bitrate': 640, 'metadata': {'Metadata': '', 'BPS': '640000', 'DURATION': '01:56:21.632000000', 'NUMBER_OF_FRAMES': '218176', 'NUMBER_OF_BYTES': '558530560', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 2, 'stream_type': 'subtitle', 'language': 'spa', 'default': False, 'metadata': {'Metadata': '', 'BPS': '1239', 'DURATION': '01:40:00.917000000', 'NUMBER_OF_FRAMES': '104', 'NUMBER_OF_BYTES': '929482', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 3, 'stream_type': 'subtitle', 'language': 'eng', 'default': False, 'metadata': {'Metadata': '', 'BPS': '46911', 'DURATION': '01:52:32.500000000', 'NUMBER_OF_FRAMES': '3644', 'NUMBER_OF_BYTES': '39596105', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}], 'input_number': 0}], 'duration': 6981.63, 'bitrate': 3435, 'start': 0.0, 'default_video_input_number': 0, 'default_video_stream_number': 0, 'video_codec_name': 'h264', 'video_profile': '(High)', 'video_size': [1024, 428], 'video_bitrate': None, 'video_fps': 24.0, 'default_audio_input_number': 0, 'default_audio_stream_number': 1, 'audio_fps': 48000, 'audio_bitrate': 640, 'video_duration': 6981.63, 'video_n_frames': 167559}
+C:\Users\Administrator\AppData\Local\Programs\Python\Python313\Lib\site-packages\imageio_ffmpeg\binaries\ffmpeg-win-x86_64-v7.1.exe -ss 2526.210000 -i W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.and.the.Beyond.2019.576p.BluRay.x264-HANDJOB.mkv -ss 1.000000 -loglevel error -f image2pipe -vf scale=1024:428 -sws_flags bicubic -pix_fmt rgb24 -vcodec rawvideo -
+{'video_found': True, 'audio_found': True, 'metadata': {'title': 'The Rodriguez and the Beyond [2019] 576p BluRay - HJ', 'encoder': 'libebml v1.4.5 + libmatroska v1.7.1', 'creation_time': '2025-06-20T12:06:59.000000Z'}, 'inputs': [{'streams': [{'input_number': 0, 'stream_number': 0, 'stream_type': 'video', 'language': None, 'default': True, 'size': [1024, 428], 'bitrate': None, 'fps': 24.0, 'codec_name': 'h264', 'profile': '(High)', 'metadata': {'Metadata': '', 'BPS': '2780110', 'DURATION': '01:56:21.625000000', 'NUMBER_OF_FRAMES': '167559', 'NUMBER_OF_BYTES': '2426211342', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 1, 'stream_type': 'audio', 'language': 'spa', 'default': True, 'fps': 48000, 'bitrate': 640, 'metadata': {'Metadata': '', 'BPS': '640000', 'DURATION': '01:56:21.632000000', 'NUMBER_OF_FRAMES': '218176', 'NUMBER_OF_BYTES': '558530560', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 2, 'stream_type': 'subtitle', 'language': 'spa', 'default': False, 'metadata': {'Metadata': '', 'BPS': '1239', 'DURATION': '01:40:00.917000000', 'NUMBER_OF_FRAMES': '104', 'NUMBER_OF_BYTES': '929482', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 3, 'stream_type': 'subtitle', 'language': 'eng', 'default': False, 'metadata': {'Metadata': '', 'BPS': '46911', 'DURATION': '01:52:32.500000000', 'NUMBER_OF_FRAMES': '3644', 'NUMBER_OF_BYTES': '39596105', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}], 'input_number': 0}], 'duration': 6981.63, 'bitrate': 3435, 'start': 0.0, 'default_video_input_number': 0, 'default_video_stream_number': 0, 'video_codec_name': 'h264', 'video_profile': '(High)', 'video_size': [1024, 428], 'video_bitrate': None, 'video_fps': 24.0, 'default_audio_input_number': 0, 'default_audio_stream_number': 1, 'audio_fps': 48000, 'audio_bitrate': 640, 'video_duration': 6981.63, 'video_n_frames': 167559}
+C:\Users\Administrator\AppData\Local\Programs\Python\Python313\Lib\site-packages\imageio_ffmpeg\binaries\ffmpeg-win-x86_64-v7.1.exe -ss 3083.012500 -i W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.and.the.Beyond.2019.576p.BluRay.x264-HANDJOB.mkv -ss 1.000000 -loglevel error -f image2pipe -vf scale=1024:428 -sws_flags bicubic -pix_fmt rgb24 -vcodec rawvideo -
+{'video_found': True, 'audio_found': True, 'metadata': {'title': 'The Rodriguez and the Beyond [2019] 576p BluRay - HJ', 'encoder': 'libebml v1.4.5 + libmatroska v1.7.1', 'creation_time': '2025-06-20T12:06:59.000000Z'}, 'inputs': [{'streams': [{'input_number': 0, 'stream_number': 0, 'stream_type': 'video', 'language': None, 'default': True, 'size': [1024, 428], 'bitrate': None, 'fps': 24.0, 'codec_name': 'h264', 'profile': '(High)', 'metadata': {'Metadata': '', 'BPS': '2780110', 'DURATION': '01:56:21.625000000', 'NUMBER_OF_FRAMES': '167559', 'NUMBER_OF_BYTES': '2426211342', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 1, 'stream_type': 'audio', 'language': 'spa', 'default': True, 'fps': 48000, 'bitrate': 640, 'metadata': {'Metadata': '', 'BPS': '640000', 'DURATION': '01:56:21.632000000', 'NUMBER_OF_FRAMES': '218176', 'NUMBER_OF_BYTES': '558530560', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 2, 'stream_type': 'subtitle', 'language': 'spa', 'default': False, 'metadata': {'Metadata': '', 'BPS': '1239', 'DURATION': '01:40:00.917000000', 'NUMBER_OF_FRAMES': '104', 'NUMBER_OF_BYTES': '929482', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 3, 'stream_type': 'subtitle', 'language': 'eng', 'default': False, 'metadata': {'Metadata': '', 'BPS': '46911', 'DURATION': '01:52:32.500000000', 'NUMBER_OF_FRAMES': '3644', 'NUMBER_OF_BYTES': '39596105', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}], 'input_number': 0}], 'duration': 6981.63, 'bitrate': 3435, 'start': 0.0, 'default_video_input_number': 0, 'default_video_stream_number': 0, 'video_codec_name': 'h264', 'video_profile': '(High)', 'video_size': [1024, 428], 'video_bitrate': None, 'video_fps': 24.0, 'default_audio_input_number': 0, 'default_audio_stream_number': 1, 'audio_fps': 48000, 'audio_bitrate': 640, 'video_duration': 6981.63, 'video_n_frames': 167559}
+C:\Users\Administrator\AppData\Local\Programs\Python\Python313\Lib\site-packages\imageio_ffmpeg\binaries\ffmpeg-win-x86_64-v7.1.exe -ss 3639.815000 -i W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.and.the.Beyond.2019.576p.BluRay.x264-HANDJOB.mkv -ss 1.000000 -loglevel error -f image2pipe -vf scale=1024:428 -sws_flags bicubic -pix_fmt rgb24 -vcodec rawvideo -
+{'video_found': True, 'audio_found': True, 'metadata': {'title': 'The Rodriguez and the Beyond [2019] 576p BluRay - HJ', 'encoder': 'libebml v1.4.5 + libmatroska v1.7.1', 'creation_time': '2025-06-20T12:06:59.000000Z'}, 'inputs': [{'streams': [{'input_number': 0, 'stream_number': 0, 'stream_type': 'video', 'language': None, 'default': True, 'size': [1024, 428], 'bitrate': None, 'fps': 24.0, 'codec_name': 'h264', 'profile': '(High)', 'metadata': {'Metadata': '', 'BPS': '2780110', 'DURATION': '01:56:21.625000000', 'NUMBER_OF_FRAMES': '167559', 'NUMBER_OF_BYTES': '2426211342', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 1, 'stream_type': 'audio', 'language': 'spa', 'default': True, 'fps': 48000, 'bitrate': 640, 'metadata': {'Metadata': '', 'BPS': '640000', 'DURATION': '01:56:21.632000000', 'NUMBER_OF_FRAMES': '218176', 'NUMBER_OF_BYTES': '558530560', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 2, 'stream_type': 'subtitle', 'language': 'spa', 'default': False, 'metadata': {'Metadata': '', 'BPS': '1239', 'DURATION': '01:40:00.917000000', 'NUMBER_OF_FRAMES': '104', 'NUMBER_OF_BYTES': '929482', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 3, 'stream_type': 'subtitle', 'language': 'eng', 'default': False, 'metadata': {'Metadata': '', 'BPS': '46911', 'DURATION': '01:52:32.500000000', 'NUMBER_OF_FRAMES': '3644', 'NUMBER_OF_BYTES': '39596105', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}], 'input_number': 0}], 'duration': 6981.63, 'bitrate': 3435, 'start': 0.0, 'default_video_input_number': 0, 'default_video_stream_number': 0, 'video_codec_name': 'h264', 'video_profile': '(High)', 'video_size': [1024, 428], 'video_bitrate': None, 'video_fps': 24.0, 'default_audio_input_number': 0, 'default_audio_stream_number': 1, 'audio_fps': 48000, 'audio_bitrate': 640, 'video_duration': 6981.63, 'video_n_frames': 167559}
+C:\Users\Administrator\AppData\Local\Programs\Python\Python313\Lib\site-packages\imageio_ffmpeg\binaries\ffmpeg-win-x86_64-v7.1.exe -ss 4196.617500 -i W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.and.the.Beyond.2019.576p.BluRay.x264-HANDJOB.mkv -ss 1.000000 -loglevel error -f image2pipe -vf scale=1024:428 -sws_flags bicubic -pix_fmt rgb24 -vcodec rawvideo -
+{'video_found': True, 'audio_found': True, 'metadata': {'title': 'The Rodriguez and the Beyond [2019] 576p BluRay - HJ', 'encoder': 'libebml v1.4.5 + libmatroska v1.7.1', 'creation_time': '2025-06-20T12:06:59.000000Z'}, 'inputs': [{'streams': [{'input_number': 0, 'stream_number': 0, 'stream_type': 'video', 'language': None, 'default': True, 'size': [1024, 428], 'bitrate': None, 'fps': 24.0, 'codec_name': 'h264', 'profile': '(High)', 'metadata': {'Metadata': '', 'BPS': '2780110', 'DURATION': '01:56:21.625000000', 'NUMBER_OF_FRAMES': '167559', 'NUMBER_OF_BYTES': '2426211342', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 1, 'stream_type': 'audio', 'language': 'spa', 'default': True, 'fps': 48000, 'bitrate': 640, 'metadata': {'Metadata': '', 'BPS': '640000', 'DURATION': '01:56:21.632000000', 'NUMBER_OF_FRAMES': '218176', 'NUMBER_OF_BYTES': '558530560', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 2, 'stream_type': 'subtitle', 'language': 'spa', 'default': False, 'metadata': {'Metadata': '', 'BPS': '1239', 'DURATION': '01:40:00.917000000', 'NUMBER_OF_FRAMES': '104', 'NUMBER_OF_BYTES': '929482', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 3, 'stream_type': 'subtitle', 'language': 'eng', 'default': False, 'metadata': {'Metadata': '', 'BPS': '46911', 'DURATION': '01:52:32.500000000', 'NUMBER_OF_FRAMES': '3644', 'NUMBER_OF_BYTES': '39596105', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}], 'input_number': 0}], 'duration': 6981.63, 'bitrate': 3435, 'start': 0.0, 'default_video_input_number': 0, 'default_video_stream_number': 0, 'video_codec_name': 'h264', 'video_profile': '(High)', 'video_size': [1024, 428], 'video_bitrate': None, 'video_fps': 24.0, 'default_audio_input_number': 0, 'default_audio_stream_number': 1, 'audio_fps': 48000, 'audio_bitrate': 640, 'video_duration': 6981.63, 'video_n_frames': 167559}
+C:\Users\Administrator\AppData\Local\Programs\Python\Python313\Lib\site-packages\imageio_ffmpeg\binaries\ffmpeg-win-x86_64-v7.1.exe -ss 4753.420000 -i W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.and.the.Beyond.2019.576p.BluRay.x264-HANDJOB.mkv -ss 1.000000 -loglevel error -f image2pipe -vf scale=1024:428 -sws_flags bicubic -pix_fmt rgb24 -vcodec rawvideo -
+{'video_found': True, 'audio_found': True, 'metadata': {'title': 'The Rodriguez and the Beyond [2019] 576p BluRay - HJ', 'encoder': 'libebml v1.4.5 + libmatroska v1.7.1', 'creation_time': '2025-06-20T12:06:59.000000Z'}, 'inputs': [{'streams': [{'input_number': 0, 'stream_number': 0, 'stream_type': 'video', 'language': None, 'default': True, 'size': [1024, 428], 'bitrate': None, 'fps': 24.0, 'codec_name': 'h264', 'profile': '(High)', 'metadata': {'Metadata': '', 'BPS': '2780110', 'DURATION': '01:56:21.625000000', 'NUMBER_OF_FRAMES': '167559', 'NUMBER_OF_BYTES': '2426211342', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 1, 'stream_type': 'audio', 'language': 'spa', 'default': True, 'fps': 48000, 'bitrate': 640, 'metadata': {'Metadata': '', 'BPS': '640000', 'DURATION': '01:56:21.632000000', 'NUMBER_OF_FRAMES': '218176', 'NUMBER_OF_BYTES': '558530560', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 2, 'stream_type': 'subtitle', 'language': 'spa', 'default': False, 'metadata': {'Metadata': '', 'BPS': '1239', 'DURATION': '01:40:00.917000000', 'NUMBER_OF_FRAMES': '104', 'NUMBER_OF_BYTES': '929482', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 3, 'stream_type': 'subtitle', 'language': 'eng', 'default': False, 'metadata': {'Metadata': '', 'BPS': '46911', 'DURATION': '01:52:32.500000000', 'NUMBER_OF_FRAMES': '3644', 'NUMBER_OF_BYTES': '39596105', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}], 'input_number': 0}], 'duration': 6981.63, 'bitrate': 3435, 'start': 0.0, 'default_video_input_number': 0, 'default_video_stream_number': 0, 'video_codec_name': 'h264', 'video_profile': '(High)', 'video_size': [1024, 428], 'video_bitrate': None, 'video_fps': 24.0, 'default_audio_input_number': 0, 'default_audio_stream_number': 1, 'audio_fps': 48000, 'audio_bitrate': 640, 'video_duration': 6981.63, 'video_n_frames': 167559}
+C:\Users\Administrator\AppData\Local\Programs\Python\Python313\Lib\site-packages\imageio_ffmpeg\binaries\ffmpeg-win-x86_64-v7.1.exe -ss 5310.222500 -i W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.and.the.Beyond.2019.576p.BluRay.x264-HANDJOB.mkv -ss 1.000000 -loglevel error -f image2pipe -vf scale=1024:428 -sws_flags bicubic -pix_fmt rgb24 -vcodec rawvideo -
+{'video_found': True, 'audio_found': True, 'metadata': {'title': 'The Rodriguez and the Beyond [2019] 576p BluRay - HJ', 'encoder': 'libebml v1.4.5 + libmatroska v1.7.1', 'creation_time': '2025-06-20T12:06:59.000000Z'}, 'inputs': [{'streams': [{'input_number': 0, 'stream_number': 0, 'stream_type': 'video', 'language': None, 'default': True, 'size': [1024, 428], 'bitrate': None, 'fps': 24.0, 'codec_name': 'h264', 'profile': '(High)', 'metadata': {'Metadata': '', 'BPS': '2780110', 'DURATION': '01:56:21.625000000', 'NUMBER_OF_FRAMES': '167559', 'NUMBER_OF_BYTES': '2426211342', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 1, 'stream_type': 'audio', 'language': 'spa', 'default': True, 'fps': 48000, 'bitrate': 640, 'metadata': {'Metadata': '', 'BPS': '640000', 'DURATION': '01:56:21.632000000', 'NUMBER_OF_FRAMES': '218176', 'NUMBER_OF_BYTES': '558530560', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 2, 'stream_type': 'subtitle', 'language': 'spa', 'default': False, 'metadata': {'Metadata': '', 'BPS': '1239', 'DURATION': '01:40:00.917000000', 'NUMBER_OF_FRAMES': '104', 'NUMBER_OF_BYTES': '929482', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 3, 'stream_type': 'subtitle', 'language': 'eng', 'default': False, 'metadata': {'Metadata': '', 'BPS': '46911', 'DURATION': '01:52:32.500000000', 'NUMBER_OF_FRAMES': '3644', 'NUMBER_OF_BYTES': '39596105', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}], 'input_number': 0}], 'duration': 6981.63, 'bitrate': 3435, 'start': 0.0, 'default_video_input_number': 0, 'default_video_stream_number': 0, 'video_codec_name': 'h264', 'video_profile': '(High)', 'video_size': [1024, 428], 'video_bitrate': None, 'video_fps': 24.0, 'default_audio_input_number': 0, 'default_audio_stream_number': 1, 'audio_fps': 48000, 'audio_bitrate': 640, 'video_duration': 6981.63, 'video_n_frames': 167559}
+C:\Users\Administrator\AppData\Local\Programs\Python\Python313\Lib\site-packages\imageio_ffmpeg\binaries\ffmpeg-win-x86_64-v7.1.exe -ss 5867.025000 -i W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.and.the.Beyond.2019.576p.BluRay.x264-HANDJOB.mkv -ss 1.000000 -loglevel error -f image2pipe -vf scale=1024:428 -sws_flags bicubic -pix_fmt rgb24 -vcodec rawvideo -
+{'video_found': True, 'audio_found': True, 'metadata': {'title': 'The Rodriguez and the Beyond [2019] 576p BluRay - HJ', 'encoder': 'libebml v1.4.5 + libmatroska v1.7.1', 'creation_time': '2025-06-20T12:06:59.000000Z'}, 'inputs': [{'streams': [{'input_number': 0, 'stream_number': 0, 'stream_type': 'video', 'language': None, 'default': True, 'size': [1024, 428], 'bitrate': None, 'fps': 24.0, 'codec_name': 'h264', 'profile': '(High)', 'metadata': {'Metadata': '', 'BPS': '2780110', 'DURATION': '01:56:21.625000000', 'NUMBER_OF_FRAMES': '167559', 'NUMBER_OF_BYTES': '2426211342', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 1, 'stream_type': 'audio', 'language': 'spa', 'default': True, 'fps': 48000, 'bitrate': 640, 'metadata': {'Metadata': '', 'BPS': '640000', 'DURATION': '01:56:21.632000000', 'NUMBER_OF_FRAMES': '218176', 'NUMBER_OF_BYTES': '558530560', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 2, 'stream_type': 'subtitle', 'language': 'spa', 'default': False, 'metadata': {'Metadata': '', 'BPS': '1239', 'DURATION': '01:40:00.917000000', 'NUMBER_OF_FRAMES': '104', 'NUMBER_OF_BYTES': '929482', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 3, 'stream_type': 'subtitle', 'language': 'eng', 'default': False, 'metadata': {'Metadata': '', 'BPS': '46911', 'DURATION': '01:52:32.500000000', 'NUMBER_OF_FRAMES': '3644', 'NUMBER_OF_BYTES': '39596105', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}], 'input_number': 0}], 'duration': 6981.63, 'bitrate': 3435, 'start': 0.0, 'default_video_input_number': 0, 'default_video_stream_number': 0, 'video_codec_name': 'h264', 'video_profile': '(High)', 'video_size': [1024, 428], 'video_bitrate': None, 'video_fps': 24.0, 'default_audio_input_number': 0, 'default_audio_stream_number': 1, 'audio_fps': 48000, 'audio_bitrate': 640, 'video_duration': 6981.63, 'video_n_frames': 167559}
+C:\Users\Administrator\AppData\Local\Programs\Python\Python313\Lib\site-packages\imageio_ffmpeg\binaries\ffmpeg-win-x86_64-v7.1.exe -ss 6423.827500 -i W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.and.the.Beyond.2019.576p.BluRay.x264-HANDJOB.mkv -ss 1.000000 -loglevel error -f image2pipe -vf scale=1024:428 -sws_flags bicubic -pix_fmt rgb24 -vcodec rawvideo -
+{'video_found': True, 'audio_found': True, 'metadata': {'title': 'The Rodriguez and the Beyond [2019] 576p BluRay - HJ', 'encoder': 'libebml v1.4.5 + libmatroska v1.7.1', 'creation_time': '2025-06-20T12:06:59.000000Z'}, 'inputs': [{'streams': [{'input_number': 0, 'stream_number': 0, 'stream_type': 'video', 'language': None, 'default': True, 'size': [1024, 428], 'bitrate': None, 'fps': 24.0, 'codec_name': 'h264', 'profile': '(High)', 'metadata': {'Metadata': '', 'BPS': '2780110', 'DURATION': '01:56:21.625000000', 'NUMBER_OF_FRAMES': '167559', 'NUMBER_OF_BYTES': '2426211342', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 1, 'stream_type': 'audio', 'language': 'spa', 'default': True, 'fps': 48000, 'bitrate': 640, 'metadata': {'Metadata': '', 'BPS': '640000', 'DURATION': '01:56:21.632000000', 'NUMBER_OF_FRAMES': '218176', 'NUMBER_OF_BYTES': '558530560', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 2, 'stream_type': 'subtitle', 'language': 'spa', 'default': False, 'metadata': {'Metadata': '', 'BPS': '1239', 'DURATION': '01:40:00.917000000', 'NUMBER_OF_FRAMES': '104', 'NUMBER_OF_BYTES': '929482', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 3, 'stream_type': 'subtitle', 'language': 'eng', 'default': False, 'metadata': {'Metadata': '', 'BPS': '46911', 'DURATION': '01:52:32.500000000', 'NUMBER_OF_FRAMES': '3644', 'NUMBER_OF_BYTES': '39596105', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}], 'input_number': 0}], 'duration': 6981.63, 'bitrate': 3435, 'start': 0.0, 'default_video_input_number': 0, 'default_video_stream_number': 0, 'video_codec_name': 'h264', 'video_profile': '(High)', 'video_size': [1024, 428], 'video_bitrate': None, 'video_fps': 24.0, 'default_audio_input_number': 0, 'default_audio_stream_number': 1, 'audio_fps': 48000, 'audio_bitrate': 640, 'video_duration': 6981.63, 'video_n_frames': 167559}
+C:\Users\Administrator\AppData\Local\Programs\Python\Python313\Lib\site-packages\imageio_ffmpeg\binaries\ffmpeg-win-x86_64-v7.1.exe -ss 6980.630000 -i W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.and.the.Beyond.2019.576p.BluRay.x264-HANDJOB.mkv -ss 1.000000 -loglevel error -f image2pipe -vf scale=1024:428 -sws_flags bicubic -pix_fmt rgb24 -vcodec rawvideo -
+C:\Users\Administrator\AppData\Local\Programs\Python\Python313\Lib\site-packages\moviepy\video\io\ffmpeg_reader.py:178: UserWarning: In file W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.and.the.Beyond.2019.576p.BluRay.x264-HANDJOB.mkv, 1314816 bytes wanted but 0 bytes read at frame index 167559 (out of a total 167559 frames), at time 6981.62/6981.63 sec. Using the last valid frame instead.
+  warnings.warn(
+{'video_found': True, 'audio_found': True, 'metadata': {'title': 'The Rodriguez and the Beyond [2019] 576p BluRay - HJ', 'encoder': 'libebml v1.4.5 + libmatroska v1.7.1', 'creation_time': '2025-06-20T12:06:59.000000Z'}, 'inputs': [{'streams': [{'input_number': 0, 'stream_number': 0, 'stream_type': 'video', 'language': None, 'default': True, 'size': [1024, 428], 'bitrate': None, 'fps': 24.0, 'codec_name': 'h264', 'profile': '(High)', 'metadata': {'Metadata': '', 'BPS': '2780110', 'DURATION': '01:56:21.625000000', 'NUMBER_OF_FRAMES': '167559', 'NUMBER_OF_BYTES': '2426211342', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 1, 'stream_type': 'audio', 'language': 'spa', 'default': True, 'fps': 48000, 'bitrate': 640, 'metadata': {'Metadata': '', 'BPS': '640000', 'DURATION': '01:56:21.632000000', 'NUMBER_OF_FRAMES': '218176', 'NUMBER_OF_BYTES': '558530560', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 2, 'stream_type': 'subtitle', 'language': 'spa', 'default': False, 'metadata': {'Metadata': '', 'BPS': '1239', 'DURATION': '01:40:00.917000000', 'NUMBER_OF_FRAMES': '104', 'NUMBER_OF_BYTES': '929482', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}, {'input_number': 0, 'stream_number': 3, 'stream_type': 'subtitle', 'language': 'eng', 'default': False, 'metadata': {'Metadata': '', 'BPS': '46911', 'DURATION': '01:52:32.500000000', 'NUMBER_OF_FRAMES': '3644', 'NUMBER_OF_BYTES': '39596105', '_STATISTICS_WRITING_APP': "mkvmerge v90.0 ('Hanging On') 64-bit", '_STATISTICS_WRITING_DATE_UTC': '2025-06-20 12:06:59', '_STATISTICS_TAGS': 'BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES'}}], 'input_number': 0}], 'duration': 6981.63, 'bitrate': 3435, 'start': 0.0, 'default_video_input_number': 0, 'default_video_stream_number': 0, 'video_codec_name': 'h264', 'video_profile': '(High)', 'video_size': [1024, 428], 'video_bitrate': None, 'video_fps': 24.0, 'default_audio_input_number': 0, 'default_audio_stream_number': 1, 'audio_fps': 48000, 'audio_bitrate': 640, 'video_duration': 6981.63, 'video_n_frames': 167559}
+C:\Users\Administrator\AppData\Local\Programs\Python\Python313\Lib\site-packages\imageio_ffmpeg\binaries\ffmpeg-win-x86_64-v7.1.exe -ss 5310.222500 -i W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.and.the.Beyond.2019.576p.BluRay.x264-HANDJOB.mkv -ss 1.000000 -loglevel error -f image2pipe -vf scale=1024:428 -sws_flags bicubic -pix_fmt rgb24 -vcodec rawvideo -
+CompletedProcess(args=['C:\\Program Files\\MediaInfo_CLI_25.03_Windows_x64\\MediaInfo.exe', 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\576p\\The.Rodriguez.and.the.Beyond.2019.576p.BluRay.x264-HANDJOB.mkv'], returncode=0, stdout="General\nUnique ID                                : 101909261485452057307889562961773097711 (0x4CAB028440CAE75EA27C81E6506072EF)\nComplete name                            : W:\\Encodes\\Los RodrÃ\xadguez y el mÃ¡s allÃ¡ AKA The Rodriguez and the Beyond\\576p\\The.Rodriguez.and.the.Beyond.2019.576p.BluRay.x264-HANDJOB.mkv\nFormat                                   : Matroska\nFormat version                           : Version 4\nFile size                                : 2.79 GiB\nDuration                                 : 1 h 56 min\nOverall bit rate                         : 3 435 kb/s\nFrame rate                               : 24.000 FPS\nMovie name                               : The Rodriguez and the Beyond [2019] 576p BluRay - HJ\nEncoded date                             : 2025-06-20 12:06:59 UTC\nWriting application                      : mkvmerge v90.0 ('Hanging On') 64-bit\nWriting library                          : libebml v1.4.5 + libmatroska v1.7.1\n\nVideo\nID                                       : 1\nFormat                                   : AVC\nFormat/Info                              : Advanced Video Codec\nFormat profile                           : High@L4.1\nFormat settings                          : CABAC / 16 Ref Frames\nFormat settings, CABAC                   : Yes\nFormat settings, Reference frames        : 16 frames\nCodec ID                                 : V_MPEG4/ISO/AVC\nDuration                                 : 1 h 56 min\nBit rate                                 : 2 780 kb/s\nWidth                                    : 1 024 pixels\nHeight                                   : 428 pixels\nDisplay aspect ratio                     : 2.39:1\nFrame rate mode                          : Constant\nFrame rate                               : 24.000 FPS\nColor space                              : YUV\nChroma subsampling                       : 4:2:0\nBit depth                                : 8 bits\nScan type                                : Progressive\nBits/(Pixel*Frame)                       : 0.264\nStream size                              : 2.26 GiB (81%)\nWriting library                          : x264 core 164 r3186 585e0199\nEncoding settings                        : cabac=1 / ref=16 / deblock=1:-3:-3 / analyse=0x3:0x133 / me=umh / subme=10 / psy=1 / psy_rd=1.10:0.00 / mixed_ref=1 / me_range=32 / chroma_me=1 / trellis=2 / 8x8dct=1 / cqm=0 / deadzone=21,11 / fast_pskip=0 / chroma_qp_offset=-2 / threads=13 / lookahead_threads=3 / sliced_threads=0 / nr=0 / decimate=0 / interlaced=0 / bluray_compat=0 / constrained_intra=0 / bframes=16 / b_pyramid=2 / b_adapt=2 / b_bias=0 / direct=3 / weightb=1 / open_gop=0 / weightp=2 / keyint=240 / keyint_min=24 / scenecut=40 / intra_refresh=0 / rc_lookahead=60 / rc=crf / mbtree=0 / crf=15.0 / qcomp=0.60 / qpmin=0 / qpmax=69 / qpstep=4 / vbv_maxrate=62500 / vbv_bufsize=78125 / crf_max=0.0 / nal_hrd=none / filler=0 / ip_ratio=1.40 / pb_ratio=1.30 / aq=2:1.00\nDefault                                  : Yes\nForced                                   : No\nColor range                              : Limited\nColor primaries                          : BT.709\nTransfer characteristics                 : BT.709\nMatrix coefficients                      : BT.709\n\nAudio\nID                                       : 2\nFormat                                   : AC-3\nFormat/Info                              : Audio Coding 3\nCommercial name                          : Dolby Digital\nCodec ID                                 : A_AC3\nDuration                                 : 1 h 56 min\nBit rate mode                            : Constant\nBit rate                                 : 640 kb/s\nChannel(s)                               : 6 channels\nChannel layout                           : L R C LFE Ls Rs\nSampling rate                            : 48.0 kHz\nFrame rate                               : 31.250 FPS (1536 SPF)\nCompression mode                         : Lossy\nStream size                              : 533 MiB (19%)\nLanguage                                 : Spanish\nService kind                             : Complete Main\nDefault                                  : Yes\nForced                                   : No\nDialog Normalization                     : -31 dB\ncmixlev                                  : -3.0 dB\nsurmixlev                                : -3 dB\ndialnorm_Average                         : -31 dB\ndialnorm_Minimum                         : -31 dB\ndialnorm_Maximum                         : -31 dB\n\nText #1\nID                                       : 3\nFormat                                   : PGS\nMuxing mode                              : zlib\nCodec ID                                 : S_HDMV/PGS\nCodec ID/Info                            : Picture based subtitle format used on BDs/HD-DVDs\nDuration                                 : 1 h 40 min\nBit rate                                 : 1 239 b/s\nFrame rate                               : 0.017 FPS\nCount of elements                        : 104\nStream size                              : 908 KiB (0%)\nLanguage                                 : Spanish\nDefault                                  : No\nForced                                   : No\n\nText #2\nID                                       : 4\nFormat                                   : PGS\nMuxing mode                              : zlib\nCodec ID                                 : S_HDMV/PGS\nCodec ID/Info                            : Picture based subtitle format used on BDs/HD-DVDs\nDuration                                 : 1 h 52 min\nBit rate                                 : 46.9 kb/s\nFrame rate                               : 0.540 FPS\nCount of elements                        : 3644\nStream size                              : 37.8 MiB (1%)\nLanguage                                 : English\nDefault                                  : No\nForced                                   : No\n\n\n", stderr='')
+Sending The Rodriguez and the Beyond, 2019, W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.and.the.Beyond.2019.576p.BluRay.x264-HANDJOB.mkv, The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS
+- H.264/MKV/Blu-ray/1080p - The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS - 5/4/0
+
+Matching source
+returning spaced format  H.264 / MKV / Blu-ray / 1080p
+
+Process complete! Approval file saved to approval.txt
+CompletedProcess(args=['C:\\Program Files\\MediaInfo_CLI_25.03_Windows_x64\\MediaInfo.exe', 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv'], returncode=0, stdout="General\nUnique ID                                : 87485695788471892472289258546573889678 (0x41D121D2C7000373D8CA33D101A8508E)\nComplete name                            : W:\\Encodes\\Los RodrÃ\xadguez y el mÃ¡s allÃ¡ AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv\nFormat                                   : Matroska\nFormat version                           : Version 4\nFile size                                : 10.9 GiB\nDuration                                 : 1 h 56 min\nOverall bit rate mode                    : Variable\nOverall bit rate                         : 13.4 Mb/s\nFrame rate                               : 24.000 FPS\nEncoded date                             : 2024-03-27 15:04:20 UTC\nWriting application                      : mkvmerge v80.0 ('Roundabout') 64-bit\nWriting library                          : libebml v1.4.4 + libmatroska v1.7.1\n\nVideo\nID                                       : 1\nID in the original source medium         : 4113 (0x1011)\nFormat                                   : AVC\nFormat/Info                              : Advanced Video Codec\nFormat profile                           : High@L4.1\nFormat settings                          : CABAC / 4 Ref Frames\nFormat settings, CABAC                   : Yes\nFormat settings, Reference frames        : 4 frames\nFormat settings, Slice count             : 4 slices per frame\nCodec ID                                 : V_MPEG4/ISO/AVC\nDuration                                 : 1 h 56 min\nBit rate mode                            : Variable\nBit rate                                 : 9 997 kb/s\nMaximum bit rate                         : 13.0 Mb/s\nWidth                                    : 1 920 pixels\nHeight                                   : 1 080 pixels\nDisplay aspect ratio                     : 16:9\nFrame rate mode                          : Constant\nFrame rate                               : 24.000 FPS\nColor space                              : YUV\nChroma subsampling                       : 4:2:0\nBit depth                                : 8 bits\nScan type                                : Progressive\nBits/(Pixel*Frame)                       : 0.201\nStream size                              : 8.13 GiB (75%)\nDefault                                  : Yes\nForced                                   : No\nColor range                              : Limited\nColor primaries                          : BT.709\nTransfer characteristics                 : BT.709\nMatrix coefficients                      : BT.709\nOriginal source medium                   : Blu-ray\n\nAudio\nID                                       : 2\nID in the original source medium         : 4352 (0x1100)\nFormat                                   : DTS XLL\nFormat/Info                              : Digital Theater Systems\nCommercial name                          : DTS-HD Master Audio\nCodec ID                                 : A_DTS\nDuration                                 : 1 h 56 min\nBit rate mode                            : Variable\nBit rate                                 : 3 389 kb/s\nChannel(s)                               : 6 channels\nChannel layout                           : C L R Ls Rs LFE\nSampling rate                            : 48.0 kHz\nFrame rate                               : 93.750 FPS (512 SPF)\nBit depth                                : 24 bits\nCompression mode                         : Lossless\nStream size                              : 2.75 GiB (25%)\nTitle                                    : Original Spanish Surround\nLanguage                                 : Spanish\nDefault                                  : Yes\nForced                                   : No\nOriginal source medium                   : Blu-ray\n\nText #1\nID                                       : 3\nID in the original source medium         : 4608 (0x1200)\nFormat                                   : PGS\nMuxing mode                              : zlib\nCodec ID                                 : S_HDMV/PGS\nCodec ID/Info                            : Picture based subtitle format used on BDs/HD-DVDs\nDuration                                 : 1 h 40 min\nBit rate                                 : 1 239 b/s\nFrame rate                               : 0.017 FPS\nCount of elements                        : 104\nStream size                              : 908 KiB (0%)\nLanguage                                 : Spanish\nDefault                                  : No\nForced                                   : No\nOriginal source medium                   : Blu-ray\n\nText #2\nID                                       : 4\nID in the original source medium         : 4609 (0x1201)\nFormat                                   : PGS\nMuxing mode                              : zlib\nCodec ID                                 : S_HDMV/PGS\nCodec ID/Info                            : Picture based subtitle format used on BDs/HD-DVDs\nDuration                                 : 1 h 52 min\nBit rate                                 : 46.9 kb/s\nFrame rate                               : 0.540 FPS\nCount of elements                        : 3644\nStream size                              : 37.8 MiB (0%)\nLanguage                                 : English\nDefault                                  : No\nForced                                   : No\nOriginal source medium                   : Blu-ray\n\nMenu\n00:00:00.000                             : en:chapter01 \n00:05:18.458                             : en:chapter02 \n00:14:55.125                             : en:chapter03 \n00:20:17.416                             : en:chapter04 \n00:27:08.833                             : en:chapter05 \n00:38:35.333                             : en:chapter06 \n00:45:59.791                             : en:chapter07 \n00:52:44.708                             : en:chapter08 \n00:58:30.416                             : en:chapter09 \n01:03:15.791                             : en:chapter10 \n01:10:48.791                             : en:chapter11 \n01:16:32.875                             : en:chapter12 \n01:27:20.708                             : en:chapter13 \n01:33:19.958                             : en:chapter14 \n01:38:46.625                             : en:chapter15 \n01:46:47.416                             : en:chapter16 \n01:50:03.208                             : en:chapter17 \n\n\n", stderr='')
+🎵 Scanning audio tracks for The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS...
+🎯 Best track: 2 - DTS Master Audio, Spanish, 5.1 channels, 24 bits, 48kHz, dialnorm: 0dB
+🔧 Extracting audio...
+Running in fast mode                                                           
+Keeping dialnorm                                                               
+analyze: 1%
+analyze: 2%
+analyze: 3%
+analyze: 4%
+analyze: 5%
+analyze: 6%
+analyze: 7%
+analyze: 8%
+analyze: 9%
+analyze: 10%
+analyze: 11%
+analyze: 12%
+analyze: 13%
+analyze: 14%
+analyze: 15%
+analyze: 16%
+analyze: 17%
+analyze: 18%
+analyze: 19%
+analyze: 20%
+analyze: 21%
+analyze: 22%
+analyze: 23%
+analyze: 24%
+analyze: 25%
+analyze: 26%
+analyze: 27%
+analyze: 28%
+analyze: 29%
+analyze: 30%
+analyze: 31%
+analyze: 32%
+analyze: 33%
+analyze: 34%
+analyze: 35%
+analyze: 36%
+analyze: 37%
+analyze: 38%
+analyze: 39%
+analyze: 40%
+analyze: 41%
+analyze: 42%
+analyze: 43%
+analyze: 44%
+analyze: 45%
+analyze: 46%
+analyze: 47%
+analyze: 48%
+analyze: 49%
+analyze: 50%
+analyze: 51%
+analyze: 52%
+analyze: 53%
+analyze: 54%
+analyze: 55%
+analyze: 56%
+analyze: 57%
+analyze: 58%
+analyze: 59%
+analyze: 60%
+analyze: 61%
+analyze: 62%
+analyze: 63%
+analyze: 64%
+analyze: 65%
+analyze: 66%
+analyze: 67%
+analyze: 68%
+analyze: 69%
+analyze: 70%
+analyze: 71%
+analyze: 72%
+analyze: 73%
+analyze: 74%
+analyze: 75%
+analyze: 76%
+analyze: 77%
+analyze: 78%
+analyze: 79%
+analyze: 80%
+analyze: 81%
+analyze: 82%
+analyze: 83%
+analyze: 84%
+analyze: 85%
+analyze: 86%
+analyze: 87%
+analyze: 88%
+analyze: 89%
+analyze: 90%
+analyze: 91%
+analyze: 92%
+analyze: 93%
+analyze: 94%
+analyze: 95%
+analyze: 96%
+analyze: 97%
+analyze: 98%
+analyze: 99%
+analyze: 100%
+MKV, 1 video track, 1 audio track, 2 subtitle tracks, 1:56:22, 24p             
+1: h264/AVC, 1080p24 (16:9)                                                    
+2: DTS Master Audio, Spanish, 5.1 channels, 24 bits, 48kHz, dialnorm: 0dB      
+   (core: DTS, 5.1 channels, 768kbps, 48kHz, dialnorm: 0dB)                    
+   "Original Spanish Surround"                                                 
+3: Subtitle (PGS), Spanish                                                     
+4: Subtitle (PGS), English                                                     
+a02 Extracting audio track number 2...                                         
+a02 Decoding with libDcaDec DTS Decoder...                                     
+a02 Remapping channels...                                                      
+a02 Encoding AC3 <640kbps> with libAften...                                    
+a02 Creating file "W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\480p\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS@480p.ac3"...
+process: 1%
+process: 2%
+process: 3%
+process: 4%
+process: 5%
+process: 6%
+process: 7%
+process: 8%
+process: 9%
+process: 10%
+process: 11%
+process: 12%
+process: 13%
+process: 14%
+process: 15%
+process: 16%
+process: 17%
+process: 18%
+process: 19%
+process: 20%
+process: 21%
+process: 22%
+process: 23%
+process: 24%
+process: 25%
+process: 26%
+process: 27%
+process: 28%
+process: 29%
+process: 30%
+process: 31%
+process: 32%
+process: 33%
+process: 34%
+process: 35%
+process: 36%
+process: 37%
+process: 38%
+process: 39%
+process: 40%
+process: 41%
+process: 42%
+process: 43%
+process: 44%
+process: 45%
+process: 46%
+process: 47%
+process: 48%
+process: 49%
+process: 50%
+process: 51%
+process: 52%
+process: 53%
+process: 54%
+process: 55%
+process: 56%
+process: 57%
+process: 58%
+process: 59%
+process: 60%
+process: 61%
+process: 62%
+process: 63%
+process: 64%
+process: 65%
+process: 66%
+process: 67%
+process: 68%
+process: 69%
+process: 70%
+process: 71%
+process: 72%
+process: 73%
+process: 74%
+process: 75%
+process: 76%
+process: 77%
+process: 78%
+process: 79%
+process: 80%
+process: 81%
+process: 82%
+process: 83%
+process: 84%
+process: 85%
+process: 86%
+process: 87%
+process: 88%
+process: 89%
+process: 90%
+process: 91%
+process: 92%
+process: 93%
+process: 94%
+process: 95%
+process: 96%
+process: 97%
+process: 98%
+process: 99%
+process: 100%
+a02 The original audio track has a constant bit depth of 24 bits.              
+Video track 1 contains 167559 frames.                                          
+eac3to processing took 2 minutes, 12 seconds.                                  
+Done.                                                                          
+
+Audio extracted
+Extracting frame
+Getting frame
+Crop values for frame at 300s: 
+Top: 138, Bottom: 138, Left: 0, Right: 0
+Extracting frame
+Getting frame
+Crop values for frame at 1000s: 
+Top: 138, Bottom: 138, Left: 0, Right: 0
+Extracting frame
+Getting frame
+Crop values for frame at 1500s: 
+Top: 138, Bottom: 136, Left: 0, Right: 0
+Extracting frame
+Getting frame
+Crop values for frame at 2500s: 
+Top: 138, Bottom: 138, Left: 0, Right: 0
+CQ is 17 Bitrate is  2116
+Output file path: W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\480p\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS@480p.mkv
+Final ranges are:  1500 1442 2500

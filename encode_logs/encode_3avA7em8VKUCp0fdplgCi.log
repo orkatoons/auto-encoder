@@ -1,0 +1,561 @@
+Found resolutions for Los Rodríguez y el más allá AKA The Rodriguez and the Beyond: ['576p', '480p']
+MKV merge output:
+{'mkvmerge_path': 'mkvmerge', 'title': None, '_chapters_file': None, '_chapter_language': None, '_global_tags_file': None, '_link_to_previous_file': None, '_link_to_next_file': None, 'tracks': [{'_track_codec': 'AVC/H.264/MPEG-4p10', '_track_type': 'video', 'mkvmerge_path': 'mkvmerge', '_file_path': 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv', '_track_id': 0, 'track_name': None, '_language': 'und', '_tags': None, 'default_track': True, 'forced_track': False, 'no_chapters': False, 'no_global_tags': False, 'no_track_tags': False, 'no_attachments': False}, {'_track_codec': 'DTS-HD Master Audio', '_track_type': 'audio', 'mkvmerge_path': 'mkvmerge', '_file_path': 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv', '_track_id': 1, 'track_name': 'Original Spanish Surround', '_language': 'spa', '_tags': None, 'default_track': True, 'forced_track': False, 'no_chapters': False, 'no_global_tags': False, 'no_track_tags': False, 'no_attachments': False}, {'_track_codec': 'HDMV PGS', '_track_type': 'subtitles', 'mkvmerge_path': 'mkvmerge', '_file_path': 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv', '_track_id': 2, 'track_name': None, '_language': 'spa', '_tags': None, 'default_track': False, 'forced_track': False, 'no_chapters': False, 'no_global_tags': False, 'no_track_tags': False, 'no_attachments': False}, {'_track_codec': 'HDMV PGS', '_track_type': 'subtitles', 'mkvmerge_path': 'mkvmerge', '_file_path': 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv', '_track_id': 3, 'track_name': None, '_language': 'eng', '_tags': None, 'default_track': False, 'forced_track': False, 'no_chapters': False, 'no_global_tags': False, 'no_track_tags': False, 'no_attachments': False}], 'attachments': [], '_split_options': []}
+Found track: {'_track_codec': 'AVC/H.264/MPEG-4p10', '_track_type': 'video', 'mkvmerge_path': 'mkvmerge', '_file_path': 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv', '_track_id': 0, 'track_name': None, '_language': 'und', '_tags': None, 'default_track': True, 'forced_track': False, 'no_chapters': False, 'no_global_tags': False, 'no_track_tags': False, 'no_attachments': False}
+Found track: {'_track_codec': 'DTS-HD Master Audio', '_track_type': 'audio', 'mkvmerge_path': 'mkvmerge', '_file_path': 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv', '_track_id': 1, 'track_name': 'Original Spanish Surround', '_language': 'spa', '_tags': None, 'default_track': True, 'forced_track': False, 'no_chapters': False, 'no_global_tags': False, 'no_track_tags': False, 'no_attachments': False}
+Found track: {'_track_codec': 'HDMV PGS', '_track_type': 'subtitles', 'mkvmerge_path': 'mkvmerge', '_file_path': 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv', '_track_id': 2, 'track_name': None, '_language': 'spa', '_tags': None, 'default_track': False, 'forced_track': False, 'no_chapters': False, 'no_global_tags': False, 'no_track_tags': False, 'no_attachments': False}
+Running command: C:\Program Files\MKVToolNix\mkvextract.exe tracks W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\source\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv 2:W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\source\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS_subtitle_2_spa.sup
+Found track: {'_track_codec': 'HDMV PGS', '_track_type': 'subtitles', 'mkvmerge_path': 'mkvmerge', '_file_path': 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv', '_track_id': 3, 'track_name': None, '_language': 'eng', '_tags': None, 'default_track': False, 'forced_track': False, 'no_chapters': False, 'no_global_tags': False, 'no_track_tags': False, 'no_attachments': False}
+Running command: C:\Program Files\MKVToolNix\mkvextract.exe tracks W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\source\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv 3:W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\source\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS_subtitle_3_eng.sup
+Extraction complete!
+MKV merge output:
+{'mkvmerge_path': 'mkvmerge', 'title': None, '_chapters_file': None, '_chapter_language': None, '_global_tags_file': None, '_link_to_previous_file': None, '_link_to_next_file': None, 'tracks': [{'_track_codec': 'AVC/H.264/MPEG-4p10', '_track_type': 'video', 'mkvmerge_path': 'mkvmerge', '_file_path': 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv', '_track_id': 0, 'track_name': None, '_language': 'und', '_tags': None, 'default_track': True, 'forced_track': False, 'no_chapters': False, 'no_global_tags': False, 'no_track_tags': False, 'no_attachments': False}, {'_track_codec': 'DTS-HD Master Audio', '_track_type': 'audio', 'mkvmerge_path': 'mkvmerge', '_file_path': 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv', '_track_id': 1, 'track_name': 'Original Spanish Surround', '_language': 'spa', '_tags': None, 'default_track': True, 'forced_track': False, 'no_chapters': False, 'no_global_tags': False, 'no_track_tags': False, 'no_attachments': False}, {'_track_codec': 'HDMV PGS', '_track_type': 'subtitles', 'mkvmerge_path': 'mkvmerge', '_file_path': 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv', '_track_id': 2, 'track_name': None, '_language': 'spa', '_tags': None, 'default_track': False, 'forced_track': False, 'no_chapters': False, 'no_global_tags': False, 'no_track_tags': False, 'no_attachments': False}, {'_track_codec': 'HDMV PGS', '_track_type': 'subtitles', 'mkvmerge_path': 'mkvmerge', '_file_path': 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv', '_track_id': 3, 'track_name': None, '_language': 'eng', '_tags': None, 'default_track': False, 'forced_track': False, 'no_chapters': False, 'no_global_tags': False, 'no_track_tags': False, 'no_attachments': False}], 'attachments': [], '_split_options': []}
+Found track: {'_track_codec': 'AVC/H.264/MPEG-4p10', '_track_type': 'video', 'mkvmerge_path': 'mkvmerge', '_file_path': 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv', '_track_id': 0, 'track_name': None, '_language': 'und', '_tags': None, 'default_track': True, 'forced_track': False, 'no_chapters': False, 'no_global_tags': False, 'no_track_tags': False, 'no_attachments': False}
+Found track: {'_track_codec': 'DTS-HD Master Audio', '_track_type': 'audio', 'mkvmerge_path': 'mkvmerge', '_file_path': 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv', '_track_id': 1, 'track_name': 'Original Spanish Surround', '_language': 'spa', '_tags': None, 'default_track': True, 'forced_track': False, 'no_chapters': False, 'no_global_tags': False, 'no_track_tags': False, 'no_attachments': False}
+Found track: {'_track_codec': 'HDMV PGS', '_track_type': 'subtitles', 'mkvmerge_path': 'mkvmerge', '_file_path': 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv', '_track_id': 2, 'track_name': None, '_language': 'spa', '_tags': None, 'default_track': False, 'forced_track': False, 'no_chapters': False, 'no_global_tags': False, 'no_track_tags': False, 'no_attachments': False}
+Running command: C:\Program Files\MKVToolNix\mkvextract.exe tracks W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\source\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv 2:W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\source\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS_subtitle_2_spa.sup
+Found track: {'_track_codec': 'HDMV PGS', '_track_type': 'subtitles', 'mkvmerge_path': 'mkvmerge', '_file_path': 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv', '_track_id': 3, 'track_name': None, '_language': 'eng', '_tags': None, 'default_track': False, 'forced_track': False, 'no_chapters': False, 'no_global_tags': False, 'no_track_tags': False, 'no_attachments': False}
+Running command: C:\Program Files\MKVToolNix\mkvextract.exe tracks W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\source\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv 3:W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\source\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS_subtitle_3_eng.sup
+Extraction complete!
+PROGRESS::The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv::5
+CompletedProcess(args=['C:\\Program Files\\MediaInfo_CLI_25.03_Windows_x64\\MediaInfo.exe', 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv'], returncode=0, stdout="General\nUnique ID                                : 87485695788471892472289258546573889678 (0x41D121D2C7000373D8CA33D101A8508E)\nComplete name                            : W:\\Encodes\\Los RodrÃ\xadguez y el mÃ¡s allÃ¡ AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv\nFormat                                   : Matroska\nFormat version                           : Version 4\nFile size                                : 10.9 GiB\nDuration                                 : 1 h 56 min\nOverall bit rate mode                    : Variable\nOverall bit rate                         : 13.4 Mb/s\nFrame rate                               : 24.000 FPS\nEncoded date                             : 2024-03-27 15:04:20 UTC\nWriting application                      : mkvmerge v80.0 ('Roundabout') 64-bit\nWriting library                          : libebml v1.4.4 + libmatroska v1.7.1\n\nVideo\nID                                       : 1\nID in the original source medium         : 4113 (0x1011)\nFormat                                   : AVC\nFormat/Info                              : Advanced Video Codec\nFormat profile                           : High@L4.1\nFormat settings                          : CABAC / 4 Ref Frames\nFormat settings, CABAC                   : Yes\nFormat settings, Reference frames        : 4 frames\nFormat settings, Slice count             : 4 slices per frame\nCodec ID                                 : V_MPEG4/ISO/AVC\nDuration                                 : 1 h 56 min\nBit rate mode                            : Variable\nBit rate                                 : 9 997 kb/s\nMaximum bit rate                         : 13.0 Mb/s\nWidth                                    : 1 920 pixels\nHeight                                   : 1 080 pixels\nDisplay aspect ratio                     : 16:9\nFrame rate mode                          : Constant\nFrame rate                               : 24.000 FPS\nColor space                              : YUV\nChroma subsampling                       : 4:2:0\nBit depth                                : 8 bits\nScan type                                : Progressive\nBits/(Pixel*Frame)                       : 0.201\nStream size                              : 8.13 GiB (75%)\nDefault                                  : Yes\nForced                                   : No\nColor range                              : Limited\nColor primaries                          : BT.709\nTransfer characteristics                 : BT.709\nMatrix coefficients                      : BT.709\nOriginal source medium                   : Blu-ray\n\nAudio\nID                                       : 2\nID in the original source medium         : 4352 (0x1100)\nFormat                                   : DTS XLL\nFormat/Info                              : Digital Theater Systems\nCommercial name                          : DTS-HD Master Audio\nCodec ID                                 : A_DTS\nDuration                                 : 1 h 56 min\nBit rate mode                            : Variable\nBit rate                                 : 3 389 kb/s\nChannel(s)                               : 6 channels\nChannel layout                           : C L R Ls Rs LFE\nSampling rate                            : 48.0 kHz\nFrame rate                               : 93.750 FPS (512 SPF)\nBit depth                                : 24 bits\nCompression mode                         : Lossless\nStream size                              : 2.75 GiB (25%)\nTitle                                    : Original Spanish Surround\nLanguage                                 : Spanish\nDefault                                  : Yes\nForced                                   : No\nOriginal source medium                   : Blu-ray\n\nText #1\nID                                       : 3\nID in the original source medium         : 4608 (0x1200)\nFormat                                   : PGS\nMuxing mode                              : zlib\nCodec ID                                 : S_HDMV/PGS\nCodec ID/Info                            : Picture based subtitle format used on BDs/HD-DVDs\nDuration                                 : 1 h 40 min\nBit rate                                 : 1 239 b/s\nFrame rate                               : 0.017 FPS\nCount of elements                        : 104\nStream size                              : 908 KiB (0%)\nLanguage                                 : Spanish\nDefault                                  : No\nForced                                   : No\nOriginal source medium                   : Blu-ray\n\nText #2\nID                                       : 4\nID in the original source medium         : 4609 (0x1201)\nFormat                                   : PGS\nMuxing mode                              : zlib\nCodec ID                                 : S_HDMV/PGS\nCodec ID/Info                            : Picture based subtitle format used on BDs/HD-DVDs\nDuration                                 : 1 h 52 min\nBit rate                                 : 46.9 kb/s\nFrame rate                               : 0.540 FPS\nCount of elements                        : 3644\nStream size                              : 37.8 MiB (0%)\nLanguage                                 : English\nDefault                                  : No\nForced                                   : No\nOriginal source medium                   : Blu-ray\n\nMenu\n00:00:00.000                             : en:chapter01 \n00:05:18.458                             : en:chapter02 \n00:14:55.125                             : en:chapter03 \n00:20:17.416                             : en:chapter04 \n00:27:08.833                             : en:chapter05 \n00:38:35.333                             : en:chapter06 \n00:45:59.791                             : en:chapter07 \n00:52:44.708                             : en:chapter08 \n00:58:30.416                             : en:chapter09 \n01:03:15.791                             : en:chapter10 \n01:10:48.791                             : en:chapter11 \n01:16:32.875                             : en:chapter12 \n01:27:20.708                             : en:chapter13 \n01:33:19.958                             : en:chapter14 \n01:38:46.625                             : en:chapter15 \n01:46:47.416                             : en:chapter16 \n01:50:03.208                             : en:chapter17 \n\n\n", stderr='')
+🎵 Scanning audio tracks for The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS...
+🎯 Best track: 2 - DTS Master Audio, Spanish, 5.1 channels, 24 bits, 48kHz, dialnorm: 0dB
+🔧 Extracting audio...
+Running in fast mode                                                           
+Keeping dialnorm                                                               
+analyze: 1%
+analyze: 2%
+analyze: 3%
+analyze: 4%
+analyze: 5%
+analyze: 6%
+analyze: 7%
+analyze: 8%
+analyze: 9%
+analyze: 10%
+analyze: 11%
+analyze: 12%
+analyze: 13%
+analyze: 14%
+analyze: 15%
+analyze: 16%
+analyze: 17%
+analyze: 18%
+analyze: 19%
+analyze: 20%
+analyze: 21%
+analyze: 22%
+analyze: 23%
+analyze: 24%
+analyze: 25%
+analyze: 26%
+analyze: 27%
+analyze: 28%
+analyze: 29%
+analyze: 30%
+analyze: 31%
+analyze: 32%
+analyze: 33%
+analyze: 34%
+analyze: 35%
+analyze: 36%
+analyze: 37%
+analyze: 38%
+analyze: 39%
+analyze: 40%
+analyze: 41%
+analyze: 42%
+analyze: 43%
+analyze: 44%
+analyze: 45%
+analyze: 46%
+analyze: 47%
+analyze: 48%
+analyze: 49%
+analyze: 50%
+analyze: 51%
+analyze: 52%
+analyze: 53%
+analyze: 54%
+analyze: 55%
+analyze: 56%
+analyze: 57%
+analyze: 58%
+analyze: 59%
+analyze: 60%
+analyze: 61%
+analyze: 62%
+analyze: 63%
+analyze: 64%
+analyze: 65%
+analyze: 66%
+analyze: 67%
+analyze: 68%
+analyze: 69%
+analyze: 70%
+analyze: 71%
+analyze: 72%
+analyze: 73%
+analyze: 74%
+analyze: 75%
+analyze: 76%
+analyze: 77%
+analyze: 78%
+analyze: 79%
+analyze: 80%
+analyze: 81%
+analyze: 82%
+analyze: 83%
+analyze: 84%
+analyze: 85%
+analyze: 86%
+analyze: 87%
+analyze: 88%
+analyze: 89%
+analyze: 90%
+analyze: 91%
+analyze: 92%
+analyze: 93%
+analyze: 94%
+analyze: 95%
+analyze: 96%
+analyze: 97%
+analyze: 98%
+analyze: 99%
+analyze: 100%
+MKV, 1 video track, 1 audio track, 2 subtitle tracks, 1:56:22, 24p             
+1: h264/AVC, 1080p24 (16:9)                                                    
+2: DTS Master Audio, Spanish, 5.1 channels, 24 bits, 48kHz, dialnorm: 0dB      
+   (core: DTS, 5.1 channels, 768kbps, 48kHz, dialnorm: 0dB)                    
+   "Original Spanish Surround"                                                 
+3: Subtitle (PGS), Spanish                                                     
+4: Subtitle (PGS), English                                                     
+a02 Extracting audio track number 2...                                         
+a02 Decoding with libDcaDec DTS Decoder...                                     
+a02 Remapping channels...                                                      
+a02 Encoding AC3 <640kbps> with libAften...                                    
+a02 Creating file "W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS@576p.ac3"...
+process: 1%
+process: 2%
+process: 3%
+process: 4%
+process: 5%
+process: 6%
+process: 7%
+process: 8%
+process: 9%
+process: 10%
+process: 11%
+process: 12%
+process: 13%
+process: 14%
+process: 15%
+process: 16%
+process: 17%
+process: 18%
+process: 19%
+process: 20%
+process: 21%
+process: 22%
+process: 23%
+process: 24%
+process: 25%
+process: 26%
+process: 27%
+process: 28%
+process: 29%
+process: 30%
+process: 31%
+process: 32%
+process: 33%
+process: 34%
+process: 35%
+process: 36%
+process: 37%
+process: 38%
+process: 39%
+process: 40%
+process: 41%
+process: 42%
+process: 43%
+process: 44%
+process: 45%
+process: 46%
+process: 47%
+process: 48%
+process: 49%
+process: 50%
+process: 51%
+process: 52%
+process: 53%
+process: 54%
+process: 55%
+process: 56%
+process: 57%
+process: 58%
+process: 59%
+process: 60%
+process: 61%
+process: 62%
+process: 63%
+process: 64%
+process: 65%
+process: 66%
+process: 67%
+process: 68%
+process: 69%
+process: 70%
+process: 71%
+process: 72%
+process: 73%
+process: 74%
+process: 75%
+process: 76%
+process: 77%
+process: 78%
+process: 79%
+process: 80%
+process: 81%
+process: 82%
+process: 83%
+process: 84%
+process: 85%
+process: 86%
+process: 87%
+process: 88%
+process: 89%
+process: 90%
+process: 91%
+process: 92%
+process: 93%
+process: 94%
+process: 95%
+process: 96%
+process: 97%
+process: 98%
+process: 99%
+process: 100%
+a02 The original audio track has a constant bit depth of 24 bits.              
+Video track 1 contains 167559 frames.                                          
+eac3to processing took 2 minutes, 17 seconds.                                  
+Done.                                                                          
+
+Audio extracted
+Extracting frame
+Getting frame
+Crop values for frame at 300s: 
+Top: 138, Bottom: 138, Left: 0, Right: 0
+Extracting frame
+Getting frame
+Crop values for frame at 1000s: 
+Top: 138, Bottom: 138, Left: 0, Right: 0
+Extracting frame
+Getting frame
+Crop values for frame at 1500s: 
+Top: 138, Bottom: 136, Left: 0, Right: 0
+Extracting frame
+Getting frame
+Crop values for frame at 2500s: 
+Top: 138, Bottom: 138, Left: 0, Right: 0
+CQ is 17 Bitrate is  2931
+Output file path: W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS@576p.mkv
+Final ranges are:  2500 1971 3500
+Final ranges are:  2500 2334 3500
+Final ranges are:  2500 2781 3500
+Trying IMDb search: The Rodriguez and the Beyond
+✅ Found movie: "Archetypes" 'Beyond the Archetype: Human, Being' with Michaela Jaé Rodriguez & Candace Bushnell (2022)
+DEBUG: Movie data keys: ['title', 'kind', 'cover url', 'year', 'plot', 'canonical title', 'long imdb title', 'long imdb canonical title', 'smart canonical title', 'smart long imdb canonical title', 'full-size cover url']
+DEBUG: Movie data: "Archetypes" 'Beyond the Archetype: Human, Being' with Michaela Jaé Rodriguez & Candace Bushnell
+
+    Video File       : W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS@576p.mkv
+    Audio Files      : ['W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\576p\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS@576p.ac3']
+    Subtitle Files   : ['W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS_subtitle_2_spa.sup', 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS_subtitle_3_eng.sup']
+    Language         : spa
+    Resolution       : 576p
+    Source Format    : BluRay
+    Encoding Used    : x264
+    Final Filename   : W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\"Archetypes".'Beyond.the.Archetype:.Human,.Being'.with.Michaela.Jaé.Rodriguez.&.Candace.Bushnell.2022.576p.BluRay.x264-HANDJOB.mkv
+    File Title       : "Archetypes" 'Beyond the Archetype: Human, Being' with Michaela Jaé Rodriguez & Candace Bushnell [2022] 576p BluRay - HJ
+    
+Running command: mkvmerge -o W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\"Archetypes".'Beyond.the.Archetype:.Human,.Being'.with.Michaela.Jaé.Rodriguez.&.Candace.Bushnell.2022.576p.BluRay.x264-HANDJOB.mkv --title "Archetypes" 'Beyond the Archetype: Human, Being' with Michaela Jaé Rodriguez & Candace Bushnell [2022] 576p BluRay - HJ --no-global-tags --no-chapters W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS@576p.mkv --language 0:spa --default-track 0:yes W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS@576p.ac3 --language 0:spa --forced-track 0:no --default-track 0:no W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\source\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS_subtitle_2_spa.sup --language 0:eng --forced-track 0:no --default-track 0:no W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\source\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS_subtitle_3_eng.sup
+mkvmerge v90.0 ('Hanging On') 64-bit
+'W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS@576p.mkv': Using the demultiplexer for the format 'Matroska'.
+'W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS@576p.ac3': Using the demultiplexer for the format 'AC-3'.
+'W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\source\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS_subtitle_2_spa.sup': Using the demultiplexer for the format 'PGSSUP'.
+'W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\source\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS_subtitle_3_eng.sup': Using the demultiplexer for the format 'PGSSUP'.
+'W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS@576p.mkv' track 0: Using the output module for the format 'AVC/H.264'.
+'W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS@576p.ac3' track 0: Using the output module for the format 'AC-3'.
+'W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\source\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS_subtitle_2_spa.sup' track 0: Using the output module for the format 'HDMV PGS'.
+'W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\source\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS_subtitle_3_eng.sup' track 0: Using the output module for the format 'HDMV PGS'.
+Error: The file 'W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\576p\"Archetypes".'Beyond.the.Archetype:.Human,.Being'.with.Michaela.Jaé.Rodriguez.&.Candace.Bushnell.2022.576p.BluRay.x264-HANDJOB.mkv' could not be opened for writing: open file error.
+CompletedProcess(args=['C:\\Program Files\\MediaInfo_CLI_25.03_Windows_x64\\MediaInfo.exe', 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv'], returncode=0, stdout="General\nUnique ID                                : 87485695788471892472289258546573889678 (0x41D121D2C7000373D8CA33D101A8508E)\nComplete name                            : W:\\Encodes\\Los RodrÃ\xadguez y el mÃ¡s allÃ¡ AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS.mkv\nFormat                                   : Matroska\nFormat version                           : Version 4\nFile size                                : 10.9 GiB\nDuration                                 : 1 h 56 min\nOverall bit rate mode                    : Variable\nOverall bit rate                         : 13.4 Mb/s\nFrame rate                               : 24.000 FPS\nEncoded date                             : 2024-03-27 15:04:20 UTC\nWriting application                      : mkvmerge v80.0 ('Roundabout') 64-bit\nWriting library                          : libebml v1.4.4 + libmatroska v1.7.1\n\nVideo\nID                                       : 1\nID in the original source medium         : 4113 (0x1011)\nFormat                                   : AVC\nFormat/Info                              : Advanced Video Codec\nFormat profile                           : High@L4.1\nFormat settings                          : CABAC / 4 Ref Frames\nFormat settings, CABAC                   : Yes\nFormat settings, Reference frames        : 4 frames\nFormat settings, Slice count             : 4 slices per frame\nCodec ID                                 : V_MPEG4/ISO/AVC\nDuration                                 : 1 h 56 min\nBit rate mode                            : Variable\nBit rate                                 : 9 997 kb/s\nMaximum bit rate                         : 13.0 Mb/s\nWidth                                    : 1 920 pixels\nHeight                                   : 1 080 pixels\nDisplay aspect ratio                     : 16:9\nFrame rate mode                          : Constant\nFrame rate                               : 24.000 FPS\nColor space                              : YUV\nChroma subsampling                       : 4:2:0\nBit depth                                : 8 bits\nScan type                                : Progressive\nBits/(Pixel*Frame)                       : 0.201\nStream size                              : 8.13 GiB (75%)\nDefault                                  : Yes\nForced                                   : No\nColor range                              : Limited\nColor primaries                          : BT.709\nTransfer characteristics                 : BT.709\nMatrix coefficients                      : BT.709\nOriginal source medium                   : Blu-ray\n\nAudio\nID                                       : 2\nID in the original source medium         : 4352 (0x1100)\nFormat                                   : DTS XLL\nFormat/Info                              : Digital Theater Systems\nCommercial name                          : DTS-HD Master Audio\nCodec ID                                 : A_DTS\nDuration                                 : 1 h 56 min\nBit rate mode                            : Variable\nBit rate                                 : 3 389 kb/s\nChannel(s)                               : 6 channels\nChannel layout                           : C L R Ls Rs LFE\nSampling rate                            : 48.0 kHz\nFrame rate                               : 93.750 FPS (512 SPF)\nBit depth                                : 24 bits\nCompression mode                         : Lossless\nStream size                              : 2.75 GiB (25%)\nTitle                                    : Original Spanish Surround\nLanguage                                 : Spanish\nDefault                                  : Yes\nForced                                   : No\nOriginal source medium                   : Blu-ray\n\nText #1\nID                                       : 3\nID in the original source medium         : 4608 (0x1200)\nFormat                                   : PGS\nMuxing mode                              : zlib\nCodec ID                                 : S_HDMV/PGS\nCodec ID/Info                            : Picture based subtitle format used on BDs/HD-DVDs\nDuration                                 : 1 h 40 min\nBit rate                                 : 1 239 b/s\nFrame rate                               : 0.017 FPS\nCount of elements                        : 104\nStream size                              : 908 KiB (0%)\nLanguage                                 : Spanish\nDefault                                  : No\nForced                                   : No\nOriginal source medium                   : Blu-ray\n\nText #2\nID                                       : 4\nID in the original source medium         : 4609 (0x1201)\nFormat                                   : PGS\nMuxing mode                              : zlib\nCodec ID                                 : S_HDMV/PGS\nCodec ID/Info                            : Picture based subtitle format used on BDs/HD-DVDs\nDuration                                 : 1 h 52 min\nBit rate                                 : 46.9 kb/s\nFrame rate                               : 0.540 FPS\nCount of elements                        : 3644\nStream size                              : 37.8 MiB (0%)\nLanguage                                 : English\nDefault                                  : No\nForced                                   : No\nOriginal source medium                   : Blu-ray\n\nMenu\n00:00:00.000                             : en:chapter01 \n00:05:18.458                             : en:chapter02 \n00:14:55.125                             : en:chapter03 \n00:20:17.416                             : en:chapter04 \n00:27:08.833                             : en:chapter05 \n00:38:35.333                             : en:chapter06 \n00:45:59.791                             : en:chapter07 \n00:52:44.708                             : en:chapter08 \n00:58:30.416                             : en:chapter09 \n01:03:15.791                             : en:chapter10 \n01:10:48.791                             : en:chapter11 \n01:16:32.875                             : en:chapter12 \n01:27:20.708                             : en:chapter13 \n01:33:19.958                             : en:chapter14 \n01:38:46.625                             : en:chapter15 \n01:46:47.416                             : en:chapter16 \n01:50:03.208                             : en:chapter17 \n\n\n", stderr='')
+🎵 Scanning audio tracks for The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS...
+🎯 Best track: 2 - DTS Master Audio, Spanish, 5.1 channels, 24 bits, 48kHz, dialnorm: 0dB
+🔧 Extracting audio...
+Running in fast mode                                                           
+Keeping dialnorm                                                               
+analyze: 1%
+analyze: 2%
+analyze: 3%
+analyze: 4%
+analyze: 5%
+analyze: 6%
+analyze: 7%
+analyze: 8%
+analyze: 9%
+analyze: 10%
+analyze: 11%
+analyze: 12%
+analyze: 13%
+analyze: 14%
+analyze: 15%
+analyze: 16%
+analyze: 17%
+analyze: 18%
+analyze: 19%
+analyze: 20%
+analyze: 21%
+analyze: 22%
+analyze: 23%
+analyze: 24%
+analyze: 25%
+analyze: 26%
+analyze: 27%
+analyze: 28%
+analyze: 29%
+analyze: 30%
+analyze: 31%
+analyze: 32%
+analyze: 33%
+analyze: 34%
+analyze: 35%
+analyze: 36%
+analyze: 37%
+analyze: 38%
+analyze: 39%
+analyze: 40%
+analyze: 41%
+analyze: 42%
+analyze: 43%
+analyze: 44%
+analyze: 45%
+analyze: 46%
+analyze: 47%
+analyze: 48%
+analyze: 49%
+analyze: 50%
+analyze: 51%
+analyze: 52%
+analyze: 53%
+analyze: 54%
+analyze: 55%
+analyze: 56%
+analyze: 57%
+analyze: 58%
+analyze: 59%
+analyze: 60%
+analyze: 61%
+analyze: 62%
+analyze: 63%
+analyze: 64%
+analyze: 65%
+analyze: 66%
+analyze: 67%
+analyze: 68%
+analyze: 69%
+analyze: 70%
+analyze: 71%
+analyze: 72%
+analyze: 73%
+analyze: 74%
+analyze: 75%
+analyze: 76%
+analyze: 77%
+analyze: 78%
+analyze: 79%
+analyze: 80%
+analyze: 81%
+analyze: 82%
+analyze: 83%
+analyze: 84%
+analyze: 85%
+analyze: 86%
+analyze: 87%
+analyze: 88%
+analyze: 89%
+analyze: 90%
+analyze: 91%
+analyze: 92%
+analyze: 93%
+analyze: 94%
+analyze: 95%
+analyze: 96%
+analyze: 97%
+analyze: 98%
+analyze: 99%
+analyze: 100%
+MKV, 1 video track, 1 audio track, 2 subtitle tracks, 1:56:22, 24p             
+1: h264/AVC, 1080p24 (16:9)                                                    
+2: DTS Master Audio, Spanish, 5.1 channels, 24 bits, 48kHz, dialnorm: 0dB      
+   (core: DTS, 5.1 channels, 768kbps, 48kHz, dialnorm: 0dB)                    
+   "Original Spanish Surround"                                                 
+3: Subtitle (PGS), Spanish                                                     
+4: Subtitle (PGS), English                                                     
+a02 Extracting audio track number 2...                                         
+a02 Decoding with libDcaDec DTS Decoder...                                     
+a02 Remapping channels...                                                      
+a02 Encoding AC3 <640kbps> with libAften...                                    
+a02 Creating file "W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\480p\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS@480p.ac3"...
+process: 1%
+process: 2%
+process: 3%
+process: 4%
+process: 5%
+process: 6%
+process: 7%
+process: 8%
+process: 9%
+process: 10%
+process: 11%
+process: 12%
+process: 13%
+process: 14%
+process: 15%
+process: 16%
+process: 17%
+process: 18%
+process: 19%
+process: 20%
+process: 21%
+process: 22%
+process: 23%
+process: 24%
+process: 25%
+process: 26%
+process: 27%
+process: 28%
+process: 29%
+process: 30%
+process: 31%
+process: 32%
+process: 33%
+process: 34%
+process: 35%
+process: 36%
+process: 37%
+process: 38%
+process: 39%
+process: 40%
+process: 41%
+process: 42%
+process: 43%
+process: 44%
+process: 45%
+process: 46%
+process: 47%
+process: 48%
+process: 49%
+process: 50%
+process: 51%
+process: 52%
+process: 53%
+process: 54%
+process: 55%
+process: 56%
+process: 57%
+process: 58%
+process: 59%
+process: 60%
+process: 61%
+process: 62%
+process: 63%
+process: 64%
+process: 65%
+process: 66%
+process: 67%
+process: 68%
+process: 69%
+process: 70%
+process: 71%
+process: 72%
+process: 73%
+process: 74%
+process: 75%
+process: 76%
+process: 77%
+process: 78%
+process: 79%
+process: 80%
+process: 81%
+process: 82%
+process: 83%
+process: 84%
+process: 85%
+process: 86%
+process: 87%
+process: 88%
+process: 89%
+process: 90%
+process: 91%
+process: 92%
+process: 93%
+process: 94%
+process: 95%
+process: 96%
+process: 97%
+process: 98%
+process: 99%
+process: 100%
+a02 The original audio track has a constant bit depth of 24 bits.              
+Video track 1 contains 167559 frames.                                          
+eac3to processing took 2 minutes, 9 seconds.                                   
+Done.                                                                          
+
+Audio extracted
+Extracting frame
+Getting frame
+Crop values for frame at 300s: 
+Top: 138, Bottom: 138, Left: 0, Right: 0
+Extracting frame
+Getting frame
+Crop values for frame at 1000s: 
+Top: 138, Bottom: 138, Left: 0, Right: 0
+Extracting frame
+Getting frame
+Crop values for frame at 1500s: 
+Top: 138, Bottom: 136, Left: 0, Right: 0
+Extracting frame
+Getting frame
+Crop values for frame at 2500s: 
+Top: 138, Bottom: 138, Left: 0, Right: 0
+CQ is 17 Bitrate is  2116
+Output file path: W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\480p\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS@480p.mkv
+Final ranges are:  1500 1442 2500
+Final ranges are:  1500 1690 2500
+Trying IMDb search: The Rodriguez and the Beyond
+✅ Found movie: "Archetypes" 'Beyond the Archetype: Human, Being' with Michaela Jaé Rodriguez & Candace Bushnell (2022)
+DEBUG: Movie data keys: ['title', 'kind', 'cover url', 'year', 'plot', 'canonical title', 'long imdb title', 'long imdb canonical title', 'smart canonical title', 'smart long imdb canonical title', 'full-size cover url']
+DEBUG: Movie data: "Archetypes" 'Beyond the Archetype: Human, Being' with Michaela Jaé Rodriguez & Candace Bushnell
+
+    Video File       : W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\480p\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS@480p.mkv
+    Audio Files      : ['W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\480p\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS@480p.ac3']
+    Subtitle Files   : ['W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS_subtitle_2_spa.sup', 'W:\\Encodes\\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\\source\\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS_subtitle_3_eng.sup']
+    Language         : spa
+    Resolution       : 480p
+    Source Format    : BluRay
+    Encoding Used    : x264
+    Final Filename   : W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\480p\"Archetypes".'Beyond.the.Archetype:.Human,.Being'.with.Michaela.Jaé.Rodriguez.&.Candace.Bushnell.2022.480p.BluRay.x264-HANDJOB.mkv
+    File Title       : "Archetypes" 'Beyond the Archetype: Human, Being' with Michaela Jaé Rodriguez & Candace Bushnell [2022] 480p BluRay - HJ
+    
+Running command: mkvmerge -o W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\480p\"Archetypes".'Beyond.the.Archetype:.Human,.Being'.with.Michaela.Jaé.Rodriguez.&.Candace.Bushnell.2022.480p.BluRay.x264-HANDJOB.mkv --title "Archetypes" 'Beyond the Archetype: Human, Being' with Michaela Jaé Rodriguez & Candace Bushnell [2022] 480p BluRay - HJ --no-global-tags --no-chapters W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\480p\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS@480p.mkv --language 0:spa --default-track 0:yes W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\480p\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS@480p.ac3 --language 0:spa --forced-track 0:no --default-track 0:no W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\source\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS_subtitle_2_spa.sup --language 0:eng --forced-track 0:no --default-track 0:no W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\source\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS_subtitle_3_eng.sup
+mkvmerge v90.0 ('Hanging On') 64-bit
+'W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\480p\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS@480p.mkv': Using the demultiplexer for the format 'Matroska'.
+'W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\480p\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS@480p.ac3': Using the demultiplexer for the format 'AC-3'.
+'W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\source\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS_subtitle_2_spa.sup': Using the demultiplexer for the format 'PGSSUP'.
+'W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\source\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS_subtitle_3_eng.sup': Using the demultiplexer for the format 'PGSSUP'.
+'W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\480p\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS@480p.mkv' track 0: Using the output module for the format 'AVC/H.264'.
+'W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\480p\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS@480p.ac3' track 0: Using the output module for the format 'AC-3'.
+'W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\source\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS_subtitle_2_spa.sup' track 0: Using the output module for the format 'HDMV PGS'.
+'W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\source\The.Rodriguez.And.The.Beyond.2019.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-BeerGAS_subtitle_3_eng.sup' track 0: Using the output module for the format 'HDMV PGS'.
+Error: The file 'W:\Encodes\Los Rodríguez y el más allá AKA The Rodriguez and the Beyond\480p\"Archetypes".'Beyond.the.Archetype:.Human,.Being'.with.Michaela.Jaé.Rodriguez.&.Candace.Bushnell.2022.480p.BluRay.x264-HANDJOB.mkv' could not be opened for writing: open file error.
