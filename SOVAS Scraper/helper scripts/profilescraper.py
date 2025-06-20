@@ -30,29 +30,48 @@ time.sleep(1)
 clipboard_text = pyperclip.paste()
 lines = clipboard_text.splitlines()
 
+print(f"🔍 DEBUG: Clipboard has {len(lines)} lines")
+print(f"🔍 DEBUG: Extracting names from lines 69-121 (every 3rd line)")
+
 names = []
 for i in range(69, 121, 3):  # Adjust line range if needed
     if i < len(lines):
-        names.append(lines[i].strip())
+        name = lines[i].strip()
+        names.append(name)
+        print(f"   - Line {i}: '{name}'")
     else:
+        print(f"   - Line {i}: Index out of range")
         break
 
+print(f"🔍 DEBUG: Extracted {len(names)} names")
+
 # === Step 3: Extract profile links from saved HTML ===
+print(f"🔍 DEBUG: Reading HTML file: {html_file_path}")
+print(f"🔍 DEBUG: HTML file exists: {os.path.exists(html_file_path)}")
+
 with open(html_file_path, 'r', encoding='utf-8') as file:
     soup = BeautifulSoup(file, 'html.parser')
 
 cards = soup.find_all("div", class_="md-card md-theme provider-card")
+print(f"🔍 DEBUG: Found {len(cards)} profile cards in HTML")
 
 profiles = []
-for card in cards:
+for i, card in enumerate(cards):
     a_tag = card.find("a", class_="profile-anchor")
     if a_tag:
         full_url = a_tag.get("href")
         parsed_url = urlparse(full_url)
         clean_url = urlunparse((parsed_url.scheme, parsed_url.netloc, parsed_url.path, '', '', ''))
         profiles.append(clean_url)
+        print(f"   - Card {i+1}: {clean_url}")
+    else:
+        print(f"   - Card {i+1}: No profile anchor found")
+
+print(f"🔍 DEBUG: Extracted {len(profiles)} profile URLs")
 
 # === Step 4: Combine names and profiles ===
+print(f"🔍 DEBUG: Combining {len(names)} names with {len(profiles)} profiles")
+
 combined_data = [
     {
         "Name": name,
@@ -67,15 +86,22 @@ combined_data = [
     for i, name in enumerate(names)
 ]
 
+print(f"🔍 DEBUG: Created {len(combined_data)} combined entries")
+for i, entry in enumerate(combined_data[:3]):  # Show first 3 entries
+    print(f"   - Entry {i+1}: {entry['Name']} -> {entry['Work Samples']}")
+
 # === Step 5: Load existing JSON and avoid duplicates ===
 existing_data = []
 existing_final_data = []
+
+print(f"🔍 DEBUG: Loading existing data...")
 
 # Load from voice_actors.json if it exists
 if os.path.exists(json_file):
     try:
         with open(json_file, "r", encoding="utf-8") as f:
             existing_data = json.load(f)
+        print(f"🔍 DEBUG: Loaded {len(existing_data)} entries from voice_actors.json")
     except Exception as e:
         print(f"Error loading existing JSON: {e}")
 
@@ -84,7 +110,7 @@ if os.path.exists(final_data_file):
     try:
         with open(final_data_file, "r", encoding="utf-8") as f:
             existing_final_data = json.load(f)
-        print(f"📂 Found existing final_data.json with {len(existing_final_data)} entries")
+        print(f"🔍 DEBUG: Loaded {len(existing_final_data)} entries from final_data.json")
     except Exception as e:
         print(f"Error loading final_data.json: {e}")
 
@@ -92,20 +118,33 @@ if os.path.exists(final_data_file):
 all_existing_entries = {(entry["Name"].lower(), entry["Work Samples"].lower()) for entry in existing_data}
 all_existing_entries.update({(entry["Name"].lower(), entry["Work Samples"].lower()) for entry in existing_final_data})
 
+print(f"🔍 DEBUG: Total existing entries for deduplication: {len(all_existing_entries)}")
+
 # Deduplicate based on both Name and Profile (case-insensitive)
-new_data = [
-    entry for entry in combined_data 
-    if (entry["Name"].lower(), entry["Work Samples"].lower()) not in all_existing_entries
-]
+new_data = []
+duplicate_count = 0
+
+for entry in combined_data:
+    key = (entry["Name"].lower(), entry["Work Samples"].lower())
+    if key not in all_existing_entries:
+        new_data.append(entry)
+    else:
+        duplicate_count += 1
+        print(f"🔍 DEBUG: Duplicate found: {entry['Name']}")
+
+print(f"🔍 DEBUG: Found {len(new_data)} new entries, {duplicate_count} duplicates")
 
 # Merge with final_data.json if it exists, otherwise use voice_actors.json
 if existing_final_data:
     final_data = existing_final_data + new_data
     output_file = final_data_file
-    print(f"📂 Merging with existing final_data.json")
+    print(f"🔍 DEBUG: Merging with existing final_data.json")
 else:
     final_data = existing_data + new_data
     output_file = json_file
+    print(f"🔍 DEBUG: Using voice_actors.json")
+
+print(f"🔍 DEBUG: Final data count before deduplication: {len(final_data)}")
 
 # Remove duplicates in final_data just in case
 seen = set()
@@ -116,10 +155,13 @@ for entry in final_data:
         deduped_final_data.append(entry)
         seen.add(key)
 
+print(f"🔍 DEBUG: Final data count after deduplication: {len(deduped_final_data)}")
+print(f"🔍 DEBUG: Saving to: {output_file}")
+
 try:
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump(deduped_final_data, f, indent=4, ensure_ascii=False)
-    print(f"Saved {len(new_data)} new entries (total: {len(deduped_final_data)}) to '{output_file}'")
+    print(f"🔍 DEBUG: Successfully saved {len(new_data)} new entries (total: {len(deduped_final_data)}) to '{output_file}'")
 except Exception as e:
     print(f"Error writing to JSON: {e}")
 

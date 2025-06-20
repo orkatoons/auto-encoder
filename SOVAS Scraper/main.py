@@ -77,9 +77,43 @@ def run_automate_with_tracking(script_path, start_page, num_pages, initial_count
     total_new_entries = 0
     
     for page in range(start_page, start_page + num_pages):
-        print(f"\n--- Processing page {page} ---")
+        print(f"\n{'='*50}")
+        print(f"🔍 DEBUG: Processing page {page}")
+        print(f"🔍 DEBUG: Initial count: {initial_count}")
+        print(f"🔍 DEBUG: Total new entries so far: {total_new_entries}")
+        print(f"{'='*50}")
+        
+        # Check data before processing this page
+        json_dir = "C:/Encode Tools/auto-encoder/SOVAS Scraper/json data"
+        final_data_file = os.path.join(json_dir, "final_data.json")
+        voice_actors_file = os.path.join(json_dir, "voice_actors.json")
+        
+        print(f"🔍 DEBUG: Checking files before page {page}:")
+        print(f"   - final_data.json exists: {os.path.exists(final_data_file)}")
+        print(f"   - voice_actors.json exists: {os.path.exists(voice_actors_file)}")
+        
+        if os.path.exists(final_data_file):
+            try:
+                with open(final_data_file, 'r', encoding='utf-8') as f:
+                    before_data = json.load(f)
+                    before_count = len(before_data)
+                    print(f"   - final_data.json count: {before_count}")
+                    if before_count > 0:
+                        print(f"   - Sample entry: {before_data[0].get('Name', 'No name')}")
+            except Exception as e:
+                print(f"   - Error reading final_data.json: {e}")
+        
+        if os.path.exists(voice_actors_file):
+            try:
+                with open(voice_actors_file, 'r', encoding='utf-8') as f:
+                    voice_data = json.load(f)
+                    voice_count = len(voice_data)
+                    print(f"   - voice_actors.json count: {voice_count}")
+            except Exception as e:
+                print(f"   - Error reading voice_actors.json: {e}")
         
         # Run single page scrape
+        print(f"\n🔍 DEBUG: Running automate1.py for page {page}...")
         subprocess.run(
             ["python", script_path, str(page), "1"],
             stdout=sys.stdout,
@@ -88,22 +122,53 @@ def run_automate_with_tracking(script_path, start_page, num_pages, initial_count
         )
         
         # Check for new entries after this page
-        json_dir = "C:/Encode Tools/auto-encoder/SOVAS Scraper/json data"
-        final_data_file = os.path.join(json_dir, "final_data.json")
+        print(f"\n🔍 DEBUG: Checking data after page {page}:")
         
         if os.path.exists(final_data_file):
             try:
                 with open(final_data_file, 'r', encoding='utf-8') as f:
-                    current_data = json.load(f)
-                    current_count = len(current_data)
-                    new_this_page = current_count - initial_count - total_new_entries
+                    after_data = json.load(f)
+                    after_count = len(after_data)
+                    print(f"   - final_data.json count after: {after_count}")
+                    
+                    # Calculate new entries
+                    expected_count = initial_count + total_new_entries
+                    new_this_page = after_count - expected_count
+                    
+                    print(f"   - Expected count: {expected_count}")
+                    print(f"   - New entries this page: {new_this_page}")
+                    
                     if new_this_page > 0:
-                        print(f"📊 Page {page}: Found {new_this_page} new voice actors")
+                        print(f"   - New entries found on page {page}: {new_this_page}")
                         total_new_entries += new_this_page
+                        print(f"   - Total new entries so far: {total_new_entries}")
+                        
+                        # Show some of the new entries
+                        print(f"   - Sample new entries:")
+                        for i in range(min(3, new_this_page)):
+                            new_entry = after_data[-(new_this_page - i)]
+                            print(f"     * {new_entry.get('Name', 'No name')} - {new_entry.get('Work Samples', 'No profile')}")
                     else:
-                        print(f"📊 Page {page}: No new voice actors found")
+                        print(f"   - No new entries found on page {page}")
+                        
             except Exception as e:
-                print(f"Warning: Could not check data after page {page}: {e}")
+                print(f"   - Error reading final_data.json after page {page}: {e}")
+        else:
+            print(f"   - final_data.json does not exist after page {page}")
+        
+        if os.path.exists(voice_actors_file):
+            try:
+                with open(voice_actors_file, 'r', encoding='utf-8') as f:
+                    voice_after = json.load(f)
+                    voice_after_count = len(voice_after)
+                    print(f"   - voice_actors.json count after: {voice_after_count}")
+            except Exception as e:
+                print(f"   - Error reading voice_actors.json after page {page}: {e}")
+    
+    print(f"\n{'='*50}")
+    print(f"🔍 DEBUG: Phase 1 Complete")
+    print(f"🔍 DEBUG: Total new entries found: {total_new_entries}")
+    print(f"{'='*50}")
     
     return total_new_entries
 
