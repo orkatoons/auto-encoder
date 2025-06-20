@@ -5,6 +5,7 @@ import os
 import json
 import requests
 from pywinauto.keyboard import send_keys
+import shutil
 
 PROGRESS_FILE = "C:/Encode Tools/auto-encoder/SOVAS Scraper/json data/progress1.json"
 
@@ -44,6 +45,25 @@ def reset_email_progress():
         except Exception as e:
             print(f"Warning: Could not reset email progress: {e}")
 
+def cleanup_html_files():
+    """Clean up downloaded HTML files after scraping"""
+    saved_pages_dir = "C:/Encode Tools/auto-encoder/SOVAS Scraper/saved offline pages"
+    if os.path.exists(saved_pages_dir):
+        try:
+            for item in os.listdir(saved_pages_dir):
+                item_path = os.path.join(saved_pages_dir, item)
+                if os.path.isfile(item_path):
+                    os.unlink(item_path)
+                    print(f"🗑️ Deleted: {item}")
+                elif os.path.isdir(item_path):
+                    shutil.rmtree(item_path)
+                    print(f"🗑️ Deleted directory: {item}")
+            print("✅ HTML cleanup completed")
+        except Exception as e:
+            print(f"Warning: Error during HTML cleanup: {e}")
+    else:
+        print("ℹ️ No saved pages directory found")
+
 def run_automate(script_path, start_page, num_pages):
     subprocess.run(
         ["python", script_path, str(start_page), str(num_pages)],
@@ -51,6 +71,41 @@ def run_automate(script_path, start_page, num_pages):
         stderr=subprocess.DEVNULL,
         check=True
     )
+
+def run_automate_with_tracking(script_path, start_page, num_pages, initial_count):
+    """Run automate1.py and track new entries after each page"""
+    total_new_entries = 0
+    
+    for page in range(start_page, start_page + num_pages):
+        print(f"\n--- Processing page {page} ---")
+        
+        # Run single page scrape
+        subprocess.run(
+            ["python", script_path, str(page), "1"],
+            stdout=sys.stdout,
+            stderr=subprocess.DEVNULL,
+            check=True
+        )
+        
+        # Check for new entries after this page
+        json_dir = "C:/Encode Tools/auto-encoder/SOVAS Scraper/json data"
+        final_data_file = os.path.join(json_dir, "final_data.json")
+        
+        if os.path.exists(final_data_file):
+            try:
+                with open(final_data_file, 'r', encoding='utf-8') as f:
+                    current_data = json.load(f)
+                    current_count = len(current_data)
+                    new_this_page = current_count - initial_count - total_new_entries
+                    if new_this_page > 0:
+                        print(f"📊 Page {page}: Found {new_this_page} new voice actors")
+                        total_new_entries += new_this_page
+                    else:
+                        print(f"📊 Page {page}: No new voice actors found")
+            except Exception as e:
+                print(f"Warning: Could not check data after page {page}: {e}")
+    
+    return total_new_entries
 
 def initialize_scraper(start_page, num_pages):
     try:
@@ -72,7 +127,7 @@ def initialize_scraper(start_page, num_pages):
                 print(f"Warning: Could not read existing data: {e}")
 
         print(f"\nStarting Phase 1 (pages {start_page} to {start_page + num_pages - 1})")
-        run_automate(automate1_path, start_page, num_pages)
+        new_entries = run_automate_with_tracking(automate1_path, start_page, num_pages, initial_count)
 
         save_last_page(start_page + num_pages)
 
@@ -81,33 +136,24 @@ def initialize_scraper(start_page, num_pages):
 
         print("Phase 1 has finished\n")
 
-        # Check how many new voice actors were added
-        final_count = 0
-        new_entries_count = 0
-        
-        if os.path.exists(final_data_file):
-            try:
-                with open(final_data_file, 'r', encoding='utf-8') as f:
-                    updated_data = json.load(f)
-                    final_count = len(updated_data)
-                    new_entries_count = final_count - initial_count
-                    print(f"📊 Found {new_entries_count} new voice actors (total: {final_count})")
-            except Exception as e:
-                print(f"Warning: Could not read updated data: {e}")
-
         # Only run Phase 2 if new entries were found
-        if new_entries_count > 0:
-            print(f"🚀 Starting Phase 2 to find emails for {new_entries_count} new voice actors")
+        if new_entries > 0:
+            print(f"🚀 Starting Phase 2 to find emails for {new_entries} new voice actors")
             reset_email_progress()  # Reset progress to process new entries
             run_automate(automate2_path, start_page, num_pages)
             print("automate2.py finished. All automation tasks completed.")
-            notify_completion(new_entries_count)
+            notify_completion(new_entries)
         else:
             print("✅ No new voice actors found. Skipping Phase 2 (email discovery).")
             notify_completion(0)
 
+        # Clean up HTML files
+        cleanup_html_files()
+
     except Exception as e:
         print(f"Error during SOVAS scraping: {e}")
+        # Clean up HTML files even if there's an error
+        cleanup_html_files()
         sys.exit(1)
 
 if __name__ == "__main__":

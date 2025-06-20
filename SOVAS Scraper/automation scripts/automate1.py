@@ -32,6 +32,8 @@ time.sleep(1)  # Wait for the window to activate
 
 # Main scraping loop
 for page in range(start_page, start_page + num_pages):
+    print(f"Processing page {page}...")
+    
     # Focus the address bar (Ctrl+L)
     send_keys('^l')  # Ctrl + L
     time.sleep(0.5)
@@ -78,6 +80,7 @@ for page in range(start_page, start_page + num_pages):
     time.sleep(5)
 
     # Run the profile scraper
+    print(f"Running profilescraper.py for page {page}...")
     subprocess.run(
         ["python", "profilescraper.py"],
         cwd="C:/Encode Tools/auto-encoder/SOVAS Scraper/helper scripts"
