@@ -808,9 +808,8 @@ def encode_file(input_file, resolutions, job_id):
             # ---------------------------
             # 1. Find official IMDb data
             grandparent_dir = os.path.basename(os.path.dirname(os.path.dirname(input_file)))
-            # Extract English name if the title is in "Regional Name AKA English Name" format
-            movie_name_for_imdb = extract_english_name_from_aka(grandparent_dir)
-            movie_data = find_movie(movie_name_for_imdb)  # Use extracted English name for IMDb search
+            # Use the original grandparent directory name directly (revert AKA changes)
+            movie_data = find_movie(grandparent_dir)
             if movie_data:
                 # Debug: Print available keys
                 log(f"IMDb movie data keys: {list(movie_data.keys())}")
@@ -958,26 +957,6 @@ def get_ptp_url_from_source_folder(input_file):
         return None
 
 
-def extract_english_name_from_aka(title):
-    """
-    Extract the English name from titles in format "Regional Name AKA English Name".
-    Returns the English name if found, otherwise returns the original title.
-    """
-    if not title:
-        return title
-    
-    # Look for "AKA" pattern (case insensitive)
-    aka_pattern = r'\s+AKA\s+(.+)$'
-    match = re.search(aka_pattern, title, re.IGNORECASE)
-    
-    if match:
-        english_name = match.group(1).strip()
-        log(f"✅ Extracted English name from AKA format: '{english_name}' from '{title}'")
-        return english_name
-    
-    return title
-
-
 def determine_encodes(file_path):
     """
     Determines the encoding resolutions based on the movie data in output.json.
@@ -1066,20 +1045,5 @@ def start_encoding(file, job_id=None):
         print(f"Failed to notify completion: {e}")
 
 if __name__ == "__main__":
-    # Test the AKA extraction function
-    test_cases = [
-        "Los Rodríguez y el más allá AKA The Rodriguez and the Beyond",
-        "Some Regional Movie AKA The English Title",
-        "Just English Title",
-        "Another Regional AKA English Version",
-        "No AKA here",
-        ""
-    ]
-    
-    print("Testing AKA extraction function:")
-    for test_case in test_cases:
-        result = extract_english_name_from_aka(test_case)
-        print(f"Input: '{test_case}' -> Output: '{result}'")
-    
     # Get the file path from the command-line argument
     start_encoding(r"W:\Encodes\Bajirao Mastani\source\Bajirao Mastani 2015 1080p Blu-ray Remux AVC TrueHD 7.1 - KRaLiMaRKo.mkv")
