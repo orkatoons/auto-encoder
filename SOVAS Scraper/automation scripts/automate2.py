@@ -29,8 +29,11 @@ USER_AGENTS = [
     "Mozilla/5.0 (Linux; Android 13; SM-G991B)..."
 ]
 
-# Load input JSON data
-if not os.path.exists(input_json_path):
+# Load input JSON data - prefer final_data.json if it exists (for resuming)
+if os.path.exists(output_json_path):
+    print(f"📂 Found existing final_data.json, resuming from there...")
+    input_json_path = output_json_path
+elif not os.path.exists(input_json_path):
     print(f"❗ Input JSON file not found at {input_json_path}")
     exit(1)
 

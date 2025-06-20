@@ -17,6 +17,7 @@ html_file_path = os.path.join(saved_pages_dir, "Voice123 _ Find voice actors for
 # Ensure output directory exists
 os.makedirs(json_dir, exist_ok=True)
 json_file = os.path.join(json_dir, "voice_actors.json")
+final_data_file = os.path.join(json_dir, "final_data.json")
 
 # === Step 1: Copy content using pywinauto ===
 time.sleep(2)  # Small delay to switch to browser manually  
@@ -68,6 +69,9 @@ combined_data = [
 
 # === Step 5: Load existing JSON and avoid duplicates ===
 existing_data = []
+existing_final_data = []
+
+# Load from voice_actors.json if it exists
 if os.path.exists(json_file):
     try:
         with open(json_file, "r", encoding="utf-8") as f:
@@ -75,15 +79,33 @@ if os.path.exists(json_file):
     except Exception as e:
         print(f"Error loading existing JSON: {e}")
 
+# Load from final_data.json if it exists (for resuming)
+if os.path.exists(final_data_file):
+    try:
+        with open(final_data_file, "r", encoding="utf-8") as f:
+            existing_final_data = json.load(f)
+        print(f"📂 Found existing final_data.json with {len(existing_final_data)} entries")
+    except Exception as e:
+        print(f"Error loading final_data.json: {e}")
+
+# Combine existing data from both sources for deduplication
+all_existing_entries = {(entry["Name"].lower(), entry["Work Samples"].lower()) for entry in existing_data}
+all_existing_entries.update({(entry["Name"].lower(), entry["Work Samples"].lower()) for entry in existing_final_data})
+
 # Deduplicate based on both Name and Profile (case-insensitive)
-existing_entries = {(entry["Name"].lower(), entry["Work Samples"].lower()) for entry in existing_data}
 new_data = [
     entry for entry in combined_data 
-    if (entry["Name"].lower(), entry["Work Samples"].lower()) not in existing_entries
+    if (entry["Name"].lower(), entry["Work Samples"].lower()) not in all_existing_entries
 ]
 
-# Merge and save
-final_data = existing_data + new_data
+# Merge with final_data.json if it exists, otherwise use voice_actors.json
+if existing_final_data:
+    final_data = existing_final_data + new_data
+    output_file = final_data_file
+    print(f"📂 Merging with existing final_data.json")
+else:
+    final_data = existing_data + new_data
+    output_file = json_file
 
 # Remove duplicates in final_data just in case
 seen = set()
@@ -95,9 +117,9 @@ for entry in final_data:
         seen.add(key)
 
 try:
-    with open(json_file, "w", encoding="utf-8") as f:
+    with open(output_file, "w", encoding="utf-8") as f:
         json.dump(deduped_final_data, f, indent=4, ensure_ascii=False)
-    print(f"Saved {len(new_data)} new entries (total: {len(deduped_final_data)}) to '{json_file}'")
+    print(f"Saved {len(new_data)} new entries (total: {len(deduped_final_data)}) to '{output_file}'")
 except Exception as e:
     print(f"Error writing to JSON: {e}")
 
