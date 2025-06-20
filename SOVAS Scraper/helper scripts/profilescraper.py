@@ -75,29 +75,38 @@ if os.path.exists(json_file):
     except Exception as e:
         print(f"Error loading existing JSON: {e}")
 
-# Deduplicate based on both Name and Profile (case-insensitive)
-existing_entries = {(entry["Name"].lower(), entry["Work Samples"].lower()) for entry in existing_data}
-new_data = [
-    entry for entry in combined_data 
-    if (entry["Name"].lower(), entry["Work Samples"].lower()) not in existing_entries
-]
+# Create a set of existing names (case-insensitive) for faster lookup
+existing_names = {entry["Name"].lower().strip() for entry in existing_data}
 
-# Merge and save
+# Filter out duplicates based on name only (case-insensitive)
+new_data = []
+duplicate_count = 0
+for entry in combined_data:
+    name_lower = entry["Name"].lower().strip()
+    if name_lower not in existing_names:
+        new_data.append(entry)
+        existing_names.add(name_lower)  # Add to set to prevent duplicates within new data
+    else:
+        duplicate_count += 1
+
+# Merge existing data with new data
 final_data = existing_data + new_data
 
-# Remove duplicates in final_data just in case
-seen = set()
+# Additional safety check: remove any remaining duplicates in final_data
+seen_names = set()
 deduped_final_data = []
 for entry in final_data:
-    key = (entry["Name"].lower(), entry["Work Samples"].lower())
-    if key not in seen:
+    name_lower = entry["Name"].lower().strip()
+    if name_lower not in seen_names:
         deduped_final_data.append(entry)
-        seen.add(key)
+        seen_names.add(name_lower)
+    else:
+        print(f"⚠️ Removed duplicate: {entry['Name']}")
 
 try:
     with open(json_file, "w", encoding="utf-8") as f:
         json.dump(deduped_final_data, f, indent=4, ensure_ascii=False)
-    print(f"Saved {len(new_data)} new entries (total: {len(deduped_final_data)}) to '{json_file}'")
+    print(f"✅ Saved {len(new_data)} new entries, skipped {duplicate_count} duplicates (total: {len(deduped_final_data)}) to '{json_file}'")
 except Exception as e:
     print(f"Error writing to JSON: {e}")
 
