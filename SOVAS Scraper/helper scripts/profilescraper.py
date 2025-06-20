@@ -122,20 +122,20 @@ try:
     # Combine existing data from both sources for deduplication
     all_existing_entries = set()
     
-    # Process existing_data with null checks
+    # Process existing_data with null checks - only require Name
     for entry in existing_data:
         name = entry.get("Name", "")
-        work_samples = entry.get("Work Samples", "")
-        if name and work_samples:  # Only add if both fields have values
-            key = (name.lower(), work_samples.lower())
+        if name:  # Only require name to be present
+            work_samples = entry.get("Work Samples", "")
+            key = (name.lower(), work_samples.lower() if work_samples else "")
             all_existing_entries.add(key)
     
-    # Process existing_final_data with null checks
+    # Process existing_final_data with null checks - only require Name
     for entry in existing_final_data:
         name = entry.get("Name", "")
-        work_samples = entry.get("Work Samples", "")
-        if name and work_samples:  # Only add if both fields have values
-            key = (name.lower(), work_samples.lower())
+        if name:  # Only require name to be present
+            work_samples = entry.get("Work Samples", "")
+            key = (name.lower(), work_samples.lower() if work_samples else "")
             all_existing_entries.add(key)
 
     print(f"🔍 DEBUG: Total existing entries for deduplication: {len(all_existing_entries)}")
@@ -146,14 +146,14 @@ try:
     for entry in existing_final_data[:5]:
         name = entry.get("Name", "")
         work_samples = entry.get("Work Samples", "")
-        if name and work_samples:
-            key = (name.lower(), work_samples.lower())
+        if name:
+            key = (name.lower(), work_samples.lower() if work_samples else "")
             print(f"   - '{name}' -> '{work_samples}' (key: {key})")
             sample_count += 1
             if sample_count >= 5:
                 break
 
-    # Deduplicate based on both Name and Profile (case-insensitive)
+    # Deduplicate based on Name (primary) and Work Samples (secondary)
     new_data = []
     duplicate_count = 0
 
@@ -163,8 +163,8 @@ try:
         name = entry.get("Name", "")
         work_samples = entry.get("Work Samples", "")
         
-        if name and work_samples:  # Only process if both fields have values
-            key = (name.lower(), work_samples.lower())
+        if name:  # Only require name to be present
+            key = (name.lower(), work_samples.lower() if work_samples else "")
             print(f"🔍 DEBUG: Checking entry: '{name}' -> '{work_samples}'")
             print(f"🔍 DEBUG: Key: {key}")
             
@@ -175,7 +175,7 @@ try:
                 duplicate_count += 1
                 print(f"   ❌ DUPLICATE: {name} (key found in existing data)")
         else:
-            print(f"🔍 DEBUG: Skipping entry with missing data: '{name}' -> '{work_samples}'")
+            print(f"🔍 DEBUG: Skipping entry with missing name: '{name}' -> '{work_samples}'")
 
     print(f"🔍 DEBUG: Found {len(new_data)} new entries, {duplicate_count} duplicates")
 
@@ -197,14 +197,14 @@ try:
     for entry in final_data:
         name = entry.get("Name", "")
         work_samples = entry.get("Work Samples", "")
-        if name and work_samples:  # Only process if both fields have values
-            key = (name.lower(), work_samples.lower())
+        if name:  # Only require name to be present
+            key = (name.lower(), work_samples.lower() if work_samples else "")
             if key not in seen:
                 deduped_final_data.append(entry)
                 seen.add(key)
         else:
-            # Skip entries with missing data
-            print(f"🔍 DEBUG: Skipping entry with missing data in final dedup: '{name}' -> '{work_samples}'")
+            # Skip entries with missing name
+            print(f"🔍 DEBUG: Skipping entry with missing name in final dedup: '{name}' -> '{work_samples}'")
 
     print(f"🔍 DEBUG: Final data count after deduplication: {len(deduped_final_data)}")
     print(f"🔍 DEBUG: Saving to: {output_file}")
