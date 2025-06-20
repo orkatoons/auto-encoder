@@ -113,73 +113,83 @@ if os.path.exists(final_data_file):
         print(f"🔍 DEBUG: Loaded {len(existing_final_data)} entries from final_data.json")
     except Exception as e:
         print(f"Error loading final_data.json: {e}")
+        existing_final_data = []
 
-# Combine existing data from both sources for deduplication
-all_existing_entries = {(entry["Name"].lower(), entry["Work Samples"].lower()) for entry in existing_data}
-all_existing_entries.update({(entry["Name"].lower(), entry["Work Samples"].lower()) for entry in existing_final_data})
-
-print(f"🔍 DEBUG: Total existing entries for deduplication: {len(all_existing_entries)}")
-
-# Show some sample existing entries for debugging
-print(f"🔍 DEBUG: Sample existing entries (first 5):")
-sample_count = 0
-for entry in existing_final_data[:5]:
-    key = (entry["Name"].lower(), entry["Work Samples"].lower())
-    print(f"   - '{entry['Name']}' -> '{entry['Work Samples']}' (key: {key})")
-    sample_count += 1
-    if sample_count >= 5:
-        break
-
-# Deduplicate based on both Name and Profile (case-insensitive)
-new_data = []
-duplicate_count = 0
-
-print(f"🔍 DEBUG: Checking each entry for duplicates...")
-
-for entry in combined_data:
-    key = (entry["Name"].lower(), entry["Work Samples"].lower())
-    print(f"🔍 DEBUG: Checking entry: '{entry['Name']}' -> '{entry['Work Samples']}'")
-    print(f"🔍 DEBUG: Key: {key}")
-    
-    if key not in all_existing_entries:
-        new_data.append(entry)
-        print(f"   ✅ NEW: {entry['Name']}")
-    else:
-        duplicate_count += 1
-        print(f"   ❌ DUPLICATE: {entry['Name']} (key found in existing data)")
-
-print(f"🔍 DEBUG: Found {len(new_data)} new entries, {duplicate_count} duplicates")
-
-# Merge with final_data.json if it exists, otherwise use voice_actors.json
-if existing_final_data:
-    final_data = existing_final_data + new_data
-    output_file = final_data_file
-    print(f"🔍 DEBUG: Merging with existing final_data.json")
-else:
-    final_data = existing_data + new_data
-    output_file = json_file
-    print(f"🔍 DEBUG: Using voice_actors.json")
-
-print(f"🔍 DEBUG: Final data count before deduplication: {len(final_data)}")
-
-# Remove duplicates in final_data just in case
-seen = set()
-deduped_final_data = []
-for entry in final_data:
-    key = (entry["Name"].lower(), entry["Work Samples"].lower())
-    if key not in seen:
-        deduped_final_data.append(entry)
-        seen.add(key)
-
-print(f"🔍 DEBUG: Final data count after deduplication: {len(deduped_final_data)}")
-print(f"🔍 DEBUG: Saving to: {output_file}")
+print(f"🔍 DEBUG: Data loading complete. Starting deduplication...")
+print(f"🔍 DEBUG: About to start deduplication process...")
 
 try:
-    with open(output_file, "w", encoding="utf-8") as f:
-        json.dump(deduped_final_data, f, indent=4, ensure_ascii=False)
-    print(f"🔍 DEBUG: Successfully saved {len(new_data)} new entries (total: {len(deduped_final_data)}) to '{output_file}'")
+    # Combine existing data from both sources for deduplication
+    all_existing_entries = {(entry["Name"].lower(), entry["Work Samples"].lower()) for entry in existing_data}
+    all_existing_entries.update({(entry["Name"].lower(), entry["Work Samples"].lower()) for entry in existing_final_data})
+
+    print(f"🔍 DEBUG: Total existing entries for deduplication: {len(all_existing_entries)}")
+
+    # Show some sample existing entries for debugging
+    print(f"🔍 DEBUG: Sample existing entries (first 5):")
+    sample_count = 0
+    for entry in existing_final_data[:5]:
+        key = (entry["Name"].lower(), entry["Work Samples"].lower())
+        print(f"   - '{entry['Name']}' -> '{entry['Work Samples']}' (key: {key})")
+        sample_count += 1
+        if sample_count >= 5:
+            break
+
+    # Deduplicate based on both Name and Profile (case-insensitive)
+    new_data = []
+    duplicate_count = 0
+
+    print(f"🔍 DEBUG: Checking each entry for duplicates...")
+
+    for entry in combined_data:
+        key = (entry["Name"].lower(), entry["Work Samples"].lower())
+        print(f"🔍 DEBUG: Checking entry: '{entry['Name']}' -> '{entry['Work Samples']}'")
+        print(f"🔍 DEBUG: Key: {key}")
+        
+        if key not in all_existing_entries:
+            new_data.append(entry)
+            print(f"   ✅ NEW: {entry['Name']}")
+        else:
+            duplicate_count += 1
+            print(f"   ❌ DUPLICATE: {entry['Name']} (key found in existing data)")
+
+    print(f"🔍 DEBUG: Found {len(new_data)} new entries, {duplicate_count} duplicates")
+
+    # Merge with final_data.json if it exists, otherwise use voice_actors.json
+    if existing_final_data:
+        final_data = existing_final_data + new_data
+        output_file = final_data_file
+        print(f"🔍 DEBUG: Merging with existing final_data.json")
+    else:
+        final_data = existing_data + new_data
+        output_file = json_file
+        print(f"🔍 DEBUG: Using voice_actors.json")
+
+    print(f"🔍 DEBUG: Final data count before deduplication: {len(final_data)}")
+
+    # Remove duplicates in final_data just in case
+    seen = set()
+    deduped_final_data = []
+    for entry in final_data:
+        key = (entry["Name"].lower(), entry["Work Samples"].lower())
+        if key not in seen:
+            deduped_final_data.append(entry)
+            seen.add(key)
+
+    print(f"🔍 DEBUG: Final data count after deduplication: {len(deduped_final_data)}")
+    print(f"🔍 DEBUG: Saving to: {output_file}")
+
+    try:
+        with open(output_file, "w", encoding="utf-8") as f:
+            json.dump(deduped_final_data, f, indent=4, ensure_ascii=False)
+        print(f"🔍 DEBUG: Successfully saved {len(new_data)} new entries (total: {len(deduped_final_data)}) to '{output_file}'")
+    except Exception as e:
+        print(f"Error writing to JSON: {e}")
+
 except Exception as e:
-    print(f"Error writing to JSON: {e}")
+    print(f"🔍 DEBUG: ERROR in deduplication process: {e}")
+    import traceback
+    traceback.print_exc()
 
 # === Step 6: Clean saved HTML folder ===
 if os.path.exists(saved_pages_dir):
