@@ -29,11 +29,8 @@ USER_AGENTS = [
     "Mozilla/5.0 (Linux; Android 13; SM-G991B)..."
 ]
 
-# Load input JSON data - prefer final_data.json if it exists (for resuming)
-if os.path.exists(output_json_path):
-    print(f"📂 Found existing final_data.json, resuming from there...")
-    input_json_path = output_json_path
-elif not os.path.exists(input_json_path):
+# Load input JSON data
+if not os.path.exists(input_json_path):
     print(f"❗ Input JSON file not found at {input_json_path}")
     exit(1)
 
@@ -101,19 +98,6 @@ for i in range(start_index, len(data)):
     name = data[i].get("Name", "")
     if not name:
         print(f"❌ No name at index {i}, skipping...")
-        continue
-
-    # Check if entry already has emails
-    existing_emails = data[i].get("Emails", [])
-    if isinstance(existing_emails, str):
-        existing_emails = [existing_emails]
-    
-    # Skip if entry already has emails
-    if existing_emails and any(email.strip() for email in existing_emails if email):
-        print(f"⏭️ Skipping [{i + 1}/{len(data)}]: {name} - already has email(s): {existing_emails}")
-        # Still save progress for this entry
-        with open(progress_path, 'w') as f:
-            json.dump({"last_index": i + 1}, f)
         continue
 
     query = f"@gmail.com {name} voice actor"
