@@ -103,12 +103,14 @@ def extract_emails_from_url(url):
 print("✅ Script running. Minimize this terminal but DO NOT close it.")
 
 consecutive_rate_limit_hits = 0
+google_search_count = 0  # Track actual Google searches performed
 
 for i in range(start_index, len(data)):
     wait_if_paused()
 
-    if i > 0 and i % 100 == 0:
-        print("\n🕒 Completed 100 entries. Cooling down for 80 minutes...")
+    # Only do cooldown if 100 actual Google searches were completed
+    if google_search_count > 0 and google_search_count % 100 == 0:
+        print(f"\n🕒 Completed {google_search_count} Google searches. Cooling down for 80 minutes...")
         time.sleep(COOLDOWN_TIME)
 
     name = data[i].get("Name", "")
@@ -130,6 +132,7 @@ for i in range(start_index, len(data)):
     try:
         results = list(search(query, num_results=5))
         consecutive_rate_limit_hits = 0
+        google_search_count += 1  # Increment counter only for actual searches
     except Exception as e:
         if "429" in str(e):
             print("⚠️ Google rate-limited. Cooling down 80 min...")
