@@ -96,24 +96,24 @@ existing_final_data = []
 
 print(f"🔍 DEBUG: Loading existing data...")
 
-# Load from voice_actors.json if it exists
-if os.path.exists(json_file):
-    try:
-        with open(json_file, "r", encoding="utf-8") as f:
-            existing_data = json.load(f)
-        print(f"🔍 DEBUG: Loaded {len(existing_data)} entries from voice_actors.json")
-    except Exception as e:
-        print(f"Error loading existing JSON: {e}")
-
-# Load from final_data.json if it exists (for resuming)
+# Load from final_data.json if it exists (for resuming) - PRIORITY
 if os.path.exists(final_data_file):
     try:
         with open(final_data_file, "r", encoding="utf-8") as f:
             existing_final_data = json.load(f)
-        print(f"🔍 DEBUG: Loaded {len(existing_final_data)} entries from final_data.json")
+        print(f"🔍 DEBUG: Loaded {len(existing_final_data)} entries from final_data.json (PRIORITY)")
     except Exception as e:
         print(f"Error loading final_data.json: {e}")
         existing_final_data = []
+
+# Load from voice_actors.json only if final_data.json doesn't exist or is empty
+if not existing_final_data and os.path.exists(json_file):
+    try:
+        with open(json_file, "r", encoding="utf-8") as f:
+            existing_data = json.load(f)
+        print(f"🔍 DEBUG: Loaded {len(existing_data)} entries from voice_actors.json (FALLBACK)")
+    except Exception as e:
+        print(f"Error loading existing JSON: {e}")
 
 print(f"🔍 DEBUG: Data loading complete. Starting deduplication...")
 print(f"🔍 DEBUG: About to start deduplication process...")
@@ -122,28 +122,30 @@ try:
     # Combine existing data from both sources for deduplication
     all_existing_entries = set()
     
-    # Process existing_data with null checks - only require Name
-    for entry in existing_data:
-        name = entry.get("Name", "")
-        if name:  # Only require name to be present
-            work_samples = entry.get("Work Samples", "")
-            key = (name.lower(), work_samples.lower() if work_samples else "")
-            all_existing_entries.add(key)
-    
-    # Process existing_final_data with null checks - only require Name
+    # Process existing_final_data with null checks - PRIORITY
     for entry in existing_final_data:
         name = entry.get("Name", "")
         if name:  # Only require name to be present
             work_samples = entry.get("Work Samples", "")
             key = (name.lower(), work_samples.lower() if work_samples else "")
             all_existing_entries.add(key)
+    
+    # Process existing_data with null checks - ONLY if final_data.json was empty
+    if not existing_final_data:
+        for entry in existing_data:
+            name = entry.get("Name", "")
+            if name:  # Only require name to be present
+                work_samples = entry.get("Work Samples", "")
+                key = (name.lower(), work_samples.lower() if work_samples else "")
+                all_existing_entries.add(key)
 
     print(f"🔍 DEBUG: Total existing entries for deduplication: {len(all_existing_entries)}")
 
     # Show some sample existing entries for debugging
     print(f"🔍 DEBUG: Sample existing entries (first 5):")
     sample_count = 0
-    for entry in existing_final_data[:5]:
+    source_data = existing_final_data if existing_final_data else existing_data
+    for entry in source_data[:5]:
         name = entry.get("Name", "")
         work_samples = entry.get("Work Samples", "")
         if name:

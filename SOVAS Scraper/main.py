@@ -45,6 +45,40 @@ def reset_email_progress():
         except Exception as e:
             print(f"Warning: Could not reset email progress: {e}")
 
+def check_and_restore_final_data():
+    """Check if final_data.json is corrupted and restore from voice_actors.json if needed"""
+    json_dir = "C:/Encode Tools/auto-encoder/SOVAS Scraper/json data"
+    final_data_file = os.path.join(json_dir, "final_data.json")
+    voice_actors_file = os.path.join(json_dir, "voice_actors.json")
+    
+    if os.path.exists(final_data_file) and os.path.exists(voice_actors_file):
+        try:
+            with open(final_data_file, 'r', encoding='utf-8') as f:
+                final_data = json.load(f)
+            with open(voice_actors_file, 'r', encoding='utf-8') as f:
+                voice_data = json.load(f)
+            
+            final_count = len(final_data)
+            voice_count = len(voice_data)
+            
+            # If final_data.json is significantly smaller, restore from voice_actors.json
+            if final_count < voice_count * 0.8:  # If final_data is less than 80% of voice_actors
+                print(f"⚠️ WARNING: final_data.json appears corrupted ({final_count} vs {voice_count} entries)")
+                print(f"🔄 Restoring final_data.json from voice_actors.json...")
+                
+                # Copy voice_actors.json to final_data.json
+                shutil.copy2(voice_actors_file, final_data_file)
+                print(f"✅ Restored final_data.json with {voice_count} entries")
+                return voice_count
+            else:
+                print(f"✅ final_data.json appears healthy ({final_count} entries)")
+                return final_count
+                
+        except Exception as e:
+            print(f"Warning: Could not check/restore final_data.json: {e}")
+            return 0
+    return 0
+
 def cleanup_html_files():
     """Clean up downloaded HTML files after scraping"""
     saved_pages_dir = "C:/Encode Tools/auto-encoder/SOVAS Scraper/saved offline pages"
@@ -176,6 +210,10 @@ def initialize_scraper(start_page, num_pages):
     try:
         automate1_path = "C:/Encode Tools/auto-encoder/SOVAS Scraper/automation scripts/automate1.py"
         automate2_path = "C:/Encode Tools/auto-encoder/SOVAS Scraper/automation scripts/automate2.py"
+        
+        # Check and restore final_data.json if corrupted
+        print("🔍 Checking data integrity...")
+        restored_count = check_and_restore_final_data()
         
         # Check current data count before scraping
         json_dir = "C:/Encode Tools/auto-encoder/SOVAS Scraper/json data"
