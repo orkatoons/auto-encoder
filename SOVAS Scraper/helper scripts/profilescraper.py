@@ -120,17 +120,33 @@ all_existing_entries.update({(entry["Name"].lower(), entry["Work Samples"].lower
 
 print(f"🔍 DEBUG: Total existing entries for deduplication: {len(all_existing_entries)}")
 
+# Show some sample existing entries for debugging
+print(f"🔍 DEBUG: Sample existing entries (first 5):")
+sample_count = 0
+for entry in existing_final_data[:5]:
+    key = (entry["Name"].lower(), entry["Work Samples"].lower())
+    print(f"   - '{entry['Name']}' -> '{entry['Work Samples']}' (key: {key})")
+    sample_count += 1
+    if sample_count >= 5:
+        break
+
 # Deduplicate based on both Name and Profile (case-insensitive)
 new_data = []
 duplicate_count = 0
 
+print(f"🔍 DEBUG: Checking each entry for duplicates...")
+
 for entry in combined_data:
     key = (entry["Name"].lower(), entry["Work Samples"].lower())
+    print(f"🔍 DEBUG: Checking entry: '{entry['Name']}' -> '{entry['Work Samples']}'")
+    print(f"🔍 DEBUG: Key: {key}")
+    
     if key not in all_existing_entries:
         new_data.append(entry)
+        print(f"   ✅ NEW: {entry['Name']}")
     else:
         duplicate_count += 1
-        print(f"🔍 DEBUG: Duplicate found: {entry['Name']}")
+        print(f"   ❌ DUPLICATE: {entry['Name']} (key found in existing data)")
 
 print(f"🔍 DEBUG: Found {len(new_data)} new entries, {duplicate_count} duplicates")
 
