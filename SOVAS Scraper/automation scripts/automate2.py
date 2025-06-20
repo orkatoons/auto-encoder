@@ -57,15 +57,19 @@ def wait_if_paused():
 
 def has_existing_email(person_data):
     """Check if the person already has an email in their data"""
+    # Check if marked as unavailable
+    if person_data.get("Email") == "unavailable" or person_data.get("Email_Status") == "unavailable":
+        return True
+    
     # Check the main Email field
-    if person_data.get("Email") and person_data["Email"] not in [None, "", "null"]:
+    if person_data.get("Email") and person_data["Email"] not in [None, "", "null", "unavailable"]:
         return True
     
     # Check the Emails array
     emails = person_data.get("Emails", [])
     if isinstance(emails, list) and len(emails) > 0:
         # Filter out empty or invalid emails
-        valid_emails = [email for email in emails if email and email not in [None, "", "null"]]
+        valid_emails = [email for email in emails if email and email not in [None, "", "null", "unavailable"]]
         if valid_emails:
             return True
     
@@ -144,6 +148,14 @@ for i in range(start_index, len(data)):
             continue
         else:
             print(f"❌ Google search failed: {e}")
+            # Mark as unavailable due to search error
+            data[i]['Email'] = "unavailable"
+            data[i]['Email_Status'] = "unavailable"
+            print("❌ Marked as unavailable due to search error.")
+            with open(output_json_path, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=4)
+            with open(progress_path, 'w') as f:
+                json.dump({"last_index": i + 1}, f)
             continue
 
     time.sleep(random.uniform(3, 10))
@@ -155,11 +167,16 @@ for i in range(start_index, len(data)):
     if isinstance(existing_emails, str):
         existing_emails = set([existing_emails])
 
+    # Track if any URLs were successfully scraped
+    successful_scrapes = 0
+    total_urls = len(results)
+
     for url in results:
         print(f"🌐 Scraping: {url}")
         try:
             emails = extract_emails_from_url(url)
             consecutive_rate_limit_hits = 0
+            successful_scrapes += 1
         except Exception as e:
             if "429" in str(e):
                 print("⚠️ Scraping rate-limited. Cooling down 80 min...")
@@ -184,14 +201,22 @@ for i in range(start_index, len(data)):
 
         time.sleep(random.uniform(1, 3))
 
-    if best_email:
+    # If no URLs were successfully scraped, mark as unavailable
+    if successful_scrapes == 0 and total_urls > 0:
+        data[i]['Email'] = "unavailable"
+        data[i]['Email_Status'] = "unavailable"
+        print("❌ All URLs failed to scrape. Marked as unavailable.")
+    elif best_email:
         existing_emails.add(best_email)
         data[i]['Emails'] = list(existing_emails)
         print(f"✅ Found Email: {best_email}")
     else:
         if not existing_emails:
             data[i]['Emails'] = []
-        print("❌ No email found.")
+        # Mark as unavailable so it can be skipped in future runs
+        data[i]['Email'] = "unavailable"
+        data[i]['Email_Status'] = "unavailable"
+        print("❌ No email found. Marked as unavailable for future skips.")
 
     with open(output_json_path, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
