@@ -120,8 +120,23 @@ print(f"🔍 DEBUG: About to start deduplication process...")
 
 try:
     # Combine existing data from both sources for deduplication
-    all_existing_entries = {(entry["Name"].lower(), entry["Work Samples"].lower()) for entry in existing_data}
-    all_existing_entries.update({(entry["Name"].lower(), entry["Work Samples"].lower()) for entry in existing_final_data})
+    all_existing_entries = set()
+    
+    # Process existing_data with null checks
+    for entry in existing_data:
+        name = entry.get("Name", "")
+        work_samples = entry.get("Work Samples", "")
+        if name and work_samples:  # Only add if both fields have values
+            key = (name.lower(), work_samples.lower())
+            all_existing_entries.add(key)
+    
+    # Process existing_final_data with null checks
+    for entry in existing_final_data:
+        name = entry.get("Name", "")
+        work_samples = entry.get("Work Samples", "")
+        if name and work_samples:  # Only add if both fields have values
+            key = (name.lower(), work_samples.lower())
+            all_existing_entries.add(key)
 
     print(f"🔍 DEBUG: Total existing entries for deduplication: {len(all_existing_entries)}")
 
@@ -129,11 +144,14 @@ try:
     print(f"🔍 DEBUG: Sample existing entries (first 5):")
     sample_count = 0
     for entry in existing_final_data[:5]:
-        key = (entry["Name"].lower(), entry["Work Samples"].lower())
-        print(f"   - '{entry['Name']}' -> '{entry['Work Samples']}' (key: {key})")
-        sample_count += 1
-        if sample_count >= 5:
-            break
+        name = entry.get("Name", "")
+        work_samples = entry.get("Work Samples", "")
+        if name and work_samples:
+            key = (name.lower(), work_samples.lower())
+            print(f"   - '{name}' -> '{work_samples}' (key: {key})")
+            sample_count += 1
+            if sample_count >= 5:
+                break
 
     # Deduplicate based on both Name and Profile (case-insensitive)
     new_data = []
@@ -142,16 +160,22 @@ try:
     print(f"🔍 DEBUG: Checking each entry for duplicates...")
 
     for entry in combined_data:
-        key = (entry["Name"].lower(), entry["Work Samples"].lower())
-        print(f"🔍 DEBUG: Checking entry: '{entry['Name']}' -> '{entry['Work Samples']}'")
-        print(f"🔍 DEBUG: Key: {key}")
+        name = entry.get("Name", "")
+        work_samples = entry.get("Work Samples", "")
         
-        if key not in all_existing_entries:
-            new_data.append(entry)
-            print(f"   ✅ NEW: {entry['Name']}")
+        if name and work_samples:  # Only process if both fields have values
+            key = (name.lower(), work_samples.lower())
+            print(f"🔍 DEBUG: Checking entry: '{name}' -> '{work_samples}'")
+            print(f"🔍 DEBUG: Key: {key}")
+            
+            if key not in all_existing_entries:
+                new_data.append(entry)
+                print(f"   ✅ NEW: {name}")
+            else:
+                duplicate_count += 1
+                print(f"   ❌ DUPLICATE: {name} (key found in existing data)")
         else:
-            duplicate_count += 1
-            print(f"   ❌ DUPLICATE: {entry['Name']} (key found in existing data)")
+            print(f"🔍 DEBUG: Skipping entry with missing data: '{name}' -> '{work_samples}'")
 
     print(f"🔍 DEBUG: Found {len(new_data)} new entries, {duplicate_count} duplicates")
 
