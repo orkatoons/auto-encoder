@@ -34,6 +34,16 @@ def save_last_page(last_page):
     with open(PROGRESS_FILE, 'w') as f:
         json.dump({"last_page": last_page}, f)
 
+def reset_email_progress():
+    """Reset email discovery progress to start from beginning for new entries"""
+    progress2_path = "C:/Encode Tools/auto-encoder/SOVAS Scraper/json data/progress2.json"
+    if os.path.exists(progress2_path):
+        try:
+            os.remove(progress2_path)
+            print("🔄 Reset email discovery progress to process new entries")
+        except Exception as e:
+            print(f"Warning: Could not reset email progress: {e}")
+
 def run_automate(script_path, start_page, num_pages):
     subprocess.run(
         ["python", script_path, str(start_page), str(num_pages)],
@@ -46,6 +56,20 @@ def initialize_scraper(start_page, num_pages):
     try:
         automate1_path = "C:/Encode Tools/auto-encoder/SOVAS Scraper/automation scripts/automate1.py"
         automate2_path = "C:/Encode Tools/auto-encoder/SOVAS Scraper/automation scripts/automate2.py"
+        
+        # Check current data count before scraping
+        json_dir = "C:/Encode Tools/auto-encoder/SOVAS Scraper/json data"
+        final_data_file = os.path.join(json_dir, "final_data.json")
+        initial_count = 0
+        
+        if os.path.exists(final_data_file):
+            try:
+                with open(final_data_file, 'r', encoding='utf-8') as f:
+                    existing_data = json.load(f)
+                    initial_count = len(existing_data)
+                    print(f"📊 Current database has {initial_count} voice actors")
+            except Exception as e:
+                print(f"Warning: Could not read existing data: {e}")
 
         print(f"\nStarting Phase 1 (pages {start_page} to {start_page + num_pages - 1})")
         run_automate(automate1_path, start_page, num_pages)
@@ -57,11 +81,30 @@ def initialize_scraper(start_page, num_pages):
 
         print("Phase 1 has finished\n")
 
-        print("Starting Phase 2")
-        run_automate(automate2_path, start_page, num_pages)
+        # Check how many new voice actors were added
+        final_count = 0
+        new_entries_count = 0
+        
+        if os.path.exists(final_data_file):
+            try:
+                with open(final_data_file, 'r', encoding='utf-8') as f:
+                    updated_data = json.load(f)
+                    final_count = len(updated_data)
+                    new_entries_count = final_count - initial_count
+                    print(f"📊 Found {new_entries_count} new voice actors (total: {final_count})")
+            except Exception as e:
+                print(f"Warning: Could not read updated data: {e}")
 
-        print("automate2.py finished. All automation tasks completed.")
-        notify_completion(num_pages)
+        # Only run Phase 2 if new entries were found
+        if new_entries_count > 0:
+            print(f"🚀 Starting Phase 2 to find emails for {new_entries_count} new voice actors")
+            reset_email_progress()  # Reset progress to process new entries
+            run_automate(automate2_path, start_page, num_pages)
+            print("automate2.py finished. All automation tasks completed.")
+            notify_completion(new_entries_count)
+        else:
+            print("✅ No new voice actors found. Skipping Phase 2 (email discovery).")
+            notify_completion(0)
 
     except Exception as e:
         print(f"Error during SOVAS scraping: {e}")

@@ -103,6 +103,19 @@ for i in range(start_index, len(data)):
         print(f"❌ No name at index {i}, skipping...")
         continue
 
+    # Check if entry already has emails
+    existing_emails = data[i].get("Emails", [])
+    if isinstance(existing_emails, str):
+        existing_emails = [existing_emails]
+    
+    # Skip if entry already has emails
+    if existing_emails and any(email.strip() for email in existing_emails if email):
+        print(f"⏭️ Skipping [{i + 1}/{len(data)}]: {name} - already has email(s): {existing_emails}")
+        # Still save progress for this entry
+        with open(progress_path, 'w') as f:
+            json.dump({"last_index": i + 1}, f)
+        continue
+
     query = f"@gmail.com {name} voice actor"
     print(f"\n🔍 Searching [{i + 1}/{len(data)}]: {query}")
 
