@@ -298,13 +298,20 @@ def generate_approval_form(ptp_url, mediainfo_text, screenshot_bbcodes, approval
 
     bbcode_screenshots = "\n".join(screenshot_bbcodes)
 
+    # Read the HandBrake log file contents
+    try:
+        with open(handbrake_log, 'r', encoding='utf-8', errors='ignore') as f:
+            handbrake_log_content = f.read()
+    except Exception as e:
+        handbrake_log_content = f"Error reading HandBrake log file: {str(e)}"
+
     content = f"""Requesting approval for encode of {ptp_url}
 
     [mediainfo]{mediainfo_text}[/mediainfo]
     
     [hide=Encode Screenshots]{bbcode_screenshots}[/hide]
     
-    [hide=HandBrake log][code]{handbrake_log}[/code][/hide]"""
+    [hide=HandBrake log][code]{handbrake_log_content}[/code][/hide]"""
 
     with open(approval_file, 'w', encoding='utf-8') as f:
         f.write(content)

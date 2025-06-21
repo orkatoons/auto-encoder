@@ -661,8 +661,9 @@ def multiplex_file(
         match = re.search(r'_([a-z]{2,3})\.[a-z]+$', subtitle_file)
         subtitle_lang = match.group(1) if match else "und"
 
-        # Only set as default if movie is in English and subtitle is also English
-        default_subtitle = "yes" if language == "eng" and subtitle_lang == "eng" else "no"
+        # Set English subtitles as default if movie is NOT in English
+        # If movie is in English, don't set English subtitles as default
+        default_subtitle = "yes" if language != "eng" and subtitle_lang == "eng" else "no"
 
         cmd.extend([
             "--language", f"0:{subtitle_lang}",
