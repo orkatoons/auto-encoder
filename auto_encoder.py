@@ -389,8 +389,7 @@ def run_final_encode(input_file, output_file, approved_crop, cq, settings, final
             log(line, end="")
             log_file.write(line)
             log_file.flush()
-            # Force flush the main log file to ensure real-time JSON updates
-            sys.stdout.flush()
+            
         process.wait()
 
     # Clean the log file by removing progress lines
@@ -1022,6 +1021,8 @@ def determine_encodes(file_path):
 
 def log(message, end="\n"):
     logging.info(message)
+    # Force flush the main log file to ensure real-time JSON updates
+    sys.stdout.flush()
 
 def sub_log(message, end="\n"):
     logging.info(message)
