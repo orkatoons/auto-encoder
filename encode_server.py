@@ -8,6 +8,7 @@ import io
 import sys
 from datetime import datetime
 from ptp_routes import ptp_bp, handle_ptp_download, get_ptp_movies
+from sovas_routes import sovas_bp
 import subprocess
 import threading
 import requests
@@ -17,6 +18,9 @@ app = Flask(__name__)
 
 # Register the PTP blueprint with a URL prefix
 app.register_blueprint(ptp_bp, url_prefix='/ptp')
+
+# Register the SOVAS blueprint with a URL prefix
+app.register_blueprint(sovas_bp, url_prefix='/api')
 
 job_id = None
 filename = None

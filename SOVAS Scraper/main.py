@@ -30,6 +30,11 @@ def load_last_page():
         return 180  # Fallback on error
 
 def save_last_page(last_page):
+    # Reset to page 1 if we've reached page 500 or beyond
+    if last_page >= 500:
+        last_page = 1
+        print(f"🔄 Reached page 500, resetting to page 1")
+    
     os.makedirs(os.path.dirname(PROGRESS_FILE), exist_ok=True)
     with open(PROGRESS_FILE, 'w') as f:
         json.dump({"last_page": last_page}, f)

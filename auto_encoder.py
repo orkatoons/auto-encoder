@@ -386,6 +386,7 @@ def run_final_encode(input_file, output_file, approved_crop, cq, settings, final
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                    text=True, encoding="utf-8", errors="ignore")
         for line in process.stdout:
+            log(line)
             sub_log(line, end="")
             log_file.write(line)
             log_file.flush()

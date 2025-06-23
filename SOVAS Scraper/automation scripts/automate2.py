@@ -20,7 +20,7 @@ progress_path = os.path.join(base_dir, "json data", "progress2.json")
 saved_pages_dir = os.path.join(base_dir, "saved offline pages")
 
 MAX_RATE_LIMIT_HITS = 1  # Changed to 1 to end on first rate limit
-MAX_SEARCHES_BEFORE_RATE_LIMIT = 50  # Allow 50 searches before rate limit
+MAX_SEARCHES_BEFORE_RATE_LIMIT = 5  # Allow 5 searches before rate limit
 COOLDOWN_TIME = 4800  # 80 minutes (but we won't use this anymore)
 
 USER_AGENTS = [
@@ -166,7 +166,6 @@ try:
                     json.dump({"last_index": i}, f)
                 print(f"🎉 Session ended. Processed {google_search_count} searches, found {emails_found_count} emails.")
                 cleanup_html_files()
-                notify_completion(google_search_count)
                 exit(0)
             else:
                 print(f"❌ Google search failed: {e}")
@@ -201,7 +200,6 @@ try:
                         json.dump({"last_index": i}, f)
                     print(f"🎉 Session ended. Processed {google_search_count} searches, found {emails_found_count} emails.")
                     cleanup_html_files()
-                    notify_completion(google_search_count)
                     exit(0)
                 else:
                     print(f"❌ Error scraping URL: {e}")
@@ -255,6 +253,5 @@ except KeyboardInterrupt:
         json.dump({"last_index": i + 1}, f)
 
 finally:
-    # Always clean up and notify at the end
+    # Always clean up
     cleanup_html_files()
-    notify_completion(google_search_count)
