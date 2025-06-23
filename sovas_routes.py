@@ -4,8 +4,49 @@ import os
 import subprocess
 import threading
 import sys
+import time
 
 sovas_bp = Blueprint('sovas', __name__)
+
+# Simple cache for the voice actor data
+_voice_actor_cache = {
+    'data': None,
+    'last_loaded': 0,
+    'file_path': None
+}
+
+def load_voice_actor_data(force_reload=False):
+    """
+    Load voice actor data with caching.
+    Returns cached data if available and not stale.
+    """
+    base_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'SOVAS Scraper', 'json data')
+    final_data_path = os.path.join(base_dir, 'final_data.json')
+    
+    # Check if we need to reload (file changed or force reload)
+    current_time = time.time()
+    file_modified = os.path.getmtime(final_data_path) if os.path.exists(final_data_path) else 0
+    
+    if (force_reload or 
+        _voice_actor_cache['data'] is None or 
+        _voice_actor_cache['file_path'] != final_data_path or
+        _voice_actor_cache['last_loaded'] < file_modified):
+        
+        try:
+            with open(final_data_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            
+            _voice_actor_cache['data'] = data
+            _voice_actor_cache['last_loaded'] = current_time
+            _voice_actor_cache['file_path'] = final_data_path
+            
+            print(f"DEBUG: Loaded {len(data)} voice actor entries (cache updated)")
+            return data
+        except Exception as e:
+            print(f"Error loading voice actor data: {str(e)}")
+            return []
+    else:
+        return _voice_actor_cache['data']
 
 def initialize_sovas_scraper(start_page, num_pages):
     """
@@ -70,38 +111,27 @@ def get_sovas_paginated_data(page=1, page_size=50):
     try:
         # Base directory for SOVAS scraper
         base_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'SOVAS Scraper', 'json data')
-        final_data_path = os.path.join(base_dir, 'final_data.json')
         progress1_path = os.path.join(base_dir, 'progress1.json')
         
-        print(f"DEBUG: Looking for final_data.json at: {final_data_path}")
-        print(f"DEBUG: File exists: {os.path.exists(final_data_path)}")
+        # Load data using cache
+        all_data = load_voice_actor_data()
         
-        # Load all data from final_data.json
-        all_data = []
-        if os.path.exists(final_data_path):
-            try:
-                with open(final_data_path, 'r', encoding='utf-8') as f:
-                    all_data = json.load(f)
-                print(f"DEBUG: Successfully loaded {len(all_data)} entries from final_data.json")
-            except Exception as e:
-                print(f"Error reading final_data.json: {str(e)}")
-                return {
-                    'status': 'error',
-                    'message': f'Failed to read final_data.json: {str(e)}',
-                    'data': {
-                        'voice_actors': [],
-                        'pagination': {
-                            'current_page': page,
-                            'page_size': page_size or 'all',
-                            'total_entries': 0,
-                            'total_pages': 0,
-                            'has_next': False,
-                            'has_prev': False
-                        }
+        if not all_data:
+            return {
+                'status': 'error',
+                'message': 'No voice actor data available',
+                'data': {
+                    'voice_actors': [],
+                    'pagination': {
+                        'current_page': page,
+                        'page_size': page_size or 'all',
+                        'total_entries': 0,
+                        'total_pages': 0,
+                        'has_next': False,
+                        'has_prev': False
                     }
                 }
-        else:
-            print(f"DEBUG: final_data.json not found at {final_data_path}")
+            }
         
         # Load progress1.json for additional context
         progress_data = {"last_page": 180}  # Default fallback
@@ -113,11 +143,8 @@ def get_sovas_paginated_data(page=1, page_size=50):
                 print(f"Error reading progress1.json: {str(e)}")
         
         total_entries = len(all_data)
-        print(f"DEBUG: Total entries: {total_entries}")
-        print(f"DEBUG: Requested page_size: {page_size}")
-        print(f"DEBUG: Requested page: {page}")
         
-        # Handle fetching all entries
+        # Only log pagination details for debugging specific issues
         if page_size is None:
             paginated_data = all_data
             total_pages = 1
@@ -125,7 +152,6 @@ def get_sovas_paginated_data(page=1, page_size=50):
             has_prev = False
             start_index = 0
             end_index = total_entries
-            print(f"DEBUG: Fetching ALL entries ({len(paginated_data)} entries)")
         else:
             # Normal pagination logic
             total_pages = (total_entries + page_size - 1) // page_size  # Ceiling division
@@ -146,8 +172,6 @@ def get_sovas_paginated_data(page=1, page_size=50):
             # Calculate pagination metadata
             has_next = page < total_pages
             has_prev = page > 1
-            
-            print(f"DEBUG: Paginated data: {len(paginated_data)} entries (start: {start_index}, end: {end_index})")
         
         return {
             'status': 'success',
@@ -256,6 +280,7 @@ def handle_sovas_paginated_data():
         # Get query parameters
         page = request.args.get('page', 1, type=int)
         page_size_param = request.args.get('page_size', '50')
+        force_reload = request.args.get('reload', 'false').lower() == 'true'
         
         # Handle special case for getting all entries
         if page_size_param.lower() in ['all', '0']:
@@ -273,11 +298,43 @@ def handle_sovas_paginated_data():
         if page < 1:
             page = 1
         
+        # Force reload if requested
+        if force_reload:
+            load_voice_actor_data(force_reload=True)
+        
         result = get_sovas_paginated_data(page, page_size)
         status_code = 200 if result['status'] == 'success' else 500
         return jsonify(result), status_code
     except Exception as e:
         print(f"Error in handle_sovas_paginated_data route: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@sovas_bp.route('/sovas/cache/clear', methods=['POST'])
+def clear_cache():
+    """
+    API endpoint to clear the voice actor data cache and force a reload.
+    Useful when the data file has been updated.
+    """
+    try:
+        global _voice_actor_cache
+        _voice_actor_cache = {
+            'data': None,
+            'last_loaded': 0,
+            'file_path': None
+        }
+        
+        # Reload the data
+        data = load_voice_actor_data(force_reload=True)
+        
+        return jsonify({
+            'status': 'success',
+            'message': f'Cache cleared and reloaded {len(data)} entries'
+        }), 200
+    except Exception as e:
+        print(f"Error clearing cache: {str(e)}")
         return jsonify({
             'status': 'error',
             'message': str(e)
