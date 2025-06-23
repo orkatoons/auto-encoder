@@ -406,11 +406,13 @@ def extract_audio(input_file, res):
     list_cmd = ["eac3to", input_file]
     result = subprocess.run(list_cmd, capture_output=True, text=True)
     stdout = result.stdout
+    print(f"🎵 eac3to output:\n{stdout}")
     if result.stderr:
-        print(result.stderr)
+        print(f"eac3to stderr: {result.stderr}")
 
     # Match tracks
     track_lines = re.findall(r"(\d+): (.+?)\s*\n", stdout)
+    print(f"🎵 Found track lines: {track_lines}")
     if not track_lines:
         print("⚠️ No audio tracks found!")
         return []
@@ -719,7 +721,6 @@ def encode_file(input_file, resolutions, job_id):
 
     # Extract subtitles & store paths
     subtitle_files = extract_subtitles(input_file)
-    asubtitle_files = extract_subtitles(input_file)
     report_progress(filename, 5)
     for res in resolutions:
         update_resolution_status(job_id, filename, res, f"Extracted Subtitles", "3")
