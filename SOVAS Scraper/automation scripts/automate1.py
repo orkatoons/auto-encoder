@@ -18,13 +18,30 @@ save_dir = "C:\\Encode Tools\\auto-encoder\\SOVAS Scraper\\saved offline pages"
 firefox_window = None
 windows = Desktop(backend="uia").windows()
 
+# Try different Firefox window title patterns
+firefox_patterns = [
+    "Mozilla Firefox",
+    "Firefox",
+    "firefox.exe",
+    "Mozilla"
+]
+
 for w in windows:
-    if "Mozilla Firefox" in w.window_text() and w.is_visible() and not w.is_minimized():
+    window_text = w.window_text().lower()
+    print(f"Checking window: {w.window_text()}")  # Debug: print all window titles
+    
+    # Check if any Firefox pattern matches
+    if any(pattern.lower() in window_text for pattern in firefox_patterns) and w.is_visible() and not w.is_minimized():
         firefox_window = w
+        print(f"Found Firefox window: {w.window_text()}")
         break
 
 if not firefox_window:
     print("⚠️ Could not find Firefox window. Please make sure Firefox is open.")
+    print("Available windows:")
+    for w in windows:
+        if w.is_visible() and not w.is_minimized():
+            print(f"  - {w.window_text()}")
     sys.exit(1)
 
 firefox_window.set_focus()
