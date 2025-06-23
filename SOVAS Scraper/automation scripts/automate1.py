@@ -27,25 +27,32 @@ firefox_patterns = [
 ]
 
 for w in windows:
-    window_text = w.window_text().lower()
-    print(f"Checking window: {w.window_text()}")  # Debug: print all window titles
+    window_text = w.window_text()
+    print(f"Checking window: {window_text}")  # Debug: print all window titles
     
-    # Check if any Firefox pattern matches
-    if any(pattern.lower() in window_text for pattern in firefox_patterns) and w.is_visible() and not w.is_minimized():
+    # Check if any Firefox pattern matches (case insensitive)
+    window_text_lower = window_text.lower()
+    if any(pattern.lower() in window_text_lower for pattern in firefox_patterns) and w.is_visible():
         firefox_window = w
-        print(f"Found Firefox window: {w.window_text()}")
+        print(f"Found Firefox window: {window_text}")
         break
 
 if not firefox_window:
     print("⚠️ Could not find Firefox window. Please make sure Firefox is open.")
     print("Available windows:")
     for w in windows:
-        if w.is_visible() and not w.is_minimized():
-            print(f"  - {w.window_text()}")
+        print(f"  - {w.window_text()} (visible: {w.is_visible()}, minimized: {w.is_minimized()})")
     sys.exit(1)
 
 firefox_window.set_focus()
 time.sleep(1)  # Wait for the window to activate
+
+# If the window was minimized, restore it
+if firefox_window.is_minimized():
+    firefox_window.restore()
+    time.sleep(0.5)  # Wait for restore
+    firefox_window.set_focus()
+    time.sleep(0.5)  # Wait for focus
 
 # Main scraping loop
 for page in range(start_page, start_page + num_pages):
