@@ -20,7 +20,7 @@ progress_path = os.path.join(base_dir, "json data", "progress2.json")
 saved_pages_dir = os.path.join(base_dir, "saved offline pages")
 
 MAX_RATE_LIMIT_HITS = 1  # Changed to 1 to end on first rate limit
-MAX_SEARCHES_BEFORE_RATE_LIMIT = 5  # Allow 5 searches before rate limit
+MAX_SEARCHES_BEFORE_RATE_LIMIT = 50  # Increased from 5 to 50 searches before rate limit
 COOLDOWN_TIME = 4800  # 80 minutes (but we won't use this anymore)
 
 USER_AGENTS = [
