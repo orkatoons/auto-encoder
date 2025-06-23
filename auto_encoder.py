@@ -406,13 +406,13 @@ def extract_audio(input_file, res):
     list_cmd = ["eac3to", input_file]
     result = subprocess.run(list_cmd, capture_output=True, text=True)
     stdout = result.stdout
-    print(f"🎵 eac3to output:\n{stdout}")
+    log(f"🎵 eac3to output:\n{stdout}")
     if result.stderr:
-        print(f"eac3to stderr: {result.stderr}")
+        log(f"eac3to stderr: {result.stderr}")
 
     # Match tracks
     track_lines = re.findall(r"(\d+): (.+?)\s*\n", stdout)
-    print(f"🎵 Found track lines: {track_lines}")
+    log(f"🎵 Found track lines: {track_lines}")
     if not track_lines:
         print("⚠️ No audio tracks found!")
         return []
