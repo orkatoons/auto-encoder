@@ -329,32 +329,6 @@ def adjust_cq_for_bitrate(input_file, res, approved_crop):
             return 17
 
 
-def clean_encode_log(log_file_path):
-    """
-    Removes progress lines from the encode log file to keep only relevant information.
-    Progress lines look like: "Encoding: task 1 of 1, 0.14 %"
-    """
-    try:
-        log(f"Cleaning progress lines from log file: {log_file_path}")
-        # Read all lines from the log file
-        with open(log_file_path, 'r', encoding='utf-8', errors="ignore") as f:
-            lines = f.readlines()
-        
-        # Filter out progress lines
-        cleaned_lines = []
-        for line in lines:
-            # Skip lines that match the progress pattern
-            if re.match(r'Encoding: task \d+ of \d+, \d+\.\d+ %', line.strip()):
-                continue
-            cleaned_lines.append(line)
-        
-        # Write the cleaned content back to the file
-        with open(log_file_path, 'w', encoding='utf-8', errors="ignore") as f:
-            f.writelines(cleaned_lines)
-        
-        log(f"✅ Cleaned progress lines from log file: {log_file_path}")
-    except Exception as e:
-        log(f"⚠️ Error cleaning log file: {str(e)}")
 
 
 def run_final_encode(input_file, output_file, approved_crop, cq, settings, final_encode_log, res, attempts=1, max_attempts=5):
@@ -386,15 +360,16 @@ def run_final_encode(input_file, output_file, approved_crop, cq, settings, final
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                    text=True, encoding="utf-8", errors="ignore")
         for line in process.stdout:
-            log(line, end="")
-            log_file.write(line)
+            log(line, end="")  # This goes to main log (JSON output)
+            # Only write non-progress lines to final_encode_log
+            if not re.match(r'Encoding: task \d+ of \d+, \d+\.\d+ %', line.strip()):
+                log_file.write(line)
             log_file.flush()
             
         process.wait()
 
-    # Clean the log file by removing progress lines
-    clean_encode_log(final_encode_log)
-
+    # No need to clean final_encode_log since we didn't write progress lines to it
+    
     bitrate = get_bitrate(output_file)
     send_webhook_message(f"Encoding attempt #{attempts} completed at {bitrate} with cq {cq} ")
     print("Final ranges are: ",min_bitrate, bitrate, max_bitrate)
