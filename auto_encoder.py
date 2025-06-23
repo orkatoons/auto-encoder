@@ -360,7 +360,7 @@ def run_final_encode(input_file, output_file, approved_crop, cq, settings, final
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                    text=True, encoding="utf-8", errors="ignore")
         for line in process.stdout:
-            sub_log(line, end="")  # This goes to main log (JSON output)
+            sub_log(f"{line}")  # This goes to main log (JSON output)
             # Only write non-progress lines to final_encode_log
             if not re.match(r'Encoding: task \d+ of \d+, \d+\.\d+ %', line.strip()):
                 log_file.write(line)
