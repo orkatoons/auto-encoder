@@ -443,10 +443,19 @@ def extract_audio(input_file, res):
             )
             extract_cmd = f'eac3to "{input_file}" {best_track_num}:"{output_file}" -{bitrate}'
         else:
-            temp_audio = os.path.join(output_dir, "temp.aac")
-            output_file = os.path.normpath(os.path.join(output_dir, f"{base_name}@{res}.m4a"))
-            extract_cmd = f'eac3to "{input_file}" {best_track_num}:"{temp_audio}"'
-            qaac_cmd = f'qaac64 -V 127 -i "{temp_audio}" --no-delay -o "{output_file}"'
+            # Check if it's FLAC specifically
+            if "FLAC" in best_desc:
+                # For FLAC, extract as WAV first, then convert with qaac
+                temp_wav = os.path.join(output_dir, "temp.wav")
+                output_file = os.path.normpath(os.path.join(output_dir, f"{base_name}@{res}.m4a"))
+                extract_cmd = f'eac3to "{input_file}" {best_track_num}:"{temp_wav}"'
+                qaac_cmd = f'qaac64 -V 127 -i "{temp_wav}" --no-delay -o "{output_file}"'
+            else:
+                # For other lossless formats, try direct AAC extraction
+                temp_audio = os.path.join(output_dir, "temp.aac")
+                output_file = os.path.normpath(os.path.join(output_dir, f"{base_name}@{res}.m4a"))
+                extract_cmd = f'eac3to "{input_file}" {best_track_num}:"{temp_audio}"'
+                qaac_cmd = f'qaac64 -V 127 -i "{temp_audio}" --no-delay -o "{output_file}"'
     else:
         ext = "ac3" if is_surround else "m4a"
         output_file = os.path.normpath(os.path.join(output_dir, f"{base_name}@{res}.{ext}"))
@@ -457,6 +466,10 @@ def extract_audio(input_file, res):
     print(result.stdout)
     if result.stderr:
         print("STDERR:", result.stderr)
+    
+    # Check if the extraction was successful
+    if result.returncode != 0:
+        print("❌ eac3to extraction failed!")
         send_webhook_message("❌ Audio extraction failed!")
         return []
 
@@ -466,8 +479,27 @@ def extract_audio(input_file, res):
         print(result.stdout)
         if result.stderr:
             print("STDERR:", result.stderr)
-        if os.path.exists(temp_audio):
-            os.remove(temp_audio)
+        
+        # Check if qaac conversion was successful
+        if result.returncode != 0:
+            print("❌ qaac conversion failed!")
+            send_webhook_message("❌ Audio conversion failed!")
+            # Clean up temp file
+            if "FLAC" in best_desc:
+                if os.path.exists(temp_wav):
+                    os.remove(temp_wav)
+            else:
+                if os.path.exists(temp_audio):
+                    os.remove(temp_audio)
+            return []
+        
+        # Clean up temp file on success
+        if "FLAC" in best_desc:
+            if os.path.exists(temp_wav):
+                os.remove(temp_wav)
+        else:
+            if os.path.exists(temp_audio):
+                os.remove(temp_audio)
 
     send_webhook_message(f"✅ Audio extraction complete: {output_file}")
     return [output_file]
