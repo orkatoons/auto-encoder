@@ -108,7 +108,7 @@ def upload_to_ptpimg(file_path):
     return None
 
 
-def extract_screenshots(SCREENSHOT_OUTPUT_DIR, SOURCE_FILE_PATH):
+def extract_screenshots(SCREENSHOT_OUTPUT_DIR, SOURCE_FILE_PATH, resolution=None):
     """Extract and upload screenshots (skipping first 5 minutes)"""
     clip = VideoFileClip(SOURCE_FILE_PATH)
     duration = clip.duration
@@ -118,17 +118,41 @@ def extract_screenshots(SCREENSHOT_OUTPUT_DIR, SOURCE_FILE_PATH):
     start_offset = 300 if duration > 300 else 0
     usable_duration = duration - start_offset
 
+    # Define different sections for different resolutions
+    resolution_sections = {
+        "480p": [0.1, 0.4, 0.7],  # Early, middle, late sections
+        "576p": [0.2, 0.5, 0.8],  # Slightly different sections
+        "720p": [0.15, 0.45, 0.75],  # Different middle sections
+        "1080p": [0.25, 0.55, 0.85]  # Later sections
+    }
+    
+    # Use resolution-specific sections if available, otherwise use default
+    if resolution and resolution in resolution_sections:
+        section_offsets = resolution_sections[resolution]
+        print(f"Using {resolution}-specific screenshot sections: {section_offsets}")
+    else:
+        # Default sections (original behavior)
+        section_offsets = [0.33, 0.66, 1.0]
+        print(f"Using default screenshot sections for {resolution}: {section_offsets}")
+
     os.makedirs(SCREENSHOT_OUTPUT_DIR, exist_ok=True)
 
     for i in range(3):
         best_time = None
         best_score = -1
 
-        # Calculate section bounds with offset
-        section_start = start_offset + (i / 3) * usable_duration
-        section_end = start_offset + ((i + 1) / 3) * usable_duration
+        # Calculate section bounds with offset based on resolution
+        if i == 0:
+            section_start = start_offset
+            section_end = start_offset + section_offsets[0] * usable_duration
+        elif i == 1:
+            section_start = start_offset + section_offsets[0] * usable_duration
+            section_end = start_offset + section_offsets[1] * usable_duration
+        else:  # i == 2
+            section_start = start_offset + section_offsets[1] * usable_duration
+            section_end = start_offset + section_offsets[2] * usable_duration
 
-        # Sample 5 points in this third of usable video
+        # Sample 5 points in this section of usable video
         for t in np.linspace(section_start, section_end, num=5):
             try:
                 frame = clip.get_frame(t)
@@ -140,7 +164,11 @@ def extract_screenshots(SCREENSHOT_OUTPUT_DIR, SOURCE_FILE_PATH):
                 print(f"Frame error at {t:.2f}s: {e}")
 
         if best_time is not None:
-            out_path = os.path.join(SCREENSHOT_OUTPUT_DIR, f"screenshot_{i+1}.png")
+            # Include resolution in screenshot filename for uniqueness
+            if resolution:
+                out_path = os.path.join(SCREENSHOT_OUTPUT_DIR, f"screenshot_{resolution}_{i+1}.png")
+            else:
+                out_path = os.path.join(SCREENSHOT_OUTPUT_DIR, f"screenshot_{i+1}.png")
             clip.save_frame(out_path, t=best_time)
             screenshot_data.append(out_path)
 
@@ -328,7 +356,7 @@ def main():
 
     # Step 2: Create and upload screenshots
     print("\nExtracting screenshots...")
-    screenshot_bbcodes = extract_screenshots()
+    screenshot_bbcodes = extract_screenshots(SCREENSHOT_OUTPUT_DIR, SOURCE_FILE_PATH)
 
     # Step 3: Get PTP permalink
     print("\nSearching PTP...")

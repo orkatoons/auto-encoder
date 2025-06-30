@@ -452,7 +452,7 @@ def extract_audio(input_file, res):
                 # For FLAC, extract as WAV first, then convert with qaac
                 temp_wav = os.path.join(output_dir, "temp.wav")
                 output_file = os.path.normpath(os.path.join(output_dir, f"{base_name}@{res}.m4a"))
-                extract_cmd = f'eac3to "{input_file}" {best_track_num}:"{temp_wav}"'
+                extract_cmd = f'eac3to "{input_file}" {best_track_num}:"{temp_wav} -{bitrate}"'
                 qaac_cmd = f'qaac64 -V 127 -i "{temp_wav}" --no-delay -o "{output_file}"'
             else:
                 # For other lossless formats, try direct AAC extraction
@@ -471,7 +471,7 @@ def extract_audio(input_file, res):
         else:
             # For lossy stereo, extract as is (usually AAC)
             output_file = os.path.normpath(os.path.join(output_dir, f"{base_name}@{res}.m4a"))
-            extract_cmd = f'eac3to "{input_file}" {best_track_num}:"{output_file} --{bitrate}"'
+            extract_cmd = f'eac3to "{input_file}" {best_track_num}:"{output_file} -{bitrate}"'
 
     print("🔧 Extracting audio...")
     result = subprocess.run(extract_cmd, shell=True, capture_output=True, text=True)
@@ -617,14 +617,23 @@ def parse_aka_title(title):
     if not title:
         return (title, None)
     
-    # Look for "AKA" pattern (case insensitive)
-    aka_pattern = r'\s+AKA\s+'
-    match = re.search(aka_pattern, title, re.IGNORECASE)
+    # Look for "AKA" pattern (case insensitive) - handle both spaces and dots
+    aka_patterns = [
+        r'\s+AKA\s+',  # Space-separated: "Title AKA English"
+        r'\.AKA\.',    # Dot-separated: "Title.AKA.English"
+        r'\s+AKA\.',   # Mixed: "Title AKA.English"
+        r'\.AKA\s+'    # Mixed: "Title.AKA English"
+    ]
     
-    if match:
-        original_title = title[:match.start()].strip()
-        english_title = title[match.end():].strip()
-        return (original_title, english_title)
+    for pattern in aka_patterns:
+        match = re.search(pattern, title, re.IGNORECASE)
+        if match:
+            original_title = title[:match.start()].strip()
+            english_title = title[match.end():].strip()
+            # Clean up any remaining dots at the end of original or start of english
+            original_title = original_title.rstrip('.')
+            english_title = english_title.lstrip('.')
+            return (original_title, english_title)
     
     return (title, None)
 
@@ -853,6 +862,10 @@ def encode_file(input_file, resolutions, job_id):
     original_filename = os.path.splitext(os.path.basename(input_file))[0]
     send_webhook_message(f"Beginning encoding for {filename} @ {resolutions}")
 
+    # Extract AKA information from original filename first
+    original_aka_original, original_aka_english = parse_aka_title(original_filename)
+    log(f"Original filename AKA - Original: '{original_aka_original}', English: '{original_aka_english}'")
+
     # Extract subtitles & store paths
     subtitle_files = extract_subtitles(input_file)
     report_progress(filename, 5)
@@ -941,9 +954,16 @@ def encode_file(input_file, resolutions, job_id):
                 official_title = os.path.splitext(filename)[0]
                 official_year = "0000"
 
-            # Parse AKA title information
-            original_title, english_title = parse_aka_title(official_title)
-            log(f"Parsed title - Original: '{original_title}', English: '{english_title}'")
+            # Use original AKA information from filename if available, otherwise parse from IMDb title
+            if original_aka_english:
+                # Use the original AKA information from filename
+                original_title = original_aka_original
+                english_title = original_aka_english
+                log(f"Using original filename AKA - Original: '{original_title}', English: '{english_title}'")
+            else:
+                # Parse AKA title information from IMDb result
+                original_title, english_title = parse_aka_title(official_title)
+                log(f"Parsed IMDb title - Original: '{original_title}', English: '{english_title}'")
 
             # 2. Construct final output name (Step 13)
             encoding_used = "x264"  # We used x264 in the HandBrake command
@@ -1007,7 +1027,7 @@ def encode_file(input_file, resolutions, job_id):
                 output_dir = os.path.normpath(os.path.join(parent_dir, res))
                 screenshot_output_dir = os.path.join(output_dir, "screenshots")
                 send_webhook_message("Extracting Screenshots for ptp upload")
-                screenshot_bbcodes = config.extract_screenshots(screenshot_output_dir, final_filename)
+                screenshot_bbcodes = config.extract_screenshots(screenshot_output_dir, final_filename, res)
                 update_resolution_status(job_id, filename, res, f"Extracted Screenshots", "90")
                 send_webhook_message("Creating Approval Document")
                 update_resolution_status(job_id, filename, res, f"Creating Upload Doc", "91")
@@ -1015,7 +1035,8 @@ def encode_file(input_file, resolutions, job_id):
                 mediainfo_text = config.extract_mediainfo(final_filename)
 
                 log("\nSearching PTP...")
-                movie_title = official_title.replace('.', ' ')
+                # Use the formatted title for PTP search
+                movie_title = header_title.replace('.', ' ')
 
                 print(f"Sending {movie_title}, {official_year}, {final_filename}, {original_filename}")
 
