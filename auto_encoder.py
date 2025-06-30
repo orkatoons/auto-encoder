@@ -32,6 +32,16 @@ MKVEXTRACT = os.getenv("MKVEXTRACT")
 PTPIMG_API_KEY = os.getenv("API_KEY")
 UPLOAD_TO_PTPIMG = True
 
+# BDSup2Sub configuration - try multiple locations
+BDSup2Sub_PATHS = [
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "BDSup2Sub.jar"),  # Same directory as script (auto_encoder/auto_encoder/)
+    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "BDSup2Sub.jar"),  # Parent directory (auto_encoder/)
+    "BDSup2Sub.jar",  # Current working directory
+    os.path.join(os.path.expanduser("~"), "BDSup2Sub.jar"),  # Home directory
+    r"C:\Program Files\BDSup2Sub\BDSup2Sub.jar",  # Program Files
+    r"C:\BDSup2Sub\BDSup2Sub.jar",  # C:\BDSup2Sub
+]
+
 PRESET_SETTINGS = {
     "480p": {"width": 854, "height": 480, "quality": 11, "ratio": "16:9"},
     "576p": {"width": 1024, "height": 576, "quality": 13, "ratio": "16:9"},
@@ -539,31 +549,51 @@ def resize_pgs_to_ntsc(sup_file, resolution):
         base_name = os.path.splitext(sup_file)[0]
         resized_file = f"{base_name}_ntsc_{resolution}.sup"
         
+        # Find BDSup2Sub.jar
+        bdsup2sub_path = None
+        for path in BDSup2Sub_PATHS:
+            if os.path.exists(path):
+                bdsup2sub_path = path
+                break
+        
+        if not bdsup2sub_path:
+            print("⚠️ BDSup2Sub.jar not found in any of the configured paths:")
+            for path in BDSup2Sub_PATHS:
+                print(f"   - {path}")
+            print("   Please place BDSup2Sub.jar in one of these locations or update BDSup2Sub_PATHS")
+        
         # Try different tools for PGS subtitle resizing
         tools_to_try = [
             # Method 1: BDSup2Sub (most common for PGS processing)
             {
                 "name": "BDSup2Sub",
-                "cmd": ["java", "-jar", "BDSup2Sub.jar", "-o", resized_file, "-s", target_resolution, sup_file],
-                "check": ["java", "-version"]
+                "cmd": ["java", "-jar", bdsup2sub_path, "-o", resized_file, "-s", target_resolution, sup_file] if bdsup2sub_path else None,
+                "check": ["java", "-version"],
+                "enabled": bdsup2sub_path is not None
             },
             # Method 2: SupRip (alternative tool)
             {
                 "name": "SupRip",
                 "cmd": ["suprip", "-o", resized_file, "-r", target_resolution, sup_file],
-                "check": ["suprip", "--version"]
+                "check": ["suprip", "--version"],
+                "enabled": True
             },
             # Method 3: FFmpeg (if available with subtitle support)
             {
                 "name": "FFmpeg",
                 "cmd": ["ffmpeg", "-i", sup_file, "-vf", f"scale={width}:{height}", "-c:v", "copy", resized_file],
-                "check": ["ffmpeg", "-version"]
+                "check": ["ffmpeg", "-version"],
+                "enabled": True
             }
         ]
         
         print(f"🔄 Resizing PGS subtitle to {target_resolution} for {resolution}: {sup_file}")
         
         for tool in tools_to_try:
+            if not tool["enabled"]:
+                print(f"⚠️ {tool['name']} disabled - tool not found")
+                continue
+                
             try:
                 # Check if tool is available
                 check_result = subprocess.run(tool["check"], capture_output=True, text=True)
