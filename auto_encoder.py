@@ -436,9 +436,12 @@ def extract_audio(input_file, res):
     is_lossless = any(codec in best_desc for codec in lossless_codecs)
     is_surround = any(x in best_desc for x in ["5.1", "7.1"])
 
+    # Determine bitrate based on resolution being encoded
+    bitrate = "448" if res in ["480p", "576p"] else "640"
+
     if is_lossless:
         if is_surround:
-            bitrate = "448" if ("480p" in input_file or "576p" in input_file) else "640"
+            # For lossless surround, convert to AC3 with specified bitrate
             output_file = os.path.normpath(
                 os.path.join(output_dir, f"{base_name}@{res}-{bitrate}.ac3")
             )
@@ -458,9 +461,17 @@ def extract_audio(input_file, res):
                 extract_cmd = f'eac3to "{input_file}" {best_track_num}:"{temp_audio}"'
                 qaac_cmd = f'qaac64 -V 127 -i "{temp_audio}" --no-delay -o "{output_file}"'
     else:
-        ext = "ac3" if is_surround else "m4a"
-        output_file = os.path.normpath(os.path.join(output_dir, f"{base_name}@{res}.{ext}"))
-        extract_cmd = f'eac3to "{input_file}" {best_track_num}:"{output_file}"'
+        # For lossy audio, determine format and bitrate
+        if is_surround:
+            # For lossy surround, convert to AC3 with specified bitrate
+            output_file = os.path.normpath(
+                os.path.join(output_dir, f"{base_name}@{res}-{bitrate}.ac3")
+            )
+            extract_cmd = f'eac3to "{input_file}" {best_track_num}:"{output_file}" -{bitrate}'
+        else:
+            # For lossy stereo, extract as is (usually AAC)
+            output_file = os.path.normpath(os.path.join(output_dir, f"{base_name}@{res}.m4a"))
+            extract_cmd = f'eac3to "{input_file}" {best_track_num}:"{output_file} --{bitrate}"'
 
     print("🔧 Extracting audio...")
     result = subprocess.run(extract_cmd, shell=True, capture_output=True, text=True)
@@ -509,6 +520,7 @@ def extract_audio(input_file, res):
 def extract_subtitles(mkv_path):
     """
     Extracts subtitle tracks using mkvextract and returns a list of paths to the extracted subtitle files.
+    English subtitles are prioritized and come first in the list.
     """
     input_dir = os.path.dirname(mkv_path)
     base_name = os.path.splitext(os.path.basename(mkv_path))[0]
@@ -517,7 +529,7 @@ def extract_subtitles(mkv_path):
     print("MKV merge output:")
     print(mkv)
 
-    subtitle_paths = []
+    subtitle_tracks = []  # Store track info for sorting
 
     for track in mkv.tracks:
         print("Found track:", track)
@@ -537,18 +549,107 @@ def extract_subtitles(mkv_path):
                 f"{base_name}_subtitle_{track._track_id}_{language}.{out_ext}"
             )
 
-            cmd = [MKVEXTRACT, "tracks", mkv_path, f"{track._track_id}:{output_file}"]
-            print("Running command:", " ".join(cmd))
-            subprocess.run(cmd)
-            send_webhook_message(f"✅ Extracted subtitle track {track._track_id} for {base_name}")
+            # Store track info for sorting
+            subtitle_tracks.append({
+                'track_id': track._track_id,
+                'language': language,
+                'output_file': output_file,
+                'codec': track._track_codec
+            })
 
-            subtitle_paths.append(output_file)
+    # Sort tracks: English first, then others
+    def sort_key(track):
+        # English tracks get priority (lower sort value)
+        if track['language'].lower() == 'eng':
+            return 0
         else:
-            log(f"Unable to extract {track._track_id} with codec {track._track_codec} for {base_name}")
+            return 1
+
+    subtitle_tracks.sort(key=sort_key)
+
+    # Extract tracks in sorted order
+    subtitle_paths = []
+    for track_info in subtitle_tracks:
+        cmd = [MKVEXTRACT, "tracks", mkv_path, f"{track_info['track_id']}:{track_info['output_file']}"]
+        print("Running command:", " ".join(cmd))
+        subprocess.run(cmd)
+        send_webhook_message(f"✅ Extracted subtitle track {track_info['track_id']} ({track_info['language']}) for {base_name}")
+        subtitle_paths.append(track_info['output_file'])
 
     print("Extraction complete!")
     return subtitle_paths
 
+
+# --------------------Helper: AKA Title Processing --------------------
+def replace_accents(text):
+    """
+    Replace accented characters with their English equivalents for filenames.
+    """
+    accent_map = {
+        'á': 'a', 'à': 'a', 'ã': 'a', 'â': 'a', 'ä': 'a', 'å': 'a',
+        'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
+        'í': 'i', 'ì': 'i', 'î': 'i', 'ï': 'i',
+        'ó': 'o', 'ò': 'o', 'õ': 'o', 'ô': 'o', 'ö': 'o',
+        'ú': 'u', 'ù': 'u', 'û': 'u', 'ü': 'u',
+        'ý': 'y', 'ÿ': 'y',
+        'ñ': 'n',
+        'ç': 'c',
+        'Á': 'A', 'À': 'A', 'Ã': 'A', 'Â': 'A', 'Ä': 'A', 'Å': 'A',
+        'É': 'E', 'È': 'E', 'Ê': 'E', 'Ë': 'E',
+        'Í': 'I', 'Ì': 'I', 'Î': 'I', 'Ï': 'I',
+        'Ó': 'O', 'Ò': 'O', 'Õ': 'O', 'Ô': 'O', 'Ö': 'O',
+        'Ú': 'U', 'Ù': 'U', 'Û': 'U', 'Ü': 'U',
+        'Ý': 'Y',
+        'Ñ': 'N',
+        'Ç': 'C'
+    }
+    
+    for accented, plain in accent_map.items():
+        text = text.replace(accented, plain)
+    return text
+
+def parse_aka_title(title):
+    """
+    Parse a title that may contain AKA (Also Known As) information.
+    Returns (original_title, english_title) tuple.
+    If no AKA is found, returns (title, None).
+    """
+    if not title:
+        return (title, None)
+    
+    # Look for "AKA" pattern (case insensitive)
+    aka_pattern = r'\s+AKA\s+'
+    match = re.search(aka_pattern, title, re.IGNORECASE)
+    
+    if match:
+        original_title = title[:match.start()].strip()
+        english_title = title[match.end():].strip()
+        return (original_title, english_title)
+    
+    return (title, None)
+
+def format_filename_title(original_title, english_title=None):
+    """
+    Format title for filename: original AKA english (with accent replacement)
+    """
+    if english_title:
+        # For filename: original AKA english (with accents replaced)
+        filename_title = f"{original_title} AKA {english_title}"
+        return replace_accents(filename_title)
+    else:
+        # No AKA, just replace accents
+        return replace_accents(original_title)
+
+def format_header_title(original_title, english_title=None):
+    """
+    Format title for MKV header: original AKA english (keep accents)
+    """
+    if english_title:
+        # For header: original AKA english (keep accents)
+        return f"{original_title} AKA {english_title}"
+    else:
+        # No AKA, keep as is
+        return original_title
 
 # --------------------Helper: IMDb Title Lookup--------------------
 
@@ -840,6 +941,10 @@ def encode_file(input_file, resolutions, job_id):
                 official_title = os.path.splitext(filename)[0]
                 official_year = "0000"
 
+            # Parse AKA title information
+            original_title, english_title = parse_aka_title(official_title)
+            log(f"Parsed title - Original: '{original_title}', English: '{english_title}'")
+
             # 2. Construct final output name (Step 13)
             encoding_used = "x264"  # We used x264 in the HandBrake command
             global encoding_source_format
@@ -858,21 +963,25 @@ def encode_file(input_file, resolutions, job_id):
                     encoding_source_format = "BluRay"  # Default fallback
             
             language = detect_languages_ffmpeg(input_file)         # Adjust or auto-detect
+            
+            # Format title for filename (with accent replacement)
+            filename_title = format_filename_title(original_title, english_title)
             final_filename = os.path.join(
                 output_dir,
-                f"{official_title.replace(' ', '.')}."
+                f"{filename_title.replace(' ', '.')}."
                 f"{official_year}.{res}.{encoding_source_format}.{encoding_used}-HANDJOB.mkv"
             )
 
             # Validate final filename
-            if not official_title or not official_year or not encoding_source_format:
-                log(f"❌ Invalid filename components: title='{official_title}', year='{official_year}', format='{encoding_source_format}'")
+            if not filename_title or not official_year or not encoding_source_format:
+                log(f"❌ Invalid filename components: title='{filename_title}', year='{official_year}', format='{encoding_source_format}'")
                 send_webhook_message(f"❌ Invalid filename components for {filename}@{res}")
                 status_callback(filename, res, "Failed - Invalid filename")
                 continue
 
-            # 3. Construct the file title (Step 14)
-            file_title = f"{official_title} [{official_year}] {res} {encoding_source_format} - HJ"
+            # 3. Construct the file title (Step 14) - keep accents for header
+            header_title = format_header_title(original_title, english_title)
+            file_title = f"{header_title} [{official_year}] {res} {encoding_source_format} - HJ"
 
             # 4. Run the multiplex
             try:
