@@ -931,40 +931,29 @@ def encode_file(input_file, resolutions, job_id):
             status_callback(filename, res, "Completed")
             update_resolution_status(job_id, filename, res, f"Starting Multiplexing", "76")
             # ---------------------------
-            # 1. Find official IMDb data
+            # 1. Find official IMDb data for year extraction
             grandparent_dir = os.path.basename(os.path.dirname(os.path.dirname(input_file)))
-            # Use the original grandparent directory name directly (revert AKA changes)
+            log(f"Using grandparent directory name: {grandparent_dir}")
+            
+            # Use IMDb to get the year (grandparent directory doesn't have year)
             movie_data = find_movie(grandparent_dir)
             if movie_data:
                 # Debug: Print available keys
                 log(f"IMDb movie data keys: {list(movie_data.keys())}")
                 log(f"IMDb movie data: {movie_data}")
                 
-                # Try to get the title with fallbacks
-                official_title = (
-                    movie_data.get('original title') or 
-                    movie_data.get('title') or 
-                    movie_data.get('long imdb title', '').split(' (')[0] or
-                    os.path.splitext(filename)[0]
-                )
+                # Get the year from IMDb
                 official_year = movie_data.get('year', '0000')
-                log(f"Using title: {official_title}, year: {official_year}")
+                log(f"Using IMDb year: {official_year}")
             else:
                 # Fallback if IMDb not found
-                official_title = os.path.splitext(filename)[0]
                 official_year = "0000"
-
-            # Use original AKA information from filename if available, otherwise parse from IMDb title
-            if original_aka_english:
-                # Use the original AKA information from filename
-                original_title = original_aka_original
-                english_title = original_aka_english
-                log(f"Using original filename AKA - Original: '{original_title}', English: '{english_title}'")
-            else:
-                # Parse AKA title information from IMDb result
-                original_title, english_title = parse_aka_title(official_title)
-                log(f"Parsed IMDb title - Original: '{original_title}', English: '{english_title}'")
-
+                log(f"IMDb not found, using fallback year: {official_year}")
+            
+            # Parse AKA information from grandparent directory name for title formatting
+            original_title, english_title = parse_aka_title(grandparent_dir)
+            log(f"Parsed grandparent directory - Original: '{original_title}', English: '{english_title}'")
+            
             # 2. Construct final output name (Step 13)
             encoding_used = "x264"  # We used x264 in the HandBrake command
             global encoding_source_format
