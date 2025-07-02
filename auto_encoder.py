@@ -883,22 +883,22 @@ def resize_sup_subtitle_with_bdsup2sub(subtitle_path, webhook_url):
         return None
 
     # Wait for the Conversion Options dialog
-    time.sleep(10)
+    time.sleep(20)
     send_webhook_message("[BDSup2Sub] Pressing Enter to accept Conversion Options dialog...")
     pyw_keyboard.send_keys('{ENTER}')
     time.sleep(2)
 
     # Wait for the main BDSup2Sub window to load
-    time.sleep(5)
+    time.sleep(20)
     send_webhook_message("[BDSup2Sub] Pressing Ctrl+E to export...")
     pyw_keyboard.send_keys('^e')
-    time.sleep(2)
+    time.sleep(10)
     send_webhook_message("[BDSup2Sub] Pressing Enter to save exported subtitle...")
     pyw_keyboard.send_keys('{ENTER}')
     time.sleep(2)
 
     # Wait for export to finish
-    time.sleep(5)
+    time.sleep(15)
     exp_path = subtitle_path.replace('.sup', '_exp.sup')
     send_webhook_message(f"[BDSup2Sub] Exported subtitle: {exp_path}")
     return exp_path
