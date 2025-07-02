@@ -914,6 +914,10 @@ def encode_file(input_file, resolutions, job_id):
 
     # Extract subtitles & store paths
     subtitle_files = extract_subtitles(input_file)
+    # --- BDSup2Sub automation for 480p (test call immediately after extraction) ---
+    for sub in subtitle_files:
+        if sub.lower().endswith('.sup'):
+            resize_sup_subtitle_with_bdsup2sub(sub, DISCORD_WEBHOOK_URL)
     report_progress(filename, 5)
     for res in resolutions:
         update_resolution_status(job_id, filename, res, f"Extracted Subtitles", "3")
@@ -1103,12 +1107,6 @@ def encode_file(input_file, resolutions, job_id):
                 send_webhook_message(f"❌ Post-processing failed for {filename}@{res}: {str(e)}")
                 # Don't fail the entire encode, just log the error
                 update_resolution_status(job_id, filename, res, f"Completed with warnings", "100")
-
-            # --- BDSup2Sub automation for 480p (test call after extraction) ---
-            if '480p' in resolutions:
-                for sub in subtitle_files:
-                    if sub.lower().endswith('.sup'):
-                        resize_sup_subtitle_with_bdsup2sub(sub, DISCORD_WEBHOOK_URL)
 
         else:
             log(f"\n❌ Encoding failed for {res}!\n")
