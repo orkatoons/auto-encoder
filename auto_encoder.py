@@ -907,17 +907,14 @@ def encode_file(input_file, resolutions, job_id):
     filename = os.path.basename(input_file)
     original_filename = os.path.splitext(os.path.basename(input_file))[0]
     send_webhook_message(f"Beginning encoding for {filename} @ {resolutions}")
-
+    report_progress(filename, 0)
     # Extract AKA information from original filename first
     original_aka_original, original_aka_english = parse_aka_title(original_filename)
     log(f"Original filename AKA - Original: '{original_aka_original}', English: '{original_aka_english}'")
 
     # Extract subtitles & store paths
     subtitle_files = extract_subtitles(input_file)
-    # --- BDSup2Sub automation for 480p (test call immediately after extraction) ---
-    for sub in subtitle_files:
-        if sub.lower().endswith('.sup'):
-            resize_sup_subtitle_with_bdsup2sub(sub, DISCORD_WEBHOOK_URL)
+
     report_progress(filename, 5)
     for res in resolutions:
         update_resolution_status(job_id, filename, res, f"Extracted Subtitles", "3")
