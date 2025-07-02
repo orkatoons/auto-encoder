@@ -20,6 +20,7 @@ logging.basicConfig(level=logging.INFO)
 import sys
 sys.stdout.reconfigure(encoding='utf-8')
 
+from pywinauto import Application, keyboard as pyw_keyboard
 
 # ----------------- Configuration -----------------
 load_dotenv()
@@ -31,16 +32,6 @@ MEDIAINFO_PATH = os.getenv("MEDIAINFO_PATH")
 MKVEXTRACT = os.getenv("MKVEXTRACT")
 PTPIMG_API_KEY = os.getenv("API_KEY")
 UPLOAD_TO_PTPIMG = True
-
-# BDSup2Sub configuration - try multiple locations
-BDSup2Sub_PATHS = [
-    os.path.join(os.path.dirname(os.path.abspath(__file__)), "BDSup2Sub.jar"),  # Same directory as script (auto_encoder/auto_encoder/)
-    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "BDSup2Sub.jar"),  # Parent directory (auto_encoder/)
-    "BDSup2Sub.jar",  # Current working directory
-    os.path.join(os.path.expanduser("~"), "BDSup2Sub.jar"),  # Home directory
-    r"C:\Program Files\BDSup2Sub\BDSup2Sub.jar",  # Program Files
-    r"C:\BDSup2Sub\BDSup2Sub.jar",  # C:\BDSup2Sub
-]
 
 PRESET_SETTINGS = {
     "480p": {"width": 854, "height": 480, "quality": 11, "ratio": "16:9"},
@@ -527,113 +518,10 @@ def extract_audio(input_file, res):
     return [output_file]
 
 # --------------------Phase 3 (Subtitles)--------------------
-def resize_pgs_to_ntsc(sup_file, resolution):
-    """
-    Resize PGS subtitle file to NTSC resolution based on the encoding resolution.
-    Tries multiple tools in order of preference.
-    Returns the path to the resized file.
-    """
-    try:
-        # Determine NTSC resolution based on encoding resolution
-        ntsc_resolutions = {
-            "480p": "720x480",   # Standard NTSC
-            "576p": "720x576",   # PAL (but still 4:3 aspect)
-            "720p": "1280x720",  # HD but maintain aspect
-            "1080p": "1920x1080" # Full HD
-        }
-        
-        target_resolution = ntsc_resolutions.get(resolution, "720x480")
-        width, height = target_resolution.split("x")
-        
-        # Create output filename
-        base_name = os.path.splitext(sup_file)[0]
-        resized_file = f"{base_name}_ntsc_{resolution}.sup"
-        
-        # Find BDSup2Sub.jar
-        bdsup2sub_path = None
-        for path in BDSup2Sub_PATHS:
-            if os.path.exists(path):
-                bdsup2sub_path = path
-                break
-        
-        if not bdsup2sub_path:
-            print("⚠️ BDSup2Sub.jar not found in any of the configured paths:")
-            for path in BDSup2Sub_PATHS:
-                print(f"   - {path}")
-            print("   Please place BDSup2Sub.jar in one of these locations or update BDSup2Sub_PATHS")
-        
-        # Try different tools for PGS subtitle resizing
-        tools_to_try = [
-            # Method 1: BDSup2Sub (most common for PGS processing)
-            {
-                "name": "BDSup2Sub",
-                "cmd": ["java", "-jar", bdsup2sub_path, "-o", resized_file, "-s", target_resolution, sup_file] if bdsup2sub_path else None,
-                "check": ["java", "-version"],
-                "enabled": bdsup2sub_path is not None
-            },
-            # Method 2: SupRip (alternative tool)
-            {
-                "name": "SupRip",
-                "cmd": ["suprip", "-o", resized_file, "-r", target_resolution, sup_file],
-                "check": ["suprip", "--version"],
-                "enabled": True
-            },
-            # Method 3: FFmpeg (if available with subtitle support)
-            {
-                "name": "FFmpeg",
-                "cmd": ["ffmpeg", "-i", sup_file, "-vf", f"scale={width}:{height}", "-c:v", "copy", resized_file],
-                "check": ["ffmpeg", "-version"],
-                "enabled": True
-            }
-        ]
-        
-        print(f"🔄 Resizing PGS subtitle to {target_resolution} for {resolution}: {sup_file}")
-        
-        for tool in tools_to_try:
-            if not tool["enabled"]:
-                print(f"⚠️ {tool['name']} disabled - tool not found")
-                continue
-                
-            try:
-                # Check if tool is available
-                check_result = subprocess.run(tool["check"], capture_output=True, text=True)
-                if check_result.returncode == 0:
-                    log(f"Using {tool['name']} for PGS subtitle resizing to {target_resolution}")
-                    log(f"Running command: {' '.join(tool['cmd'])}")
-                    
-                    result = subprocess.run(tool["cmd"], capture_output=True, text=True)
-                    
-                    if result.returncode == 0:
-                        print(f"✅ Successfully resized PGS subtitle to {target_resolution} using {tool['name']}: {resized_file}")
-                        send_webhook_message(f"✅ Resized PGS subtitle to {target_resolution} using {tool['name']}: {os.path.basename(resized_file)}")
-                        
-                        # Remove original file and rename resized file
-                        os.remove(sup_file)
-                        os.rename(resized_file, sup_file)
-                        return sup_file
-                    else:
-                        print(f"⚠️ {tool['name']} failed: {result.stderr}")
-                        continue
-                        
-            except (FileNotFoundError, subprocess.SubprocessError) as e:
-                print(f"⚠️ {tool['name']} not available: {str(e)}")
-                continue
-        
-        # If all tools fail, log warning and return original file
-        print(f"❌ No PGS subtitle resizing tools available. Using original file: {sup_file}")
-        send_webhook_message(f"⚠️ No PGS subtitle resizing tools available. Using original: {os.path.basename(sup_file)}")
-        return sup_file
-            
-    except Exception as e:
-        print(f"❌ Error resizing PGS subtitle: {str(e)}")
-        send_webhook_message(f"❌ Error resizing PGS subtitle: {os.path.basename(sup_file)}")
-        return sup_file  # Return original file if resize fails
-
-def extract_subtitles(mkv_path, resolution=None):
+def extract_subtitles(mkv_path):
     """
     Extracts subtitle tracks using mkvextract and returns a list of paths to the extracted subtitle files.
     English subtitles are prioritized and come first in the list.
-    PGS subtitles (.sup) are resized to resolution-appropriate NTSC size.
     """
     input_dir = os.path.dirname(mkv_path)
     base_name = os.path.splitext(os.path.basename(mkv_path))[0]
@@ -667,8 +555,7 @@ def extract_subtitles(mkv_path, resolution=None):
                 'track_id': track._track_id,
                 'language': language,
                 'output_file': output_file,
-                'codec': track._track_codec,
-                'is_pgs': "PGS" in track._track_codec
+                'codec': track._track_codec
             })
 
     # Sort tracks: English first, then others
@@ -688,14 +575,7 @@ def extract_subtitles(mkv_path, resolution=None):
         print("Running command:", " ".join(cmd))
         subprocess.run(cmd)
         send_webhook_message(f"✅ Extracted subtitle track {track_info['track_id']} ({track_info['language']}) for {base_name}")
-        
-        # Resize PGS subtitles to resolution-appropriate size
-        if track_info['is_pgs'] and track_info['output_file'].endswith('.sup') and resolution:
-            print(f"🔄 Resizing PGS subtitle for {resolution}: {track_info['output_file']}")
-            resized_file = resize_pgs_to_ntsc(track_info['output_file'], resolution)
-            subtitle_paths.append(resized_file)
-        else:
-            subtitle_paths.append(track_info['output_file'])
+        subtitle_paths.append(track_info['output_file'])
 
     print("Extraction complete!")
     return subtitle_paths
@@ -978,6 +858,51 @@ def extract_mediainfo(source_file):
 
 
 # --------------------Main Encoding Function--------------------
+def resize_sup_subtitle_with_bdsup2sub(subtitle_path, webhook_url):
+    """
+    Automate BDSup2Sub to resize a .sup subtitle file for 480p using pywinauto and keyboard.
+    Logs each step to Discord webhook.
+    Returns the path to the exported file.
+    """
+    import os
+    import requests
+    import sys
+
+    bdsup2sub_jar = os.path.join(os.path.dirname(__file__), '..', 'BDSup2Sub.jar')
+    subtitle_path = os.path.abspath(subtitle_path)
+    send_webhook_message(f"[BDSup2Sub] Starting resize for: {subtitle_path}")
+
+    # Launch BDSup2Sub
+    try:
+        proc = subprocess.Popen([
+            'java', '-jar', bdsup2sub_jar, subtitle_path
+        ])
+        send_webhook_message(f"[BDSup2Sub] Launched BDSup2Sub.jar for {subtitle_path}")
+    except Exception as e:
+        send_webhook_message(f"[BDSup2Sub] Failed to launch BDSup2Sub: {e}")
+        return None
+
+    # Wait for the Conversion Options dialog
+    time.sleep(10)
+    send_webhook_message("[BDSup2Sub] Pressing Enter to accept Conversion Options dialog...")
+    pyw_keyboard.send_keys('{ENTER}')
+    time.sleep(2)
+
+    # Wait for the main BDSup2Sub window to load
+    time.sleep(5)
+    send_webhook_message("[BDSup2Sub] Pressing Ctrl+E to export...")
+    pyw_keyboard.send_keys('^e')
+    time.sleep(2)
+    send_webhook_message("[BDSup2Sub] Pressing Enter to save exported subtitle...")
+    pyw_keyboard.send_keys('{ENTER}')
+    time.sleep(2)
+
+    # Wait for export to finish
+    time.sleep(5)
+    exp_path = subtitle_path.replace('.sup', '_exp.sup')
+    send_webhook_message(f"[BDSup2Sub] Exported subtitle: {exp_path}")
+    return exp_path
+
 def encode_file(input_file, resolutions, job_id):
     filename = os.path.basename(input_file)
     original_filename = os.path.splitext(os.path.basename(input_file))[0]
@@ -987,15 +912,12 @@ def encode_file(input_file, resolutions, job_id):
     original_aka_original, original_aka_english = parse_aka_title(original_filename)
     log(f"Original filename AKA - Original: '{original_aka_original}', English: '{original_aka_english}'")
 
+    # Extract subtitles & store paths
+    subtitle_files = extract_subtitles(input_file)
     report_progress(filename, 5)
     for res in resolutions:
-        update_resolution_status(job_id, filename, res, f"Starting...", "1")
+        update_resolution_status(job_id, filename, res, f"Extracted Subtitles", "3")
         status_callback(filename, res, "Starting...")
-        
-        # Extract subtitles for this specific resolution
-        update_resolution_status(job_id, filename, res, f"Extracting Subtitles", "3")
-        subtitle_files = extract_subtitles(input_file, res)
-        
         settings = PRESET_SETTINGS.get(res)
         metadata = config.parse_video_metadata(input_file, settings)
         settings["width"] = metadata["width"]
@@ -1182,6 +1104,11 @@ def encode_file(input_file, resolutions, job_id):
                 # Don't fail the entire encode, just log the error
                 update_resolution_status(job_id, filename, res, f"Completed with warnings", "100")
 
+            # --- BDSup2Sub automation for 480p (test call after extraction) ---
+            if '480p' in resolutions:
+                for sub in subtitle_files:
+                    if sub.lower().endswith('.sup'):
+                        resize_sup_subtitle_with_bdsup2sub(sub, DISCORD_WEBHOOK_URL)
 
         else:
             log(f"\n❌ Encoding failed for {res}!\n")
