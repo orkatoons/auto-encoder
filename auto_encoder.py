@@ -973,6 +973,20 @@ def encode_file(input_file, resolutions, job_id):
 
         output = run_final_encode(input_file, output_file, approved_crop, cq, settings, final_encode_log, res)
 
+        # --- BDSup2Sub automation for 480p (after final encode, before multiplexing) ---
+        if res == '480p':
+            new_subtitle_files = []
+            for sub in subtitle_files:
+                if sub.lower().endswith('.sup'):
+                    exp_sub = resize_sup_subtitle_with_bdsup2sub(sub, DISCORD_WEBHOOK_URL)
+                    if exp_sub and os.path.exists(exp_sub):
+                        new_subtitle_files.append(exp_sub)
+                    else:
+                        new_subtitle_files.append(sub)
+                else:
+                    new_subtitle_files.append(sub)
+            subtitle_files = new_subtitle_files
+
         if output:
             update_resolution_status(job_id, filename, res, f"Final video encoding completed", "75")
             log(f"\n✅ Successfully encoded: {output_file}\n")
