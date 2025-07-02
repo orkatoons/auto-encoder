@@ -868,7 +868,7 @@ def resize_sup_subtitle_with_bdsup2sub(subtitle_path, webhook_url):
     import requests
     import sys
 
-    bdsup2sub_jar = os.path.join(os.path.dirname(__file__), '..', 'BDSup2Sub.jar')
+    bdsup2sub_jar = os.path.join(os.path.dirname(__file__), 'BDSup2Sub.jar')
     subtitle_path = os.path.abspath(subtitle_path)
     send_webhook_message(f"[BDSup2Sub] Starting resize for: {subtitle_path}")
 
