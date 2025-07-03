@@ -754,6 +754,28 @@ def multiplex_file(
     Final Filename   : {final_filename}
     File Title       : {file_title}
     """)
+    
+    # Debug: Check file sizes and existence
+    log(f"🔍 Debug: Checking input files...")
+    if os.path.exists(video_file):
+        video_size = os.path.getsize(video_file)
+        log(f"✅ Video file exists: {video_file} ({video_size} bytes)")
+    else:
+        log(f"❌ Video file missing: {video_file}")
+    
+    for i, audio_file in enumerate(audio_files):
+        if os.path.exists(audio_file):
+            audio_size = os.path.getsize(audio_file)
+            log(f"✅ Audio file {i+1} exists: {audio_file} ({audio_size} bytes)")
+        else:
+            log(f"❌ Audio file {i+1} missing: {audio_file}")
+    
+    for i, subtitle_file in enumerate(subtitle_files):
+        if os.path.exists(subtitle_file):
+            sub_size = os.path.getsize(subtitle_file)
+            log(f"✅ Subtitle file {i+1} exists: {subtitle_file} ({sub_size} bytes)")
+        else:
+            log(f"❌ Subtitle file {i+1} missing: {subtitle_file}")
 
     """
     Combines video, audio, and subtitle files into a final MKV using mkvmerge.
@@ -766,10 +788,26 @@ def multiplex_file(
         "--no-global-tags", "--no-chapters",
         video_file
     ]
+    
+    # Debug: Log the exact command that will be executed
+    log(f"🔍 Debug: mkvmerge command will be:")
+    log(f"   {' '.join(cmd)}")
+    
+    # Validate file title for potential issues
+    if not file_title or len(file_title.strip()) == 0:
+        log(f"⚠️ Warning: Empty or null file title provided")
+        file_title = "Untitled"
+    elif len(file_title) > 255:
+        log(f"⚠️ Warning: File title is very long ({len(file_title)} chars), may cause issues")
 
     # Add audio tracks with appropriate language settings
-    for audio_file in audio_files:
+    for i, audio_file in enumerate(audio_files):
+        if not os.path.exists(audio_file):
+            log(f"⚠️ Warning: Audio file {i+1} does not exist: {audio_file}")
+            continue
+            
         default_audio = "yes" if language != "undf" else "no"
+        log(f"🔍 Adding audio track {i+1}: {audio_file} (language: {language}, default: {default_audio})")
 
         cmd.extend([
             "--language", f"0:{language}",
@@ -778,7 +816,11 @@ def multiplex_file(
         ])
 
     # Add subtitle tracks
-    for subtitle_file in subtitle_files:
+    for i, subtitle_file in enumerate(subtitle_files):
+        if not os.path.exists(subtitle_file):
+            log(f"⚠️ Warning: Subtitle file {i+1} does not exist: {subtitle_file}")
+            continue
+            
         # Extract language code from filename (e.g., "_eng.srt")
         match = re.search(r'_([a-z]{2,3})\.[a-z]+$', subtitle_file)
         subtitle_lang = match.group(1) if match else "und"
@@ -786,6 +828,8 @@ def multiplex_file(
         # Set English subtitles as default if movie is NOT in English
         # If movie is in English, don't set English subtitles as default
         default_subtitle = "yes" if language != "eng" and subtitle_lang == "eng" else "no"
+        
+        log(f"🔍 Adding subtitle track {i+1}: {subtitle_file} (language: {subtitle_lang}, default: {default_subtitle})")
 
         cmd.extend([
             "--language", f"0:{subtitle_lang}",
@@ -793,17 +837,54 @@ def multiplex_file(
             "--default-track", f"0:{default_subtitle}",
             subtitle_file
         ])
+    
+    # Final validation before running mkvmerge
+    if len(cmd) < 4:  # At minimum: mkvmerge, -o, output_file, video_file
+        error_msg = f"Invalid mkvmerge command - too few arguments: {' '.join(cmd)}"
+        log(f"❌ {error_msg}")
+        raise Exception(error_msg)
 
     # Run the command
     print("Running command:", " ".join(cmd))
+    
+    # First, validate that all input files exist
+    all_files = [video_file] + audio_files + subtitle_files
+    missing_files = []
+    for file_path in all_files:
+        if not os.path.exists(file_path):
+            missing_files.append(file_path)
+    
+    if missing_files:
+        error_msg = f"Missing input files for multiplexing: {missing_files}"
+        log(f"❌ {error_msg}")
+        raise Exception(error_msg)
+    
+    # Check if output directory exists and is writable
+    output_dir = os.path.dirname(final_filename)
+    if not os.path.exists(output_dir):
+        try:
+            os.makedirs(output_dir, exist_ok=True)
+        except Exception as e:
+            error_msg = f"Cannot create output directory {output_dir}: {str(e)}"
+            log(f"❌ {error_msg}")
+            raise Exception(error_msg)
+    
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                text=True, encoding="utf-8", errors="ignore")
+    
+    # Collect all output for better error reporting
+    output_lines = []
     for line in process.stdout:
+        output_lines.append(line)
         print(line, end="")
+    
     process.wait()
     
     if process.returncode != 0:
-        raise Exception(f"mkvmerge failed with return code {process.returncode}")
+        error_output = "".join(output_lines)
+        error_msg = f"mkvmerge failed with return code {process.returncode}\nCommand: {' '.join(cmd)}\nOutput:\n{error_output}"
+        log(f"❌ {error_msg}")
+        raise Exception(error_msg)
 
     send_webhook_message("✅ Mutliplexing Completed")
 
@@ -913,10 +994,11 @@ def encode_file(input_file, resolutions, job_id):
     log(f"Original filename AKA - Original: '{original_aka_original}', English: '{original_aka_english}'")
 
     # Extract subtitles & store paths
-    subtitle_files = extract_subtitles(input_file)
+    original_subtitle_files = extract_subtitles(input_file)
 
     report_progress(filename, 5)
     for res in resolutions:
+        log(f"🎬 Starting processing for {res} resolution...")
         update_resolution_status(job_id, filename, res, f"Extracted Subtitles", "3")
         status_callback(filename, res, "Starting...")
         settings = PRESET_SETTINGS.get(res)
@@ -972,17 +1054,28 @@ def encode_file(input_file, resolutions, job_id):
 
         # --- BDSup2Sub automation for 480p (after final encode, before multiplexing) ---
         if res == '480p':
-            new_subtitle_files = []
-            for sub in subtitle_files:
+            log(f"🔧 Processing subtitles for 480p with BDSup2Sub...")
+            log(f"   Original subtitles found: {len(original_subtitle_files)}")
+            for i, sub in enumerate(original_subtitle_files):
+                log(f"     Original subtitle {i+1}: {os.path.basename(sub)}")
+            processed_subtitle_files = []
+            for sub in original_subtitle_files:
                 if sub.lower().endswith('.sup'):
                     exp_sub = resize_sup_subtitle_with_bdsup2sub(sub, DISCORD_WEBHOOK_URL)
                     if exp_sub and os.path.exists(exp_sub):
-                        new_subtitle_files.append(exp_sub)
+                        processed_subtitle_files.append(exp_sub)
+                        log(f"✅ Added BDSup2Sub processed subtitle: {exp_sub}")
                     else:
-                        new_subtitle_files.append(sub)
+                        processed_subtitle_files.append(sub)
+                        log(f"⚠️ BDSup2Sub processing failed, using original: {sub}")
                 else:
-                    new_subtitle_files.append(sub)
-            subtitle_files = new_subtitle_files
+                    processed_subtitle_files.append(sub)
+                    log(f"✅ Added non-SUP subtitle: {sub}")
+            subtitle_files = processed_subtitle_files
+        else:
+            # For higher resolutions, use original subtitles
+            log(f"🔧 Using original subtitles for {res}...")
+            subtitle_files = original_subtitle_files.copy()
 
         if output:
             update_resolution_status(job_id, filename, res, f"Final video encoding completed", "75")
@@ -1055,6 +1148,16 @@ def encode_file(input_file, resolutions, job_id):
 
             # 4. Run the multiplex
             try:
+                log(f"🔍 Starting multiplexing for {filename}@{res}")
+                log(f"   Video: {output_file}")
+                log(f"   Audio files: {len(audio_files)} files")
+                log(f"   Subtitle files: {len(subtitle_files)} files")
+                for i, sub in enumerate(subtitle_files):
+                    log(f"     Subtitle {i+1}: {os.path.basename(sub)}")
+                log(f"   Language: {language}")
+                log(f"   Final filename: {final_filename}")
+                
+                
                 multiplex_file(
                     video_file=output_file,
                     audio_files=audio_files,
@@ -1069,6 +1172,7 @@ def encode_file(input_file, resolutions, job_id):
                 update_resolution_status(job_id, filename, res, f"Completed Multiplexing", "85")
             except Exception as e:
                 log(f"❌ Error during multiplexing: {str(e)}")
+                log(f"❌ Full error details: {type(e).__name__}: {str(e)}")
                 send_webhook_message(f"❌ Multiplexing failed for {filename}@{res}: {str(e)}")
                 status_callback(filename, res, "Multiplexing Failed")
                 continue
@@ -1236,6 +1340,70 @@ def start_encoding(file, job_id=None):
     except Exception as e:
         print(f"Failed to notify completion: {e}")
 
+def test_mkvmerge():
+    """Test if mkvmerge is working properly"""
+    try:
+        result = subprocess.run(["mkvmerge", "--version"], 
+                               capture_output=True, text=True, timeout=10)
+        if result.returncode == 0:
+            log("✅ mkvmerge is working properly")
+            log(f"Version: {result.stdout.strip()}")
+            return True
+        else:
+            log(f"❌ mkvmerge failed: {result.stderr}")
+            return False
+    except FileNotFoundError:
+        log("❌ mkvmerge not found in PATH")
+        return False
+    except Exception as e:
+        log(f"❌ Error testing mkvmerge: {str(e)}")
+        return False
+
+def debug_mkvmerge_input(video_file, audio_files, subtitle_files):
+    """Debug mkvmerge input files by running info commands"""
+    log("🔍 Debugging mkvmerge input files...")
+    
+    # Test video file
+    try:
+        cmd = ["mkvmerge", "-i", video_file]
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+        if result.returncode == 0:
+            log(f"✅ Video file info retrieved successfully")
+            log(f"Video info: {result.stdout[:500]}...")  # First 500 chars
+        else:
+            log(f"❌ Video file info failed: {result.stderr}")
+    except Exception as e:
+        log(f"❌ Error getting video info: {str(e)}")
+    
+    # Test audio files
+    for i, audio_file in enumerate(audio_files):
+        try:
+            cmd = ["mkvmerge", "-i", audio_file]
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+            if result.returncode == 0:
+                log(f"✅ Audio file {i+1} info retrieved successfully")
+            else:
+                log(f"❌ Audio file {i+1} info failed: {result.stderr}")
+        except Exception as e:
+            log(f"❌ Error getting audio file {i+1} info: {str(e)}")
+    
+    # Test subtitle files
+    for i, subtitle_file in enumerate(subtitle_files):
+        try:
+            cmd = ["mkvmerge", "-i", subtitle_file]
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+            if result.returncode == 0:
+                log(f"✅ Subtitle file {i+1} info retrieved successfully")
+            else:
+                log(f"❌ Subtitle file {i+1} info failed: {result.stderr}")
+        except Exception as e:
+            log(f"❌ Error getting subtitle file {i+1} info: {str(e)}")
+
 if __name__ == "__main__":
+    # Test mkvmerge first
+    if not test_mkvmerge():
+        log("❌ mkvmerge test failed, exiting")
+        sys.exit(1)
+    
     # Get the file path from the command-line argument
     start_encoding(r"W:\Encodes\Bajirao Mastani\source\Bajirao Mastani 2015 1080p Blu-ray Remux AVC TrueHD 7.1 - KRaLiMaRKo.mkv")
