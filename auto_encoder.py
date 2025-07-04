@@ -822,7 +822,8 @@ def multiplex_file(
             continue
             
         # Extract language code from filename (e.g., "_eng.srt")
-        match = re.search(r'_([a-z]{2,3})\.[a-z]+$', subtitle_file)
+        # Look for language code before any "_exp" suffix to avoid matching "exp" as language
+        match = re.search(r'_([a-z]{2,3})(?:_exp)?\.[a-z]+$', subtitle_file)
         subtitle_lang = match.group(1) if match else "und"
 
         # Set English subtitles as default if movie is NOT in English
