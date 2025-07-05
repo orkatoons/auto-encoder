@@ -393,7 +393,6 @@ def extract_audio(input_file, res):
     - Falls back to best lossy (highest channel count)
     Returns path to the extracted audio file (single best track).
     """
-    global temp_audio, qaac_cmd
     input_dir = os.path.dirname(input_file)
     base_name = os.path.splitext(os.path.basename(input_file))[0]
     parent_dir = os.path.normpath(os.path.join(input_dir, ".."))
@@ -440,6 +439,12 @@ def extract_audio(input_file, res):
     # Determine bitrate based on resolution being encoded
     bitrate = "448" if res in ["480p", "576p"] else "640"
 
+    # Initialize variables
+    output_file = None
+    extract_cmd = None
+    qaac_cmd = None
+    temp_file = None
+
     if is_lossless:
         if is_surround:
             # For lossless surround, convert to AC3 with specified bitrate
@@ -450,17 +455,18 @@ def extract_audio(input_file, res):
         else:
             # Check if it's FLAC specifically
             if "FLAC" in best_desc:
-                # For FLAC, extract as WAV first, then convert with qaac
-                temp_wav = os.path.join(output_dir, "temp.wav")
+                # For FLAC, extract as WAV first, then convert with qaac using resolution-based bitrate
+                temp_file = os.path.join(output_dir, "temp.wav")
                 output_file = os.path.normpath(os.path.join(output_dir, f"{base_name}@{res}.m4a"))
-                extract_cmd = f'eac3to "{input_file}" {best_track_num}:"{temp_wav} -{bitrate}"'
-                qaac_cmd = f'qaac64 -V 127 -i "{temp_wav}" --no-delay -o "{output_file}"'
+                extract_cmd = f'eac3to "{input_file}" {best_track_num}:"{temp_file}"'
+                # Use bitrate based on resolution for qaac conversion
+                qaac_cmd = f'qaac64 -V {bitrate} -i "{temp_file}" --no-delay -o "{output_file}"'
             else:
-                # For other lossless formats, try direct AAC extraction
-                temp_audio = os.path.join(output_dir, "temp.aac")
+                # For other lossless formats, try direct AAC extraction with resolution-based bitrate
+                temp_file = os.path.join(output_dir, "temp.aac")
                 output_file = os.path.normpath(os.path.join(output_dir, f"{base_name}@{res}.m4a"))
-                extract_cmd = f'eac3to "{input_file}" {best_track_num}:"{temp_audio}"'
-                qaac_cmd = f'qaac64 -V 127 -i "{temp_audio}" --no-delay -o "{output_file}"'
+                extract_cmd = f'eac3to "{input_file}" {best_track_num}:"{temp_file}"'
+                qaac_cmd = f'qaac64 -V {bitrate} -i "{temp_file}" --no-delay -o "{output_file}"'
     else:
         # For lossy audio, determine format and bitrate
         if is_surround:
@@ -470,9 +476,9 @@ def extract_audio(input_file, res):
             )
             extract_cmd = f'eac3to "{input_file}" {best_track_num}:"{output_file}" -{bitrate}'
         else:
-            # For lossy stereo, extract as is (usually AAC)
+            # For lossy stereo, extract with resolution-based bitrate
             output_file = os.path.normpath(os.path.join(output_dir, f"{base_name}@{res}.m4a"))
-            extract_cmd = f'eac3to "{input_file}" {best_track_num}:"{output_file} -{bitrate}"'
+            extract_cmd = f'eac3to "{input_file}" {best_track_num}:"{output_file}" -{bitrate}'
 
     print("🔧 Extracting audio...")
     result = subprocess.run(extract_cmd, shell=True, capture_output=True, text=True)
@@ -498,21 +504,13 @@ def extract_audio(input_file, res):
             print("❌ qaac conversion failed!")
             send_webhook_message("❌ Audio conversion failed!")
             # Clean up temp file
-            if "FLAC" in best_desc:
-                if os.path.exists(temp_wav):
-                    os.remove(temp_wav)
-            else:
-                if os.path.exists(temp_audio):
-                    os.remove(temp_audio)
+            if temp_file and os.path.exists(temp_file):
+                os.remove(temp_file)
             return []
         
         # Clean up temp file on success
-        if "FLAC" in best_desc:
-            if os.path.exists(temp_wav):
-                os.remove(temp_wav)
-        else:
-            if os.path.exists(temp_audio):
-                os.remove(temp_audio)
+        if temp_file and os.path.exists(temp_file):
+            os.remove(temp_file)
 
     send_webhook_message(f"✅ Audio extraction complete: {output_file}")
     return [output_file]
