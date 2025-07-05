@@ -76,6 +76,11 @@ def get_directory_structure(path):
         if has_approval:
             print(f"Found approval file in directory: {path}")
         
+        # Check if current directory has blacklist files
+        has_blacklist = any(item.lower() == 'blacklist.txt' for item in items)
+        if has_blacklist:
+            print(f"Found blacklist file in directory: {path}")
+        
         for item in items:
             full_path = os.path.join(path, item)
             
@@ -93,19 +98,32 @@ def get_directory_structure(path):
                     for sub_item in sub_structure
                 )
                 
+                # Check if any subdirectory has blacklist
+                sub_has_blacklist = any(
+                    sub_item.get('has_blacklist', False) 
+                    for sub_item in sub_structure
+                )
+                
                 if sub_has_approval:
                     print(f"Subdirectory has approval: {full_path}")
+                
+                if sub_has_blacklist:
+                    print(f"Subdirectory has blacklist: {full_path}")
                 
                 dir_info = {
                     'name': item,
                     'type': 'directory',
                     'path': full_path,
                     'files': sub_structure,
-                    'has_approval': has_approval or sub_has_approval
+                    'has_approval': has_approval or sub_has_approval,
+                    'has_blacklist': has_blacklist or sub_has_blacklist
                 }
                 
                 if dir_info['has_approval']:
                     print(f"Directory marked as approved: {full_path}")
+                
+                if dir_info['has_blacklist']:
+                    print(f"Directory marked as blacklisted: {full_path}")
                 
                 structure.append(dir_info)
             else:

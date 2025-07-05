@@ -518,6 +518,90 @@ def extract_audio(input_file, res):
     return [output_file]
 
 # --------------------Phase 3 (Subtitles)--------------------
+def check_for_chapters(input_file):
+    """
+    Check if the source file has chapters using mkvextract.
+    Returns True if chapters exist, False otherwise.
+    """
+    try:
+        cmd = [MKVEXTRACT, "chapters", input_file]
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+        
+        if result.returncode == 0 and result.stdout.strip():
+            log(f"✅ Chapters found in {os.path.basename(input_file)}")
+            return True
+        else:
+            log(f"❌ No chapters found in {os.path.basename(input_file)}")
+            return False
+    except subprocess.TimeoutExpired:
+        log(f"⚠️ Chapter check timed out for {os.path.basename(input_file)}")
+        return False
+    except Exception as e:
+        log(f"❌ Error checking chapters: {str(e)}")
+        return False
+
+
+def extract_chapters(input_file):
+    """
+    Extract chapters from the source file using mkvextract.
+    Returns the path to the extracted chapters file.
+    """
+    try:
+        input_dir = os.path.dirname(input_file)
+        base_name = os.path.splitext(os.path.basename(input_file))[0]
+        chapters_file = os.path.join(input_dir, f"{base_name}_chapters.xml")
+        
+        cmd = [MKVEXTRACT, "chapters", input_file]
+        with open(chapters_file, 'w', encoding='utf-8') as f:
+            result = subprocess.run(cmd, stdout=f, stderr=subprocess.PIPE, text=True, timeout=60)
+        
+        if result.returncode == 0 and os.path.exists(chapters_file):
+            log(f"✅ Chapters extracted to {chapters_file}")
+            return chapters_file
+        else:
+            log(f"❌ Failed to extract chapters: {result.stderr}")
+            return None
+    except subprocess.TimeoutExpired:
+        log(f"⚠️ Chapter extraction timed out for {os.path.basename(input_file)}")
+        return None
+    except Exception as e:
+        log(f"❌ Error extracting chapters: {str(e)}")
+        return None
+
+
+def blacklist_file(input_file, reason="No chapters found"):
+    """
+    Add the source file to a blacklist.txt file in the source folder.
+    """
+    try:
+        source_dir = os.path.dirname(input_file)
+        blacklist_file_path = os.path.join(source_dir, "blacklist.txt")
+        
+        # Get the filename to add to blacklist
+        filename = os.path.basename(input_file)
+        
+        # Read existing blacklist if it exists
+        blacklisted_files = set()
+        if os.path.exists(blacklist_file_path):
+            with open(blacklist_file_path, 'r', encoding='utf-8') as f:
+                blacklisted_files = set(line.strip() for line in f if line.strip())
+        
+        # Add the current file with reason
+        blacklisted_files.add(f"{filename} - {reason}")
+        
+        # Write back to blacklist file
+        with open(blacklist_file_path, 'w', encoding='utf-8') as f:
+            for file_entry in sorted(blacklisted_files):
+                f.write(f"{file_entry}\n")
+        
+        log(f"✅ Added {filename} to blacklist: {reason}")
+        send_webhook_message(f"❌ Blacklisted {filename}: {reason}")
+        return True
+    except Exception as e:
+        log(f"❌ Error adding file to blacklist: {str(e)}")
+        return False
+
+
 def extract_subtitles(mkv_path):
     """
     Extracts subtitle tracks using mkvextract and returns a list of paths to the extracted subtitle files.
@@ -741,7 +825,8 @@ def multiplex_file(
     source_format,
     encoding_used,
     final_filename,
-    file_title
+    file_title,
+    chapters_file=None
 ):
     print(f"""
     Video File       : {video_file}
@@ -785,9 +870,17 @@ def multiplex_file(
     cmd = [
         "mkvmerge", "-o", final_filename,
         "--title", file_title,
-        "--no-global-tags", "--no-chapters",
+        "--no-global-tags",
         video_file
     ]
+    
+    # Add chapters if available
+    if chapters_file and os.path.exists(chapters_file):
+        log(f"🔍 Adding chapters from: {chapters_file}")
+        cmd.extend(["--chapters", chapters_file])
+    else:
+        log(f"ℹ️ No chapters file provided or file doesn't exist")
+        cmd.append("--no-chapters")
     
     # Debug: Log the exact command that will be executed
     log(f"🔍 Debug: mkvmerge command will be:")
@@ -990,6 +1083,28 @@ def encode_file(input_file, resolutions, job_id):
     original_filename = os.path.splitext(os.path.basename(input_file))[0]
     send_webhook_message(f"Beginning encoding for {filename} @ {resolutions}")
     report_progress(filename, 0)
+    
+    # Check for chapters in the source file
+    log(f"🔍 Checking for chapters in {filename}...")
+    has_chapters = check_for_chapters(input_file)
+    
+    if not has_chapters:
+        log(f"❌ No chapters found in {filename}, blacklisting...")
+        blacklist_file(input_file, "No chapters found")
+        send_webhook_message(f"❌ Blacklisted {filename}: No chapters found")
+        return
+    
+    # Extract chapters if they exist
+    chapters_file = None
+    if has_chapters:
+        log(f"📖 Extracting chapters from {filename}...")
+        chapters_file = extract_chapters(input_file)
+        if not chapters_file:
+            log(f"❌ Failed to extract chapters from {filename}, blacklisting...")
+            blacklist_file(input_file, "Failed to extract chapters")
+            send_webhook_message(f"❌ Blacklisted {filename}: Failed to extract chapters")
+            return
+    
     # Extract AKA information from original filename first
     original_aka_original, original_aka_english = parse_aka_title(original_filename)
     log(f"Original filename AKA - Original: '{original_aka_original}', English: '{original_aka_english}'")
@@ -1155,6 +1270,10 @@ def encode_file(input_file, resolutions, job_id):
                 log(f"   Subtitle files: {len(subtitle_files)} files")
                 for i, sub in enumerate(subtitle_files):
                     log(f"     Subtitle {i+1}: {os.path.basename(sub)}")
+                if chapters_file:
+                    log(f"   Chapters: {chapters_file}")
+                else:
+                    log(f"   Chapters: None")
                 log(f"   Language: {language}")
                 log(f"   Final filename: {final_filename}")
                 
@@ -1168,7 +1287,8 @@ def encode_file(input_file, resolutions, job_id):
                     source_format=encoding_source_format,
                     encoding_used=encoding_used,
                     final_filename=final_filename,
-                    file_title=file_title
+                    file_title=file_title,
+                    chapters_file=chapters_file
                 )
                 update_resolution_status(job_id, filename, res, f"Completed Multiplexing", "85")
             except Exception as e:
